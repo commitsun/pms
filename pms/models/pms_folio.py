@@ -178,6 +178,15 @@ class PmsFolio(models.Model):
         string="Type",
         default=lambda *a: "normal",
     )
+    channel_type = fields.Selection(
+        [
+            ("direct", "Direct"),
+            ("indirect", "Indirect"),
+        ],
+        string="Sales Channel",
+        compute="_compute_channel_type",
+        store=True,
+    )
     date_order = fields.Datetime(
         string="Order Date",
         required=True,
@@ -322,6 +331,14 @@ class PmsFolio(models.Model):
         for folio in self:
             addr = folio.partner_id.address_get(["invoice"])
             folio.partner_invoice_id = addr["invoice"]
+
+    @api.depends("agency_id")
+    def _compute_channel_type(self):
+        for folio in self:
+            if folio.agency_id:
+                folio.channel_type = "indirect"
+            else:
+                folio.channel_type = "direct"
 
     @api.depends("partner_id")
     def _compute_payment_term_id(self):

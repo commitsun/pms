@@ -146,14 +146,8 @@ class PmsReservation(models.Model):
         store=True,
         readonly=False,
     )
-    agency_id = fields.Many2one(
-        related="folio_id.agency_id",
-        readonly=True,
-    )
-    channel_type_id = fields.Many2one(
-        related="folio_id.channel_type_id",
-        readonly=True,
-    )
+    agency_id = fields.Many2one(related="folio_id.agency_id")
+
     partner_invoice_id = fields.Many2one(
         "res.partner",
         string="Invoice Address",
@@ -364,6 +358,15 @@ class PmsReservation(models.Model):
     overbooking = fields.Boolean("Is Overbooking", default=False)
     reselling = fields.Boolean("Is Reselling", default=False)
     nights = fields.Integer("Nights", compute="_compute_nights", store=True)
+    channel_type = fields.Selection(
+        [
+            ("direct","Direct"),
+            ("indirect","Indirect")
+        ],
+        string="Channel type",
+        required = True,
+        store=True
+    )
     origin = fields.Char("Origin", compute="_compute_origin", store=True)
     detail_origin = fields.Char(
         "Detail Origin", compute="_compute_detail_origin", store=True
@@ -994,6 +997,16 @@ class PmsReservation(models.Model):
     #             )
 
     # self._compute_tax_ids() TODO: refact
+
+    @api.constrains("channel_type")
+    def check_channel_type(self):
+        for record in self:
+            if (record.channel_type == "indirect" and record.partner_id.is_agency != True):
+                raise ValidationError(
+                    _(
+                        "Indirect Sale Channel must have an agency associated!"
+                    )
+                )
 
     # Action methods
 

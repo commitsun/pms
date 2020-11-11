@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import datetime
 
 from freezegun import freeze_time
@@ -101,3 +102,37 @@ class TestPmsSaleChannel(TestHotel):
             self.env["res.partner"].create(
                 {"name": "example", "is_agency": True, "sale_channel_id": None}
             )
+=======
+from .common import TestHotel
+from freezegun import freeze_time
+from odoo.exceptions import ValidationError
+import datetime
+from odoo import fields
+
+@freeze_time("2010-01-01")
+class TestPmsSaleChannel(TestHotel):
+    def test_reservation_indirect_channel(self):
+       #ARRANGE
+       PmsReservation = self.env["pms.reservation"]
+       not_agency = self.env["res.partner"].create(
+           {
+               "name":"partner1",
+                "is_agency":False
+           }
+       )
+
+       #ACT & ASSERT
+       with self.assertRaises(ValidationError), self.cr.savepoint():
+           PmsReservation.create(
+               {
+                   "checkin": datetime.datetime.now(),
+                   "checkout":datetime.datetime.now() + datetime.timedelta(days=3),
+                   "channel_type":"indirect",
+                   "partner_id":not_agency.id
+               }
+           )
+
+
+
+
+>>>>>>> [IMP] Test_pms_sale_channel
