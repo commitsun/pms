@@ -24,12 +24,18 @@ class ResPartner(models.Model):
     sale_channel_id = fields.Many2one(
         "pms.sale.channel",
         string="Sale Channel",
+<<<<<<< HEAD
         ondelete="restrict",
         domain=[("channel_type", "=", "indirect")],
     )
     default_commission = fields.Integer("Commission")
     apply_pricelist = fields.Boolean("Apply Pricelist")
     invoice_agency = fields.Boolean("Invoice Agency")
+=======
+        ondelete = "restrict",
+        domain=[("channel_type","=","indirect")],
+    )
+>>>>>>> [IMP] add test to check sales channel domain
 
     # Compute and Search methods
     def _compute_reservations_count(self):
@@ -86,6 +92,7 @@ class ResPartner(models.Model):
             )
         return res
 
+<<<<<<< HEAD
     @api.constrains("is_agency", "sale_channel_id")
     def _check_is_agency(self):
         for record in self:
@@ -93,3 +100,12 @@ class ResPartner(models.Model):
                 raise models.ValidationError(_("Sale Channel must be entered"))
             if not record.is_agency and record.sale_channel_id:
                 record.sale_channel_id = None
+=======
+    @api.constrains("is_agency","sale_channel_id")
+    def _check_is_agency(self):
+        for record in self:
+            if record.is_agency and not record.sale_channel_id:
+                 raise models.ValidationError(_("Sale Channel must be entered"))
+            if not record.is_agency and record.sale_channel_id:
+                record.sale_channel_id=None
+>>>>>>> [IMP] add test to check sales channel domain

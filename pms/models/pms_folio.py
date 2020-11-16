@@ -130,8 +130,13 @@ class PmsFolio(models.Model):
     channel_type_id = fields.Many2one(
         "pms.sale.channel",
         string="Direct Sale Channel",
+<<<<<<< HEAD
         ondelete="restrict",
         domain=[("channel_type", "=", "direct")],
+=======
+        ondelete = "restrict",
+        domain=[("channel_type","=","direct")],
+>>>>>>> [IMP] add test to check sales channel domain
     )
     payment_ids = fields.One2many("account.payment", "folio_id", readonly=True)
     # return_ids = fields.One2many("payment.return", "folio_id", readonly=True)
@@ -177,15 +182,6 @@ class PmsFolio(models.Model):
         [("normal", "Normal"), ("staff", "Staff"), ("out", "Out of Service")],
         string="Type",
         default=lambda *a: "normal",
-    )
-    channel_type = fields.Selection(
-        [
-            ("direct", "Direct"),
-            ("indirect", "Indirect"),
-        ],
-        string="Sales Channel",
-        compute="_compute_channel_type",
-        store=True,
     )
     date_order = fields.Datetime(
         string="Order Date",
@@ -332,14 +328,6 @@ class PmsFolio(models.Model):
             addr = folio.partner_id.address_get(["invoice"])
             folio.partner_invoice_id = addr["invoice"]
 
-    @api.depends("agency_id")
-    def _compute_channel_type(self):
-        for folio in self:
-            if folio.agency_id:
-                folio.channel_type = "indirect"
-            else:
-                folio.channel_type = "direct"
-
     @api.depends("partner_id")
     def _compute_payment_term_id(self):
         self.payment_term_id = False
@@ -475,17 +463,6 @@ class PmsFolio(models.Model):
                     "amount_total": amount_untaxed + amount_tax,
                 }
             )
-    # Check channel type
-    @api.constrains("channel_type")
-    def check_channel_type(self):
-        for record in self:
-            if (record.channel_type == "indirect" and record.partner_id.is_agency != True
-                or record.channel_type == "direct" and record.partner_id.is_agency == True):
-                raise ValidationError(
-                    _(
-                        "Indirect Sale Channel must have an agency associated!"
-                    )
-                )
 
     @api.depends("reservation_ids", "reservation_ids.state")
     def _compute_reservations_pending_arrival(self):
