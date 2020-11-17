@@ -101,9 +101,3 @@ class TestPmsSaleChannel(TestHotel):
             self.env["res.partner"].create(
                 {"name": "example", "is_agency": True, "sale_channel_id": None}
             )
-
-
-
-
-
-

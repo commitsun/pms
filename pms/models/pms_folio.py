@@ -130,13 +130,8 @@ class PmsFolio(models.Model):
     channel_type_id = fields.Many2one(
         "pms.sale.channel",
         string="Direct Sale Channel",
-<<<<<<< HEAD
         ondelete="restrict",
         domain=[("channel_type", "=", "direct")],
-=======
-        ondelete = "restrict",
-        domain=[("channel_type","=","direct")],
->>>>>>> [IMP] add test to check sales channel domain
     )
     payment_ids = fields.One2many("account.payment", "folio_id", readonly=True)
     # return_ids = fields.One2many("payment.return", "folio_id", readonly=True)
