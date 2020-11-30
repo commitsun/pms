@@ -192,6 +192,17 @@ class PmsReservation(models.Model):
         store=True,
         readonly=False,
     )
+    commission_percent = fields.Float(
+        string="Commission percent (%)",
+        compute="_compute_commission_percent",
+        store=True,
+        readonly=False,
+    )
+    commission_amount = fields.Float(
+        string="Commission amount",
+        compute="_compute_commission_amount",
+        store=True,
+    )
     # TODO: Warning Mens to update pricelist
     checkin_partner_ids = fields.One2many(
         "pms.checkin.partner",
@@ -510,7 +521,7 @@ class PmsReservation(models.Model):
                 )
                 reservation.allowed_room_ids = rooms_available
 
-    @api.depends("reservation_type")
+    @api.depends("reservation_type", "agency_id")
     def _compute_partner_id(self):
         for reservation in self:
             if reservation.reservation_type == "out":
@@ -519,6 +530,8 @@ class PmsReservation(models.Model):
                 reservation.partner_id = reservation.folio_id.partner_id
             else:
                 reservation.partner_id = False
+            if not reservation.partner_id and reservation.agency_id:
+                reservation.partner_id = reservation.agency_id
 
     @api.depends("partner_id")
     def _compute_partner_invoice_id(self):
@@ -597,117 +610,25 @@ class PmsReservation(models.Model):
                 # TODO: Warning change de pricelist?
                 reservation.pricelist_id = pricelist_id
 
-    @api.depends("adults")
-    def _compute_checkin_partner_ids(self):
+    @api.depends("agency_id")
+    def _compute_commission_percent(self):
         for reservation in self:
-            assigned_checkins = reservation.checkin_partner_ids.filtered(
-                lambda c: c.state in ("precheckin", "onboard", "done")
-            )
-            unassigned_checkins = reservation.checkin_partner_ids.filtered(
-                lambda c: c.state == "draft"
-            )
-            leftover_unassigneds_count = (
-                len(assigned_checkins) + len(unassigned_checkins) - reservation.adults
-            )
-            if len(assigned_checkins) > reservation.adults:
-                raise UserError(
-                    _("Remove some of the leftover assigned checkins first")
+            if reservation.agency_id:
+                reservation.commission_percent = (
+                    reservation.agency_id.default_commission
                 )
-            elif leftover_unassigneds_count > 0:
-                for i in range(0, leftover_unassigneds_count):
-                    unassigned_checkins[i].sudo().unlink()
-            elif reservation.adults > len(reservation.checkin_partner_ids):
-                checkins_lst = []
-                count_new_checkins = reservation.adults - len(
-                    reservation.checkin_partner_ids
-                )
-                for _i in range(0, count_new_checkins):
-                    checkins_lst.append(
-                        (
-                            0,
-                            False,
-                            {
-                                "reservation_id": reservation.id,
-                            },
-                        )
-                    )
-                reservation.with_context(
-                    {"auto_create_checkin": True}
-                ).checkin_partner_ids = checkins_lst
+            else:
+                reservation.commission_percent = 0
 
-    @api.depends("checkin_partner_ids", "checkin_partner_ids.state")
-    def _compute_count_pending_arrival(self):
+    @api.depends("commission_percent", "price_total")
+    def _compute_commission_amount(self):
         for reservation in self:
-            reservation.count_pending_arrival = len(
-                reservation.checkin_partner_ids.filtered(
-                    lambda c: c.state in ("draft", "precheckin")
+            if reservation.commission_percent > 0:
+                reservation.commission_amount = (
+                    reservation.price_total * reservation.commission_percent
                 )
-            )
-
-    @api.depends("count_pending_arrival")
-    def _compute_checkins_ratio(self):
-        self.checkins_ratio = 0
-        for reservation in self.filtered(lambda r: r.adults > 0):
-            reservation.checkins_ratio = (
-                (reservation.adults - reservation.count_pending_arrival)
-                * 100
-                / reservation.adults
-            )
-
-    @api.depends("checkin_partner_ids", "checkin_partner_ids.state")
-    def _compute_pending_checkin_data(self):
-        for reservation in self:
-            reservation.pending_checkin_data = len(
-                reservation.checkin_partner_ids.filtered(lambda c: c.state == "draft")
-            )
-
-    @api.depends("pending_checkin_data")
-    def _compute_ratio_checkin_data(self):
-        self.ratio_checkin_data = 0
-        for reservation in self.filtered(lambda r: r.adults > 0):
-            reservation.ratio_checkin_data = (
-                (reservation.adults - reservation.pending_checkin_data)
-                * 100
-                / reservation.adults
-            )
-
-    def _compute_arrival_today(self):
-        for record in self:
-            record.arrival_today = (
-                True if record.checkin == fields.Date.today() else False
-            )
-            # REVIEW: Late checkin?? (next day)
-
-    def _search_arrival_today(self, operator, value):
-        if operator not in ("=", "!="):
-            raise UserError(_("Invalid domain operator %s", operator))
-
-        if value not in (False, True):
-            raise UserError(_("Invalid domain right operand %s", value))
-
-        today = fields.Date.context_today(self)
-
-        return [("checkin", operator, today)]
-
-    def _compute_departure_today(self):
-        for record in self:
-            record.departure_today = (
-                True if record.checkout == fields.Date.today() else False
-            )
-
-    def _search_departure_today(self, operator, value):
-        if operator not in ("=", "!="):
-            raise UserError(_("Invalid domain operator %s", operator))
-
-        if value not in (False, True):
-            raise UserError(_("Invalid domain right operand %s", value))
-
-        searching_for_true = (operator == "=" and value) or (
-            operator == "!=" and not value
-        )
-        today = fields.Date.context_today(self)
-
-        return [("checkout", searching_for_true, today)]
+            else:
+                reservation.commission_amount = 0
 
     # REVIEW: Dont run with set room_type_id -> room_id(compute)-> No set adults¿?
     @api.depends("preferred_room_id")
@@ -1055,21 +976,11 @@ class PmsReservation(models.Model):
 
     @api.model
     def create(self, vals):
-        if "folio_id" in vals and "channel_type_id" not in vals:
+        if "folio_id" in vals:
             folio = self.env["pms.folio"].browse(vals["folio_id"])
-            channel_type_id = (
-                vals["channel_type_id"]
-                if "channel_type_id" in vals
-                else folio.channel_type_id
-            )
-            partner_id = (
-                vals["partner_id"] if "partner_id" in vals else folio.partner_id.id
-            )
-            vals.update({"channel_type_id": channel_type_id, "partner_id": partner_id})
         elif "partner_id" in vals:
             folio_vals = {
                 "partner_id": int(vals.get("partner_id")),
-                "channel_type_id": vals.get("channel_type_id"),
             }
             # Create the folio in case of need
             # (To allow to create reservations direct)
@@ -1078,7 +989,6 @@ class PmsReservation(models.Model):
                 {
                     "folio_id": folio.id,
                     "reservation_type": vals.get("reservation_type"),
-                    "channel_type_id": vals.get("channel_type_id"),
                 }
             )
         record = super(PmsReservation, self).create(vals)
