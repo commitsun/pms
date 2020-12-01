@@ -302,6 +302,7 @@ class PmsReservation(models.Model):
         string="Status",
         default=lambda *a: "draft",
         copy=False,
+        index=True,
         tracking=True,
         readonly=True,
     )
