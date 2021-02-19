@@ -721,8 +721,17 @@ class PmsReservation(models.Model):
                 reservation.commission_percent = (
                     reservation.agency_id.default_commission
                 )
-            else:
-                reservation.commission_percent = 0
+                for _i in range(0, count_new_checkins):
+                    checkins_lst.append(
+                        (
+                            0,
+                            False,
+                            {
+                                "reservation_id": reservation.id,
+                            },
+                        )
+                    )
+                reservation.checkin_partner_ids = checkins_lst
 
     @api.depends("commission_percent", "price_total")
     def _compute_commission_amount(self):
@@ -938,13 +947,13 @@ class PmsReservation(models.Model):
         """
         Compute the invoice status of a Reservation. Possible statuses:
         - no: if the Folio is not in status 'sale' or 'done', we consider
-          that there is nothing to invoice. This is also hte default value
-          if the conditions of no other status is met.
+        that there is nothing to invoice. This is also hte default value
+        if the conditions of no other status is met.
         - to invoice: we refer to the quantity to invoice of the line.
-          Refer to method `_compute_get_to_invoice_qty()` for more information
-          on how this quantity is calculated.
+        Refer to method `_compute_get_to_invoice_qty()` for more information
+        on how this quantity is calculated.
         - invoiced: the quantity invoiced is larger or equal to the
-          quantity ordered.
+        quantity ordered.
         """
         precision = self.env["decimal.precision"].precision_get(
             "Product Unit of Measure"
@@ -1197,13 +1206,13 @@ class PmsReservation(models.Model):
                     )
                 )
 
-    @api.constrains("checkin_partner_ids", "adults")
-    def _max_checkin_partner_ids(self):
-        for record in self:
-            if len(record.checkin_partner_ids) > record.adults:
-                raise models.ValidationError(
-                    _("The room already is completed (%s)", record.name)
-                )
+    # @api.constrains("checkin_partner_ids", "adults")
+    # def _max_checkin_partner_ids(self):
+    #     for record in self:
+    #         if len(record.checkin_partner_ids) > record.adults:
+    #             raise models.ValidationError(
+    #                 _("The room already is completed (%s)", record.name)
+    #             )
 
     @api.constrains("adults")
     def _check_adults(self):
@@ -1495,12 +1504,12 @@ class PmsReservation(models.Model):
         @param dfrom: range date from
         @param dto: range date to
         @return: dictionary of lists with reservations (a hash of arrays!)
-                 with the reservations dates between dfrom and dto
+                with the reservations dates between dfrom and dto
         reservations_dates
             {'2018-07-30': [pms.reservation(29,), pms.reservation(30,),
-                           pms.reservation(31,)],
-             '2018-07-31': [pms.reservation(22,), pms.reservation(35,),
-                           pms.reservation(36,)],
+                        pms.reservation(31,)],
+            '2018-07-31': [pms.reservation(22,), pms.reservation(35,),
+                        pms.reservation(36,)],
             }
         """
         domain = [("date", ">=", dfrom), ("date", "<", dto)]
