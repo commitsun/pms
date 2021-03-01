@@ -32,3 +32,4 @@ from . import test_pms_wizard_folio
 from . import test_pms_res_users
 from . import test_pms_amenity
 from . import test_pms_room
+from . import test_pms_folio_invoice
