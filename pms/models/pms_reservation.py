@@ -720,9 +720,26 @@ class PmsReservation(models.Model):
     @api.depends("agency_id")
     def _compute_commission_percent(self):
         for reservation in self:
-            if reservation.agency_id:
-                reservation.commission_percent = (
-                    reservation.agency_id.default_commission
+            assigned_checkins = reservation.checkin_partner_ids.filtered(
+                lambda c: c.state in ("precheckin", "onboard", "done")
+            )
+            unassigned_checkins = reservation.checkin_partner_ids.filtered(
+                lambda c: c.state == "draft"
+            )
+            leftover_unassigneds_count = (
+                len(assigned_checkins) + len(unassigned_checkins) - reservation.adults
+            )
+            if len(assigned_checkins) > reservation.adults:
+                raise UserError(
+                    _("Remove some of the leftover assigned checkins first")
+                )
+            elif leftover_unassigneds_count > 0:
+                for i in range(0, leftover_unassigneds_count):
+                    reservation.checkin_partner_ids = [(2, unassigned_checkins[i].id)]
+            elif reservation.adults > len(reservation.checkin_partner_ids):
+                checkins_lst = []
+                count_new_checkins = reservation.adults - len(
+                    reservation.checkin_partner_ids
                 )
                 for _i in range(0, count_new_checkins):
                     checkins_lst.append(
@@ -735,6 +752,8 @@ class PmsReservation(models.Model):
                         )
                     )
                 reservation.checkin_partner_ids = checkins_lst
+            elif reservation.adults == 0:
+                reservation.checkin_partner_ids = False
 
     @api.depends("commission_percent", "price_total")
     def _compute_commission_amount(self):
