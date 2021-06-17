@@ -19,5 +19,4 @@
 #
 ##############################################################################
 from . import pms_property
-
-# from . import inherit_hotel_reservation
+from . import pms_reservation

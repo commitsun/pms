@@ -35,7 +35,6 @@ class PmsProperty(models.Model):
         default="7",
         required=True,
     )
-
     seed_code = fields.Integer(
         string="4 digit Seed Code", help="Must be between 0 and 9999", default=0
     )

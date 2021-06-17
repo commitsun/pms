@@ -21,7 +21,8 @@
 {
     "name": "PMS Hotel Door Codes",
     "version": "14.0.1.0.1",
-    "author": "Jose Luis Algara Toledo <osotranquilo@gmail.com>, Odoo Community Association (OCA)",
+    "author": "Jose Luis Algara Toledo <osotranquilo@gmail.com>,"
+    "Odoo Community Association (OCA)",
     "license": "AGPL-3",
     "application": False,
     "category": "pms hotel",
@@ -35,7 +36,7 @@
         # 'wizard/door_code.xml',
         # 'data/menus.xml',
         # 'views/inherit_res_company.xml',
-        # 'views/inherit_hotel_reservation.xml',
+        "views/pms_reservation.xml",
         "views/pms_property_views.xml",
     ],
     "qweb": [],
