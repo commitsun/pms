@@ -13,13 +13,10 @@ class InheritPmsReservation(models.Model):
     box_number = fields.Integer("Box number")
     box_code = fields.Char("Box code")
 
-    def doorcode4(self, date):
+    def doorcode4(self, date, pms_property_id=False):
         # Calculate de Door Code...
-        pms_property_id = self.pms_property_id
-        if not pms_property_id.chararters_precode:
-            pms_property_id.chararters_precode = ""
-        if not pms_property_id.chararters_postcode:
-            pms_property_id.chararters_postcode = ""
+        if not pms_property_id:
+            pms_property_id = self.pms_property_id
         delay = pms_property_id.seed_code * 100
         if pms_property_id.code_period == "7":
             weekday = date.weekday()  # Dias a restar para lunes
@@ -36,8 +33,9 @@ class InheritPmsReservation(models.Model):
             + pms_property_id.chararters_postcode
         )
 
-    def door_codes_text(self, entry, exit):
-        pms_property_id = self.pms_property_id
+    def door_codes_text(self, entry, exit, pms_property_id=False):
+        if not pms_property_id:
+            pms_property_id = self.pms_property_id
         codes = "No data"
         if pms_property_id.code_period == "7":
             if entry.weekday() == 0:
@@ -47,7 +45,7 @@ class InheritPmsReservation(models.Model):
             codes = (
                 _("Entry code: ")
                 + '<strong><span style="font-size: 1.4em;">'
-                + self.doorcode4(entry)
+                + self.doorcode4(entry, pms_property_id)
                 + "</span></strong>"
             )
             while entry <= exit:
@@ -58,7 +56,7 @@ class InheritPmsReservation(models.Model):
                         + datetime.strftime(entry, "%d-%m-%Y")
                         + _(" to:")
                         + ' <strong><span style="font-size: 1.4em;">'
-                        + self.doorcode4(entry)
+                        + self.doorcode4(entry, pms_property_id)
                         + "</span></strong>"
                     )
                 entry = entry + timedelta(days=1)
@@ -66,7 +64,7 @@ class InheritPmsReservation(models.Model):
             codes = (
                 _("Entry code: ")
                 + '<strong><span style="font-size: 1.4em;">'
-                + self.doorcode4(entry)
+                + self.doorcode4(entry, pms_property_id)
                 + "</span></strong>"
             )
             entry = entry + timedelta(days=1)
@@ -77,7 +75,7 @@ class InheritPmsReservation(models.Model):
                     + datetime.strftime(entry, "%d-%m-%Y")
                     + _(" to:")
                     + ' <strong><span style="font-size: 1.4em;">'
-                    + self.doorcode4(entry)
+                    + self.doorcode4(entry, pms_property_id)
                     + "</span></strong>"
                 )
                 entry = entry + timedelta(days=1)

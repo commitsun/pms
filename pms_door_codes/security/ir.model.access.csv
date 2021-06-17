@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+user_access_door_code,user_access_door_code,model_door_code,pms.group_pms_user,1,1,1,1
+manager_access_door_code,manager_access_door_code,model_door_code,pms.group_pms_manager,1,1,1,1

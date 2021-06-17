@@ -1,0 +1,62 @@
+<?xml version="1.0" ?>
+<odoo>
+  <data>
+    <record model="ir.ui.view" id="hotel_door_code_view">
+      <field name="name">door_code.view</field>
+      <field name="model">door_code</field>
+      <field name="arch" type="xml">
+        <form string="Door Code Generator">
+          <sheet>
+              <group>
+                <field name="pms_property_ids" widget="many2many_tags" />
+              </group>
+                  <field
+                            name="date_start"
+                            widget="daterange"
+                            nolabel="1"
+                            class="oe_inline"
+                            options="{'related_end_date': 'date_end'}"
+                        />
+                  <i
+                            class="fa fa-long-arrow-right mx-2"
+                            aria-label="Arrow icon"
+                            title="Arrow"
+                        />
+                  <field
+                            name="date_end"
+                            widget="daterange"
+                            nolabel="1"
+                            class="oe_inline"
+                            options="{'related_start_date': 'date_start'}"
+                        />
+            <group>
+              <field name="door_code" readonly="1" />
+            </group>
+            <footer>
+              <button
+                                name="check_code"
+                                string="Generate Code"
+                                type="object"
+                                class="oe_highlight"
+                            />
+            </footer>
+          </sheet>
+        </form>
+      </field>
+    </record>
+    <act_window
+            id="action_door_code_act"
+            name="Door Code Generator"
+            res_model="door_code"
+            view_mode="form"
+        />
+    <menuitem
+            id="menu_hotel_door_code"
+            name="Door Codes"
+            sequence="31"
+            parent="pms.pms_configuration_menu"
+            action="action_door_code_act"
+        />
+
+  </data>
+</odoo>

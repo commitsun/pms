@@ -33,11 +33,10 @@
     ],
     "summary": "Generate Hotel door codes, in Pseudo random system",
     "data": [
-        # 'wizard/door_code.xml',
-        # 'data/menus.xml',
-        # 'views/inherit_res_company.xml',
+        "wizard/door_code.xml",
         "views/pms_reservation.xml",
         "views/pms_property_views.xml",
+        "security/ir.model.access.csv",
     ],
     "qweb": [],
     "test": [],
