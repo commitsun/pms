@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!-- Hotel Settings -->
+    <record id="view_property_form_door_code" model="ir.ui.view">
+        <field name="name">Property Form Door Codes</field>
+        <field name="model">pms.property</field>
+        <field name="inherit_id" ref="pms.pms_property_views_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='property_rooms']" position="after">
+                <page string="Door Code" name="door_code">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="o_horizontal_separator">
+                                Door code settings
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <group name="property_data">
+                                <field name="chararters_precode" />
+                                <field name="chararters_postcode" />
+                            </group>
+                        </div>
+                        <div class="col-6 px-0">
+                             <group name="property_data">
+                                <field name="code_period" />
+                                <field name="seed_code" />
+                             </group>
+                        </div>
+                    </div>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>
