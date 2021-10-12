@@ -48,6 +48,12 @@ class ChannelWubookBackend(models.Model):
 
     pricelist_external_id = fields.Integer(string="Parity Pricelist ID", required=True)
 
+    backend_journal_ota_ids = fields.One2many(
+        string="Journals Online Payments",
+        comodel_name="wubook.backend.journal.ota",
+        inverse_name="backend_id",
+    )
+
     # push
     def generate_security_key(self):
         for rec in self:

@@ -2,7 +2,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 import datetime
 
-from odoo import _
+from odoo import _, fields
 from odoo.exceptions import ValidationError
 
 from odoo.addons.component.core import Component
@@ -38,6 +38,25 @@ class ChannelWubookPmsFolioMapperImport(Component):
     def wubook_status(self, record):
         return {
             "wubook_status": record["was_modified"] and "7" or str(record["status"])
+        }
+
+    @mapping
+    def payment_gateway_fee(self, record):
+        # Wubook payments gateway
+        if record["id_channel"] == 0 and record['payment_gateway_fee']:
+            return {
+                "payment_gateway_fee": record["payment_gateway_fee"]
+            }
+
+        # OTA payments gateway
+        if record["channel_data"]["pay_model"] == "merchant":
+            return {
+                "payment_gateway_fee": record["amount"]
+            }
+
+        # Not online pre payment
+        return {
+            "payment_gateway_fee": 0
         }
 
     @only_create
