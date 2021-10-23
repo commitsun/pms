@@ -6,13 +6,35 @@
         <field name="arch" type="xml">
             <form string="Room Closure Reason">
                 <sheet>
-                    <field name="name" />
-                    <field name="description" />
-                    <field
-                        name="pms_property_ids"
-                        widget="many2many_tags"
-                        options="{'no_create': True,'no_open': True}"
-                    />
+                    <group>
+                        <field name="name" />
+                        <field name="description" />
+                        <field
+                            name="pms_property_ids"
+                            widget="many2many_tags"
+                            options="{'no_create': True,'no_open': True}"
+                        />
+                        <field name="is_presale_lock" />
+                    </group>
+                    <group attrs="{'invisible':[('is_presale_lock','=', False)]}">
+                        <group>
+                            <field name="separated_rooms" />
+                            <field name="expiration_action" />
+
+                        </group>
+                        <group>
+                            <field name="from_expiration_date" />
+                            <field name="moment" />
+                            <field
+                                name="time"
+                                attrs="{'invisible':[('moment','=','in_act')]}"
+                            />
+                            <field
+                                name="time_type"
+                                attrs="{'invisible':[('moment','=','in_act')]}"
+                            />
+                        </group>
+                    </group>
                 </sheet>
             </form>
         </field>

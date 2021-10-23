@@ -28,3 +28,51 @@ class RoomClosureReason(models.Model):
         help="Explanation of the reason for closing a room",
         translate=True,
     )
+    is_presale_lock = fields.Boolean(
+        string="Pre-sale lock",
+        help="used to block a room for possible future sale",
+    )
+    from_expiration_date = fields.Selection(
+        selection=[
+            ("checkout", "Checkout"),
+            ("checkin", "Checkin"),
+            ("created", "Created"),
+        ],
+        string="From expiration date",
+        default="checkout",
+    )
+    expiration_action = fields.Selection(
+        selection=[
+            ("cancel", "Cancel"),
+            ("notification", "Notification"),
+        ],
+        string="Action",
+        default="cancel",
+    )
+    time_type = fields.Selection(
+        selection=[
+            ("hours", "Hours"),
+            ("days", "Days"),
+            ("months", "Months"),
+        ],
+        string="From expiration date",
+        default="days",
+    )
+    time = fields.Integer(string="Time", help="Amount of time")
+    moment = fields.Selection(
+        string="Moment",
+        help="Moment in relation to the action in which the email will be sent",
+        selection=[
+            ("before", "Before"),
+            ("after", "After"),
+            ("in_act", "In the act"),
+        ],
+        default="before",
+    )
+    active = fields.Boolean(
+        string="Active", help="Indicates if the automated mail is active", default=True
+    )
+    separated_rooms = fields.Boolean(
+        string="Separate rooms by folios",
+        help="This option create a unique folio by each room",
+    )
