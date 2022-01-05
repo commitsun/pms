@@ -420,16 +420,18 @@ class AvailabilityWizard(models.TransientModel):
         board_service_room_id,
         pricelist_id,
         pms_property_id,
+        adults=False,
     ):
         room_type_total_price_per_room = 0
         room_type = self.env["pms.room.type"].browse(room_type_id)
+        pms_property = self.env["pms.property"].browse(pms_property_id)
         for date_iterator in [
             checkin + datetime.timedelta(days=x)
             for x in range(0, (checkout - checkin).days)
         ]:
 
             product = room_type.product_id
-            product = product.with_context(
+            product = product.with_company(pms_property.company_id).with_context(
                 quantity=1,
                 date=fields.Date.today(),
                 consumption_date=date_iterator,
@@ -444,8 +446,9 @@ class AvailabilityWizard(models.TransientModel):
                 board_service_room_id
             )
             nights = (checkout - checkin).days
+            adults = adults or room_type.get_capacity()
             room_type_total_price_per_room += (
-                board_service_room.amount * nights * room_type.get_capacity()
+                board_service_room.amount * nights * adults
             )
 
         return room_type_total_price_per_room

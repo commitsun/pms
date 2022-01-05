@@ -122,45 +122,44 @@ class PmsProperty(models.Model):
     privacy_policy = fields.Html(string="Privacy Policy", help="Mail privacy policy ")
 
     property_confirmed_template = fields.Many2one(
-        string="Confirmation Template",
+        string="Confirmation Email",
         help="Confirmation email template",
         comodel_name="mail.template",
-        default=lambda self: self.env["mail.template"]
-        .search([("name", "=", "Confirmed Reservation")])
-        .id,
     )
 
     property_modified_template = fields.Many2one(
-        string="Modification Template",
+        string="Modification Email",
         help="Modification email template",
         comodel_name="mail.template",
-        default=lambda self: self.env["mail.template"]
-        .search([("name", "=", "Modified Reservation")])
-        .id,
     )
 
     property_canceled_template = fields.Many2one(
-        string="Cancellation Template",
+        string="Cancellation Email",
         help="Cancellation email template",
         comodel_name="mail.template",
-        default=lambda self: self.env["mail.template"]
-        .search([("name", "=", "Cancelled Reservation")])
-        .id,
     )
+
+    is_confirmed_auto_mail = fields.Boolean(string="Auto Send Confirmation Mail")
+    is_modified_auto_mail = fields.Boolean(string="Auto Send Modification Mail")
+    is_canceled_auto_mail = fields.Boolean(string="Auto Send Cancellation Mail")
 
     @api.depends_context(
         "checkin",
         "checkout",
+        "real_avail",
         "room_type_id",
         "ubication_id",
         "capacity",
         "amenity_ids",
         "pricelist_id",
+        "class_id",
+        "overnight_rooms",
         "current_lines",
     )
     def _compute_free_room_ids(self):
         checkin = self._context["checkin"]
         checkout = self._context["checkout"]
+
         if isinstance(checkin, str):
             checkin = datetime.datetime.strptime(
                 checkin, DEFAULT_SERVER_DATE_FORMAT
@@ -175,11 +174,14 @@ class PmsProperty(models.Model):
 
         pricelist_id = self.env.context.get("pricelist_id", False)
         room_type_id = self.env.context.get("room_type_id", False)
+        class_id = self._context.get("class_id", False)
+        real_avail = self._context.get("real_avail", False)
+        overnight_rooms = self._context.get("overnight_rooms", False)
         for pms_property in self:
             free_rooms = pms_property.get_real_free_rooms(
                 checkin, checkout, current_lines
             )
-            if pricelist_id:
+            if pricelist_id and not real_avail:
                 # TODO: only closed_departure take account checkout date!
                 domain_rules = [
                     ("date", ">=", checkin),
@@ -208,6 +210,14 @@ class PmsProperty(models.Model):
                         free_rooms = free_rooms.filtered(
                             lambda x: x.room_type_id.id not in room_types_to_remove
                         )
+            if class_id:
+                free_rooms = free_rooms.filtered(
+                    lambda x: x.room_type_id.class_id.id == class_id
+                )
+            if overnight_rooms:
+                free_rooms = free_rooms.filtered(
+                    lambda x: x.room_type_id.overnight_room
+                )
             if len(free_rooms) > 0:
                 pms_property.free_room_ids = free_rooms.ids
             else:
@@ -261,74 +271,83 @@ class PmsProperty(models.Model):
     @api.depends_context(
         "checkin",
         "checkout",
+        "real_avail",
         "room_type_id",
         "ubication_id",
         "capacity",
         "amenity_ids",
         "pricelist_id",
+        "class_id",
+        "overnight_rooms",
         "current_lines",
     )
     def _compute_availability(self):
-        self.ensure_one()
-        checkin = self._context["checkin"]
-        checkout = self._context["checkout"]
-        if isinstance(checkin, str):
-            checkin = datetime.datetime.strptime(
-                checkin, DEFAULT_SERVER_DATE_FORMAT
-            ).date()
-        if isinstance(checkout, str):
-            checkout = datetime.datetime.strptime(
-                checkout, DEFAULT_SERVER_DATE_FORMAT
-            ).date()
-        room_type_id = self.env.context.get("room_type_id", False)
-        pricelist_id = self.env.context.get("pricelist_id", False)
-        current_lines = self.env.context.get("current_lines", [])
-        pms_property = self.with_context(
-            checkin=checkin,
-            checkout=checkout,
-            room_type_id=room_type_id,
-            current_lines=current_lines,
-            pricelist_id=pricelist_id,
-        )
-        count_free_rooms = len(pms_property.free_room_ids)
-        if current_lines and not isinstance(current_lines, list):
-            current_lines = [current_lines]
-
-        domain_rules = [
-            ("date", ">=", checkin),
-            ("date", "<=", checkout),
-            ("pms_property_id", "=", pms_property.id),
-        ]
-        if room_type_id:
-            domain_rules.append(("room_type_id", "=", room_type_id))
-
-        pricelist = False
-        if pricelist_id:
-            pricelist = self.env["product.pricelist"].browse(pricelist_id)
-        if pricelist and pricelist.availability_plan_id:
-            domain_rules.append(
-                ("availability_plan_id", "=", pricelist.availability_plan_id.id)
+        for record in self:
+            checkin = self._context["checkin"]
+            checkout = self._context["checkout"]
+            if isinstance(checkin, str):
+                checkin = datetime.datetime.strptime(
+                    checkin, DEFAULT_SERVER_DATE_FORMAT
+                ).date()
+            if isinstance(checkout, str):
+                checkout = datetime.datetime.strptime(
+                    checkout, DEFAULT_SERVER_DATE_FORMAT
+                ).date()
+            room_type_id = self.env.context.get("room_type_id", False)
+            pricelist_id = self.env.context.get("pricelist_id", False)
+            current_lines = self.env.context.get("current_lines", [])
+            class_id = self._context.get("class_id", False)
+            real_avail = self._context.get("real_avail", False)
+            overnight_rooms = self._context.get("overnight_rooms", False)
+            pms_property = record.with_context(
+                checkin=checkin,
+                checkout=checkout,
+                room_type_id=room_type_id,
+                current_lines=current_lines,
+                pricelist_id=pricelist_id,
+                class_id=class_id,
+                real_avail=real_avail,
+                overnight_rooms=overnight_rooms,
             )
-            rule_groups = self.env["pms.availability.plan.rule"].read_group(
-                domain_rules,
-                ["plan_avail:sum"],
-                ["date:day"],
-                lazy=False,
-            )
-            if len(rule_groups) > 0:
-                # If in the group per day, some room type has the sale blocked,
-                # we must subtract from that day the availability of that room type
-                for group in rule_groups:
-                    items = self.env["pms.availability.plan.rule"].search(
-                        group["__domain"]
-                    )
-                    for item in items:
-                        if pricelist.availability_plan_id.any_rule_applies(
-                            checkin, checkout, item
-                        ):
-                            group["plan_avail"] -= item.plan_avail
-                count_free_rooms = min(i["plan_avail"] for i in rule_groups)
-        self.availability = count_free_rooms
+            count_free_rooms = len(pms_property.free_room_ids)
+            if current_lines and not isinstance(current_lines, list):
+                current_lines = [current_lines]
+
+            domain_rules = [
+                ("date", ">=", checkin),
+                ("date", "<=", checkout),
+                ("pms_property_id", "=", pms_property.id),
+            ]
+            if room_type_id:
+                domain_rules.append(("room_type_id", "=", room_type_id))
+
+            pricelist = False
+            if pricelist_id:
+                pricelist = self.env["product.pricelist"].browse(pricelist_id)
+            if pricelist and pricelist.availability_plan_id and not real_avail:
+                domain_rules.append(
+                    ("availability_plan_id", "=", pricelist.availability_plan_id.id)
+                )
+                rule_groups = self.env["pms.availability.plan.rule"].read_group(
+                    domain_rules,
+                    ["plan_avail:sum"],
+                    ["date:day"],
+                    lazy=False,
+                )
+                if len(rule_groups) > 0:
+                    # If in the group per day, some room type has the sale blocked,
+                    # we must subtract from that day the availability of that room type
+                    for group in rule_groups:
+                        items = self.env["pms.availability.plan.rule"].search(
+                            group["__domain"]
+                        )
+                        for item in items:
+                            if pricelist.availability_plan_id.any_rule_applies(
+                                checkin, checkout, item
+                            ):
+                                group["plan_avail"] -= item.plan_avail
+                    count_free_rooms = min(i["plan_avail"] for i in rule_groups)
+            record.availability = count_free_rooms
 
     @api.model
     def splitted_availability(
@@ -395,19 +414,23 @@ class PmsProperty(models.Model):
 
     def date_property_timezone(self, dt):
         self.ensure_one()
-        tz_property = self.tz
-        dt = pytz.timezone(tz_property).localize(dt)
-        dt = dt.replace(tzinfo=None)
-        dt = pytz.timezone(self.env.user.tz).localize(dt)
-        dt = dt.astimezone(pytz.utc)
-        dt = dt.replace(tzinfo=None)
+        if self.env.user:
+            tz_property = self.tz
+            dt = pytz.timezone(tz_property).localize(dt)
+            dt = dt.replace(tzinfo=None)
+            dt = pytz.timezone(self.env.user.tz or "UTC").localize(dt)
+            dt = dt.astimezone(pytz.utc)
+            dt = dt.replace(tzinfo=None)
         return dt
 
-    def _get_payment_methods(self):
+    def _get_payment_methods(self, automatic_included=False):
+        # We use automatic_included to True to see absolutely
+        # all the journals with associated payments, if it is
+        # false, we will only see those journals that can be used
+        # to pay manually
         self.ensure_one()
         payment_methods = self.env["account.journal"].search(
             [
-                "&",
                 ("type", "in", ["cash", "bank"]),
                 "|",
                 ("pms_property_ids", "in", self.id),
@@ -420,6 +443,8 @@ class PmsProperty(models.Model):
                 ("company_id", "=", False),
             ]
         )
+        if not automatic_included:
+            payment_methods = payment_methods.filtered(lambda p: p.allowed_pms_payments)
         return payment_methods
 
     @api.model

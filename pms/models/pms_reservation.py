@@ -22,8 +22,8 @@ class PmsReservation(models.Model):
     _check_company_auto = True
 
     name = fields.Text(
-        string="Reservation Id",
-        help="Reservation Name",
+        string="Reservation Code",
+        help="Reservation Code Identification",
         readonly=True,
     )
     priority = fields.Integer(
@@ -637,14 +637,16 @@ class PmsReservation(models.Model):
 
     possible_existing_customer_ids = fields.One2many(
         string="Possible existing customer",
-        readonly=False,
-        store=True,
         compute="_compute_possible_existing_customer_ids",
         comodel_name="res.partner",
         inverse_name="reservation_possible_customer_id",
     )
-
-    is_mail_send = fields.Boolean(string="Mail Sent", default=False)
+    to_send_mail = fields.Boolean(
+        string="Mail Sent",
+        compute="_compute_to_send_mail",
+        readonly=False,
+        store=True,
+    )
 
     is_modified_reservation = fields.Boolean(
         string="Is A Modified Reservation",
@@ -652,7 +654,10 @@ class PmsReservation(models.Model):
         readonly=False,
         store=True,
     )
-
+    overnight_room = fields.Boolean(
+        related="room_type_id.overnight_room",
+        store=True,
+    )
     lang = fields.Many2one(
         string="Language", comodel_name="res.lang", compute="_compute_lang"
     )
@@ -804,6 +809,7 @@ class PmsReservation(models.Model):
         "reservation_line_ids.room_id",
         "reservation_line_ids.occupies_availability",
         "preferred_room_id",
+        "room_type_id",
         "pricelist_id",
         "pms_property_id",
     )
@@ -812,7 +818,9 @@ class PmsReservation(models.Model):
             if reservation.checkin and reservation.checkout:
                 if reservation.overbooking or reservation.state in ("cancel"):
                     reservation.allowed_room_ids = self.env["pms.room"].search(
-                        [("active", "=", True)]
+                        [
+                            ("active", "=", True),
+                        ]
                     )
                     return
                 pms_property = reservation.pms_property_id
@@ -822,9 +830,12 @@ class PmsReservation(models.Model):
                     room_type_id=False,  # Allows to choose any available room
                     current_lines=reservation.reservation_line_ids.ids,
                     pricelist_id=reservation.pricelist_id.id,
+                    class_id=reservation.room_type_id.class_id.id
+                    if reservation.room_type_id
+                    else False,
+                    real_avail=True,
                 )
                 reservation.allowed_room_ids = pms_property.free_room_ids
-
             else:
                 reservation.allowed_room_ids = False
 
@@ -929,9 +940,15 @@ class PmsReservation(models.Model):
                 reservation.pricelist_id = (
                     reservation.agency_id.property_product_pricelist
                 )
+            # only change de pricelist if the reservation is not yet saved
+            # and the partner has a pricelist default
             elif (
                 reservation.partner_id
                 and reservation.partner_id.property_product_pricelist
+                and (
+                    not reservation.pricelist_id
+                    or not isinstance(reservation.id, models.NewId)
+                )
             ):
                 reservation.pricelist_id = (
                     reservation.partner_id.property_product_pricelist
@@ -1045,6 +1062,7 @@ class PmsReservation(models.Model):
                 True
                 if (
                     record.reservation_type != "out"
+                    and record.overnight_room
                     and record.state in ["draft", "confirm", "arrival_delayed"]
                     and record.checkin <= fields.Date.today()
                 )
@@ -1135,6 +1153,11 @@ class PmsReservation(models.Model):
             # date checking
             record.check_in_out_dates()
 
+    def _compute_precheckin_url(self):
+        super(PmsReservation, self)._compute_access_url()
+        for reservation in self:
+            reservation.access_url = "/my/reservations/precheckin/%s" % (reservation.id)
+
     @api.depends("pms_property_id", "folio_id")
     def _compute_arrival_hour(self):
         for record in self:
@@ -1192,9 +1215,11 @@ class PmsReservation(models.Model):
                 reservation.commission_amount = 0
 
     # REVIEW: Dont run with set room_type_id -> room_id(compute)-> No set adults¿?
-    @api.depends("preferred_room_id", "reservation_type")
+    @api.depends("preferred_room_id", "reservation_type", "overnight_room")
     def _compute_adults(self):
         for reservation in self:
+            if not reservation.overnight_room:
+                reservation.adults = 0
             if reservation.preferred_room_id and reservation.reservation_type != "out":
                 if reservation.adults == 0:
                     reservation.adults = reservation.preferred_room_id.capacity
@@ -1379,7 +1404,7 @@ class PmsReservation(models.Model):
 
     def _compute_checkin_partner_count(self):
         for record in self:
-            if record.reservation_type != "out":
+            if record.reservation_type != "out" and record.overnight_room:
                 record.checkin_partner_count = len(record.checkin_partner_ids)
                 record.checkin_partner_pending_count = record.adults - len(
                     record.checkin_partner_ids
@@ -1454,9 +1479,9 @@ class PmsReservation(models.Model):
         for record in self:
             if record.state in "draft":
                 record.is_modified_reservation = False
-            elif record.state in ("confirm", "onboard") and record.is_mail_send:
+            elif record.state in ("confirm", "onboard") and not record.to_send_mail:
                 record.is_modified_reservation = True
-                record.is_mail_send = False
+                record.to_send_mail = True
             else:
                 record.is_modified_reservation = False
 
@@ -1467,6 +1492,14 @@ class PmsReservation(models.Model):
                 record.lang = record.partner_id.lang
             else:
                 record.lang = self.env["res.lang"].get_installed()
+
+    @api.depends("reservation_type")
+    def _compute_to_send_mail(self):
+        for record in self:
+            if record.reservation_type == "out":
+                record.to_send_mail = False
+            else:
+                record.to_send_mail = True
 
     def _search_allowed_checkin(self, operator, value):
         if operator not in ("=",):
@@ -1483,6 +1516,7 @@ class PmsReservation(models.Model):
         return [
             ("state", "in", ("draft", "confirm", "arrival_delayed")),
             ("checkin", "<=", today),
+            ("adults", ">", 0),
         ]
 
     def _search_allowed_checkout(self, operator, value):
@@ -1500,6 +1534,7 @@ class PmsReservation(models.Model):
         return [
             ("state", "in", ("onboard", "departure_delayed")),
             ("checkout", ">=", today),
+            ("adults", ">", 0),
         ]
 
     def _search_allowed_cancel(self, operator, value):
@@ -1621,9 +1656,10 @@ class PmsReservation(models.Model):
     @api.constrains("check_adults")
     def _check_capacity(self):
         for record in self:
-            self.env["pms.room"]._check_adults(
-                record, record.service_ids.service_line_ids
-            )
+            if record.reservation_type != "out":
+                self.env["pms.room"]._check_adults(
+                    record, record.service_ids.service_line_ids
+                )
 
     @api.constrains("reservation_type")
     def _check_same_reservation_type(self):
@@ -1709,38 +1745,36 @@ class PmsReservation(models.Model):
     def action_open_mail_composer(self):
         self.ensure_one()
         template = False
+        pms_property = self.pms_property_id
         if (
-            not self.is_mail_send
+            self.to_send_mail
             and not self.is_modified_reservation
             and self.state not in "cancel"
         ):
-            template = self.env.ref(
-                "pms.confirmed_reservation_email", raise_if_not_found=False
-            )
+            if pms_property.property_confirmed_template:
+                template = pms_property.property_confirmed_template
         elif (
-            not self.is_mail_send
+            self.to_send_mail
             and self.is_modified_reservation
             and self.state not in "cancel"
         ):
-            template = self.env.ref(
-                "pms.modified_reservation_email", raise_if_not_found=False
-            )
-        elif not self.is_mail_send and self.state in "cancel":
-            template = self.env.ref(
-                "pms.cancelled_reservation_email", raise_if_not_found=False
-            )
+            if pms_property.property_modified_template:
+                template = pms_property.property_modified_template
+        elif self.to_send_mail and self.state in "cancel":
+            if pms_property.property_canceled_template:
+                template = pms_property.property_canceled_template
         compose_form = self.env.ref(
             "mail.email_compose_message_wizard_form", raise_if_not_found=False
         )
         ctx = dict(
-            model="pms.reservation",
-            default_res_model="pms.reservation",
-            default_res_id=self.id,
+            model="pms.folio",
+            default_res_model="pms.folio",
+            default_res_id=self.folio_id.id,
             template_id=template and template.id or False,
             composition_mode="comment",
             partner_ids=[self.partner_id.id],
             force_email=True,
-            record_id=self.id,
+            record_id=self.folio_id.id,
         )
         return {
             "name": _("Send Confirmed Reservation Mail "),
@@ -1914,7 +1948,7 @@ class PmsReservation(models.Model):
             else:
                 record.state = "cancel"
                 record.folio_id._compute_amount()
-                record.is_mail_send = False
+                record.to_send_mail = True
 
     def action_assign(self):
         for record in self:
@@ -2009,7 +2043,9 @@ class PmsReservation(models.Model):
                 ("checkin", "<", fields.Date.today()),
             ]
         )
-        arrival_delayed_reservations.state = "arrival_delayed"
+        for record in arrival_delayed_reservations:
+            if record.overnight_room:
+                record.state = "arrival_delayed"
 
     @api.model
     def auto_departure_delayed(self):
@@ -2021,8 +2057,11 @@ class PmsReservation(models.Model):
             ]
         )
         for reservation in reservations:
-            if reservation.checkout_datetime <= fields.Datetime.now():
-                reservations.state = "departure_delayed"
+            if reservation.overnight_room:
+                if reservation.checkout_datetime <= fields.Datetime.now():
+                    reservations.state = "departure_delayed"
+            else:
+                reservation.state = "done"
 
     def preview_reservation(self):
         self.ensure_one()

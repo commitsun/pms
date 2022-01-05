@@ -3,16 +3,20 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 import json
-import re
+from datetime import datetime
+
+from dateutil.relativedelta import relativedelta
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
+from odoo.tools import DEFAULT_SERVER_DATE_FORMAT
 from odoo.tools.safe_eval import safe_eval
 
 
 class PmsCheckinPartner(models.Model):
     _name = "pms.checkin.partner"
     _description = "Partner Checkins"
+    _inherit = ["portal.mixin"]
     _rec_name = "identifier"
     _check_pms_properties_auto = True
 
@@ -215,8 +219,6 @@ class PmsCheckinPartner(models.Model):
 
     possible_existing_customer_ids = fields.One2many(
         string="Possible existing customer",
-        readonly=False,
-        store=True,
         compute="_compute_possible_existing_customer_ids",
         comodel_name="res.partner",
         inverse_name="checkin_partner_possible_customer_id",
@@ -321,10 +323,12 @@ class PmsCheckinPartner(models.Model):
                 record.state = "draft"
             if record.reservation_id.state == "cancel":
                 record.state = "cancel"
-            elif record.state in ("draft", "cancel"):
+            elif record.state in ("draft", "precheckin", "cancel"):
                 if any(
                     not getattr(record, field)
-                    for field in record._checkin_mandatory_fields()
+                    for field in record._checkin_mandatory_fields(
+                        country=record.nationality_id
+                    )
                 ):
                     record.state = "draft"
                 else:
@@ -460,6 +464,13 @@ class PmsCheckinPartner(models.Model):
             else:
                 record.partner_incongruences = False
 
+    def _compute_access_url(self):
+        super(PmsCheckinPartner, self)._compute_access_url()
+        for checkin in self:
+            checkin.access_url = "/my/precheckin/%s" % (checkin.id)
+
+    # Constraints and onchanges
+
     @api.constrains("departure", "arrival")
     def _check_departure(self):
         for record in self:
@@ -482,29 +493,30 @@ class PmsCheckinPartner(models.Model):
                         _("This guest is already registered in the room")
                     )
 
-    @api.constrains("email")
-    def check_email_pattern(self):
-        for record in self:
-            if record.email:
-                if not re.search(
-                    r"^[a-zA-Z0-9]([a-zA-z0-9\-\_]*[\.]?[a-zA-Z0-9\-\_]+)*"
-                    r"@([a-zA-z0-9\-]+([\.][a-zA-Z0-9\-\_]+)?\.[a-zA-Z0-9]+)+$",
-                    record.email,
-                ):
-                    raise ValidationError(_("'%s' is not a valid email", record.email))
+    # REVIEW: Redesign email & mobile control (res.partner? other module in OCA?)
+    # @api.constrains("email")
+    # def check_email_pattern(self):
+    #     for record in self:
+    #         if record.email:
+    #             if not re.search(
+    #                 r"^[a-zA-Z0-9]([a-zA-z0-9\-\_]*[\.]?[a-zA-Z0-9\-\_]+)*"
+    #                 r"@([a-zA-z0-9\-]+([\.][a-zA-Z0-9\-\_]+)?\.[a-zA-Z0-9]+)+$",
+    #                 record.email,
+    #             ):
+    #                 raise ValidationError(_("'%s' is not a valid email", record.email))
 
-    @api.constrains("mobile")
-    def check_phone_pattern(self):
+    # @api.constrains("mobile")
+    # def check_phone_pattern(self):
 
-        for record in self:
-            if record.mobile:
+    #     for record in self:
+    #         if record.mobile:
 
-                if not re.search(
-                    r"^(\d{3}[\-\s]?\d{2}[\-\s]?\d{2}[\-\s]?\d{2}[\-\s]?|"
-                    r"\d{3}[\-\s]?\d{3}[\-\s]?\d{3})$",
-                    str(record.mobile),
-                ):
-                    raise ValidationError(_("'%s' is not a valid phone", record.mobile))
+    #             if not re.search(
+    #                 r"^(\d{3}[\-\s]?\d{2}[\-\s]?\d{2}[\-\s]?\d{2}[\-\s]?|"
+    #                 r"\d{3}[\-\s]?\d{3}[\-\s]?\d{3})$",
+    #                 str(record.mobile),
+    #             ):
+    #                 raise ValidationError(_("'%s' is not a valid phone", record.mobile))
 
     @api.constrains("document_number")
     def check_document_number(self):
@@ -598,24 +610,18 @@ class PmsCheckinPartner(models.Model):
         return res
 
     @api.model
-    def _checkin_mandatory_fields(self, depends=False):
-        # api.depends need "reservation_id.state" in the lambda function
-        if depends:
-            return ["reservation_id.state", "name"]
+    def _checkin_mandatory_fields(self, country=False, depends=False):
         mandatory_fields = [
             "name",
-            "birthdate_date",
-            "gender",
-            "document_number",
-            "document_type",
-            "document_expedition_date",
         ]
+        # api.depends need "reservation_id.state" in the lambda function
+        if depends:
+            mandatory_fields.extend(["reservation_id.state", "name"])
 
         return mandatory_fields
 
     @api.model
     def _checkin_partner_fields(self):
-        # api.depends need "reservation_id.state" in the lambda function
         checkin_fields = [
             "firstname",
             "lastname",
@@ -649,11 +655,35 @@ class PmsCheckinPartner(models.Model):
                 checkin_vals[key] = value
             checkin.write(checkin_vals)
 
+    @api.model
+    def calculate_doc_type_expedition_date_from_validity_date(
+        self, doc_type, doc_date, birthdate
+    ):
+        today = fields.datetime.today()
+        datetime_doc_date = datetime.strptime(doc_date, DEFAULT_SERVER_DATE_FORMAT)
+        if datetime_doc_date < today:
+            return datetime_doc_date
+        datetime_birthdate = datetime.strptime(birthdate, DEFAULT_SERVER_DATE_FORMAT)
+        age = today.year - datetime_birthdate.year
+        document_type = self.env["res.partner.id_category"].search(
+            [("id", "=", doc_type)]
+        )
+        document_expedition_date = False
+        if document_type.code == "D" or document_type.code == "P":
+            if age < 30:
+                document_expedition_date = datetime_doc_date - relativedelta(years=5)
+            else:
+                document_expedition_date = datetime_doc_date - relativedelta(years=10)
+        if document_type.code == "C":
+            if age < 70:
+                document_expedition_date = datetime_doc_date - relativedelta(years=10)
+        return document_expedition_date
+
     def action_on_board(self):
         for record in self:
             if record.reservation_id.checkin > fields.Date.today():
                 raise ValidationError(_("It is not yet checkin day!"))
-            if record.reservation_id.checkout <= fields.Date.today():
+            if record.reservation_id.checkout < fields.Date.today():
                 raise ValidationError(_("Its too late to checkin"))
 
             if any(
@@ -704,3 +734,57 @@ class PmsCheckinPartner(models.Model):
             "type": "ir.actions.act_window",
             "context": ctx,
         }
+
+    def _save_data_from_portal(self, values):
+        checkin_partner = self.env["pms.checkin.partner"].browse(int(values.get("id")))
+        if values.get("nationality_id"):
+            nationality_id = self.env["res.country"].search(
+                [("id", "=", values.get("nationality_id"))]
+            )
+            values.update({"nationality_id": nationality_id.id})
+        else:
+            values.update({"nationality_id": False})
+        if not values.get("document_type"):
+            values.update({"document_type": False})
+        if values.get("state"):
+            state_id = self.env["res.country.state"].search(
+                [("id", "=", values.get("state"))]
+            )
+            values.update({"state_id": state_id})
+            values.pop("state")
+        if values.get("document_expedition_date"):
+            doc_type = values.get("document_type")
+            doc_date = values.get("document_expedition_date")
+            birthdate = values.get("birthdate_date")
+            document_expedition_date = (
+                self.calculate_doc_type_expedition_date_from_validity_date(
+                    doc_type, doc_date, birthdate
+                )
+            )
+            values.update({"document_expedition_date": document_expedition_date})
+        checkin_partner.sudo().write(values)
+
+    def send_portal_invitation_email(self, invitation_firstname=None, email=None):
+        template = self.sudo().env.ref(
+            "pms.precheckin_invitation_email", raise_if_not_found=False
+        )
+        subject = template._render_field(
+            "subject", [6, 0, self.id], compute_lang=True, post_process=True
+        )[self.id]
+        body = template._render_field(
+            "body_html", [6, 0, self.id], compute_lang=True, post_process=True
+        )[self.id]
+        invitation_mail = (
+            self.env["mail.mail"]
+            .sudo()
+            .create(
+                {
+                    "subject": subject,
+                    "body_html": body,
+                    "email_from": self.pms_property_id.partner_id.email,
+                    "email_to": email,
+                }
+            )
+        )
+
+        invitation_mail.send()

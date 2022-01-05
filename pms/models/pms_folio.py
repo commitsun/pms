@@ -9,6 +9,8 @@ from odoo import _, api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tools import float_is_zero
 
+from odoo.addons.base.models.ir_mail_server import MailDeliveryException
+
 _logger = logging.getLogger(__name__)
 
 
@@ -181,16 +183,37 @@ class PmsFolio(models.Model):
     )
     transaction_ids = fields.Many2many(
         string="Transactions",
+        help="Payments made through payment acquirer",
         readonly=True,
         copy=False,
         comodel_name="payment.transaction",
-        relation="folio_transaction_rel",
+        relation="payment_transaction_folio_rel",
         column1="folio_id",
-        column2="transaction_id",
+        column2="payment_transaction_id",
+    )
+    payment_ids = fields.Many2many(
+        string="Bank Payments",
+        help="Payments made by bank direct",
+        readonly=True,
+        copy=False,
+        comodel_name="account.payment",
+        relation="account_payment_folio_rel",
+        column1="folio_id",
+        column2="payment_id",
+    )
+    statement_line_ids = fields.Many2many(
+        string="Cash Payments",
+        help="Payments made by cash",
+        readonly=True,
+        copy=False,
+        comodel_name="account.bank.statement.line",
+        relation="account_bank_statement_folio_rel",
+        column1="folio_id",
+        column2="account_journal_id",
     )
     payment_term_id = fields.Many2one(
         string="Payment Terms",
-        help="Pricelist for current folio.",
+        help="Payment terms for current folio.",
         readonly=False,
         store=True,
         comodel_name="account.payment.term",
@@ -471,11 +494,23 @@ class PmsFolio(models.Model):
 
     possible_existing_customer_ids = fields.One2many(
         string="Possible existing customer",
-        readonly=False,
-        store=True,
         compute="_compute_possible_existing_customer_ids",
         comodel_name="res.partner",
         inverse_name="folio_possible_customer_id",
+    )
+
+    first_checkin = fields.Date(
+        string="First Folio Checkin",
+        readonly=False,
+        store=True,
+        compute="_compute_first_checkin",
+    )
+
+    last_checkout = fields.Date(
+        string="Last Folio Checkout",
+        readonly=False,
+        store=True,
+        compute="_compute_last_checkout",
     )
 
     def name_get(self):
@@ -770,6 +805,8 @@ class PmsFolio(models.Model):
     #     else:
     #         raise UserError(_("Some reservations have different currency"))
 
+    # is_checkin = fields.Boolean()
+
     def _compute_access_url(self):
         super(PmsFolio, self)._compute_access_url()
         for folio in self:
@@ -941,7 +978,9 @@ class PmsFolio(models.Model):
                 }
                 record.update(vals)
             else:
-                journals = record.pms_property_id._get_payment_methods()
+                journals = record.pms_property_id._get_payment_methods(
+                    automatic_included=True
+                )
                 paid_out = 0
                 for journal in journals:
                     paid_out += sum(
@@ -1035,6 +1074,20 @@ class PmsFolio(models.Model):
                 else:
                     record.possible_existing_customer_ids = False
 
+    @api.depends("reservation_ids", "reservation_ids.checkin")
+    def _compute_first_checkin(self):
+        for record in self:
+            if record.reservation_ids:
+                checkins = record.reservation_ids.mapped("checkin")
+                record.first_checkin = min(checkins)
+
+    @api.depends("reservation_ids", "reservation_ids.checkout")
+    def _compute_last_checkout(self):
+        for record in self:
+            if record.reservation_ids:
+                checkouts = record.reservation_ids.mapped("checkout")
+                record.last_checkout = max(checkouts)
+
     def _search_invoice_ids(self, operator, value):
         if operator == "in" and value:
             self.env.cr.execute(
@@ -1093,6 +1146,7 @@ class PmsFolio(models.Model):
             pms_property = self.env["pms.property"].browse(pms_property_id)
             vals["name"] = pms_property.folio_sequence_id._next_do()
         result = super(PmsFolio, self).create(vals)
+        result.access_token = result._portal_ensure_token()
         return result
 
     def action_pay(self):
@@ -1226,17 +1280,172 @@ class PmsFolio(models.Model):
         if self.env.context.get("confirm_all_reservations"):
             self.reservation_ids.confirm()
 
-        # if self.env.context.get('send_email'):
-        # self.force_quotation_send()
-
-        # create an analytic account if at least an expense product
-        # if any([expense_policy != 'no' for expense_policy in
-        # self.sale_line_ids.mapped('product_id.expense_policy')]):
-        # if not self.analytic_account_id:
-        # self._create_analytic_account()
         return True
 
     # CHECKIN/OUT PROCESS
+
+    @api.model
+    def send_confirmation_mail(self):
+        folios = self.env["pms.folio"].search(
+            [
+                ("pms_property_id.is_confirmed_auto_mail", "=", True),
+                ("reservation_ids.to_send_mail", "=", True),
+                ("reservation_ids.is_modified_reservation", "=", False),
+                ("reservation_ids.state", "!=", "cancel"),
+            ]
+        )
+        for folio in folios:
+            if folio.email and folio.create_date.date() == fields.Date.today():
+                template = folio.pms_property_id.property_confirmed_template
+                subject = template._render_field(
+                    "subject",
+                    [6, 0, folio.id],
+                    compute_lang=True,
+                )[folio.id]
+                body = template._render_field(
+                    "body_html",
+                    [6, 0, folio.id],
+                    compute_lang=True,
+                )[folio.id]
+                mail = (
+                    folio.env["mail.mail"]
+                    .sudo()
+                    .create(
+                        {
+                            "subject": subject,
+                            "body_html": body,
+                            "email_from": folio.pms_property_id.partner_id.email,
+                            "email_to": folio.email,
+                        }
+                    )
+                )
+                try:
+                    mail.send()
+                except MailDeliveryException:
+                    self.env["ir.logging"].create(
+                        {
+                            "name": "Failed to send confirmation email to "
+                            + folio.email,
+                            "type": "server",
+                            "path": "pms/pms/models/pms_folio.py",
+                            "line": "1339",
+                            "func": "send_confirmation_email",
+                            "message": "Confirmation Mail Delivery Failed",
+                        }
+                    )
+                for reservation in folio.reservation_ids:
+                    reservation.to_send_mail = False
+
+    @api.model
+    def send_modification_mail(self):
+        folios = self.env["pms.folio"].search(
+            [
+                ("pms_property_id.is_modified_auto_mail", "=", True),
+                ("reservation_ids.to_send_mail", "=", True),
+                ("reservation_ids.is_modified_reservation", "=", True),
+                ("reservation_ids.state", "!=", "cancel"),
+            ]
+        )
+        for folio in folios:
+            if folio.email:
+                template = folio.pms_property_id.property_modified_template
+                subject = template._render_field(
+                    "subject",
+                    [6, 0, folio.id],
+                    compute_lang=True,
+                    post_process=True,
+                )[folio.id]
+                body = template._render_field(
+                    "body_html",
+                    [6, 0, folio.id],
+                    compute_lang=True,
+                    post_process=True,
+                )[folio.id]
+                mail = (
+                    folio.env["mail.mail"]
+                    .sudo()
+                    .create(
+                        {
+                            "subject": subject,
+                            "body_html": body,
+                            "email_from": folio.pms_property_id.partner_id.email,
+                            "email_to": folio.email,
+                        }
+                    )
+                )
+                try:
+                    mail.send()
+                except MailDeliveryException:
+                    self.env["ir.logging"].create(
+                        {
+                            "name": "Failed to send modification email to "
+                            + folio.email,
+                            "type": "server",
+                            "path": "pms/pms/models/pms_folio.py",
+                            "line": "1391",
+                            "func": "send_modification_email",
+                            "message": "Modification Mail Delivery Failed",
+                        }
+                    )
+                for reservation in folio.reservation_ids:
+                    reservation.to_send_mail = False
+
+    @api.model
+    def send_cancelation_mail(self):
+        folios = self.env["pms.folio"].search(
+            [("pms_property_id.is_canceled_auto_mail", "=", True)]
+        )
+        for folio in folios:
+            reservations = folio.reservation_ids.filtered(lambda r: r.state in "cancel")
+            for reservation in reservations:
+                if reservation.email:
+                    if (
+                        not reservation.to_send_mail
+                        and reservation.email
+                        and reservation.state not in "out"
+                    ):
+                        template = (
+                            reservation.pms_property_id.property_canceled_template
+                        )
+                        subject = template._render_field(
+                            "subject",
+                            [6, 0, reservation.id],
+                            compute_lang=True,
+                            post_process=True,
+                        )[reservation.id]
+                        body = template._render_field(
+                            "body_html",
+                            [6, 0, reservation.id],
+                            compute_lang=True,
+                            post_process=True,
+                        )[reservation.id]
+                        mail = (
+                            folio.env["mail.mail"]
+                            .sudo()
+                            .create(
+                                {
+                                    "subject": subject,
+                                    "body_html": body,
+                                    "email_from": folio.pms_property_id.partner_id.email,
+                                    "email_to": reservation.email,
+                                }
+                            )
+                        )
+                        try:
+                            mail.send()
+                        except MailDeliveryException:
+                            self.env["ir.logging"].create(
+                                {
+                                    "name": "Failed to send cancellation email to "
+                                    + reservation.email,
+                                    "type": "server",
+                                    "path": "pms/pms/models/pms_folio.py",
+                                    "line": "1450",
+                                    "func": "send_cancelation_email",
+                                    "message": "Cancellation Mail Delivery Failed",
+                                }
+                            )
+                        reservation.to_send_mail = False
 
     def action_view_invoice(self):
         invoices = self.mapped("move_ids")
@@ -1481,19 +1690,59 @@ class PmsFolio(models.Model):
         services=False,
         partner=False,
         date=False,
+        pay_type=False,
     ):
-        line = self._get_statement_line_vals(
-            journal=journal,
-            receivable_account=receivable_account,
-            user=user,
-            amount=amount,
-            folios=folio,
-            reservations=reservations,
-            services=services,
-            partner=partner,
-            date=date,
+        """
+        create folio payment
+        type: set cash to use statement or bank to use account.payment,
+        by default, use the journal type
+        """
+        if not pay_type:
+            pay_type = journal.type
+        if pay_type == "cash":
+            line = self._get_statement_line_vals(
+                journal=journal,
+                receivable_account=receivable_account,
+                user=user,
+                amount=amount,
+                folios=folio,
+                reservations=reservations,
+                services=services,
+                partner=partner,
+                date=date,
+            )
+            self.env["account.bank.statement.line"].sudo().create(line)
+        else:
+            vals = {
+                "journal_id": journal.id,
+                "partner_id": partner.id,
+                "amount": amount,
+                "date": fields.Date.today(),
+                "ref": folio.name,
+                "folio_ids": [(6, 0, [folio.id])],
+                "payment_type": "inbound",
+                "partner_type": "customer",
+                "state": "draft",
+            }
+            pay = self.env["account.payment"].create(vals)
+            pay.action_post()
+
+        folio.message_post(
+            body=_(
+                """Payment: <b>%s</b> by <b>%s</b>""",
+                amount,
+                journal.display_name,
+            )
         )
-        self.env["account.bank.statement.line"].sudo().create(line)
+        for reservation in folio.reservation_ids:
+            reservation.message_post(
+                body=_(
+                    """Payment: <b>%s</b> by <b>%s</b>""",
+                    amount,
+                    journal.display_name,
+                )
+            )
+        return True
 
     def open_wizard_several_partners(self):
         ctx = dict(
@@ -1892,3 +2141,78 @@ class PmsFolio(models.Model):
                 }
                 self.env["res.partner.id_number"].create(number_values)
         record.partner_id = partner
+
+    def _create_payment_transaction(self, vals):
+        # Ensure the currencies are the same.
+        currency = self[0].currency_id
+        if any(folio.currency_id != currency for folio in self):
+            raise ValidationError(
+                _(
+                    "A transaction can't be linked to folios having different currencies."
+                )
+            )
+
+        # Ensure the partner are the same.
+        partner = self[0].partner_id
+        if any(folio.partner_id != partner for folio in self):
+            raise ValidationError(
+                _("A transaction can't be linked to folios having different partners.")
+            )
+
+        # Try to retrieve the acquirer. However, fallback to the token's acquirer.
+        acquirer_id = vals.get("acquirer_id")
+        acquirer = None
+        payment_token_id = vals.get("payment_token_id")
+
+        if payment_token_id:
+            payment_token = self.env["payment.token"].sudo().browse(payment_token_id)
+
+            # Check payment_token/acquirer matching or take the acquirer from token
+            if acquirer_id:
+                acquirer = self.env["payment.acquirer"].browse(acquirer_id)
+                if payment_token and payment_token.acquirer_id != acquirer:
+                    raise ValidationError(
+                        _("Invalid token found! Token acquirer %s != %s")
+                        % (payment_token.acquirer_id.name, acquirer.name)
+                    )
+                if payment_token and payment_token.partner_id != partner:
+                    raise ValidationError(
+                        _("Invalid token found! Token partner %s != %s")
+                        % (payment_token.partner.name, partner.name)
+                    )
+            else:
+                acquirer = payment_token.acquirer_id
+
+        # Check an acquirer is there.
+        if not acquirer_id and not acquirer:
+            raise ValidationError(
+                _("A payment acquirer is required to create a transaction.")
+            )
+
+        if not acquirer:
+            acquirer = self.env["payment.acquirer"].browse(acquirer_id)
+
+        # Check a journal is set on acquirer.
+        if not acquirer.journal_id:
+            raise ValidationError(
+                _("A journal must be specified for the acquirer %s.", acquirer.name)
+            )
+
+        if not acquirer_id and acquirer:
+            vals["acquirer_id"] = acquirer.id
+
+        vals.update(
+            {
+                "amount": sum(self.mapped("amount_total")),
+                "currency_id": currency.id,
+                "partner_id": partner.id,
+                "folio_ids": [(6, 0, self.ids)],
+            }
+        )
+        transaction = self.env["payment.transaction"].create(vals)
+
+        # Process directly if payment_token
+        if transaction.payment_token_id:
+            transaction.s2s_do_transaction()
+
+        return transaction

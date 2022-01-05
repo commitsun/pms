@@ -79,6 +79,7 @@ class TravellerReport(models.TransientModel):
                     ("state", "=", "onboard"),
                     ("arrival", ">=", str(date.today()) + " 0:00:00"),
                     ("arrival", "<=", str(date.today()) + " 23:59:59"),
+                    ("pms_property_id", "=", pms_property.id),
                 ]
             )
             # build the property info record
@@ -101,11 +102,11 @@ class TravellerReport(models.TransientModel):
             for line in lines:
                 content += "2"
                 # [P|N|..]
-                if line.document_type != "D":
+                if line.document_type.code != "D":
                     content += "||" + line.document_number.upper() + "|"
                 else:
                     content += "|" + line.document_number.upper() + "||"
-                content += line.document_type + "|"
+                content += line.document_type.code + "|"
                 content += line.document_expedition_date.strftime("%Y%m%d") + "|"
                 content += line.lastname.upper() + "|"
                 if line.lastname2:
@@ -469,4 +470,5 @@ class TravellerReport(models.TransientModel):
     @api.model
     def send_file_institution_async(self):
         for prop in self.env["pms.property"].search([]):
-            self.with_delay().send_file_institution(prop)
+            if prop.institution:
+                self.with_delay().send_file_institution(prop)
