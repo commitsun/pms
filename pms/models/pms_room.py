@@ -101,13 +101,28 @@ class PmsRoom(models.Model):
         translate=True,
     )
 
+    short_name = fields.Char(
+        string="Short Name",
+        help="Four character name, made up of the first two letters of "
+        "the room name and two incremental numbers",
+        store=True,
+        readonly=False,
+        compute="_compute_short_name",
+    )
+
     _sql_constraints = [
         (
             "room_property_unique",
             "unique(name, pms_property_id)",
-            "you cannot have more than one room "
+            "You cannot have more than one room "
             "with the same name in the same property",
-        )
+        ),
+        (
+            "room_short_name_unique",
+            "unique(short_name, pms_property_id)",
+            "You cannot have more than one room "
+            "with the same short name in the same property",
+        ),
     ]
 
     @api.depends("child_ids")
@@ -117,6 +132,35 @@ class PmsRoom(models.Model):
                 record.is_shared_room = True
             elif not record.is_shared_room:
                 record.is_shared_room = False
+
+    @api.depends("name")
+    def _compute_short_name(self):
+        for record in self:
+            if record.name:
+                if len(record.name) > 4:
+                    short_name = record.name[:2].upper()
+                    rooms = self.env["pms.room"].search(
+                        [("pms_property_id", "=", record.pms_property_id.id)]
+                    )
+                    same_name_rooms = rooms.filtered(
+                        lambda room: room.name[:2].upper() == short_name
+                    )
+                    numbers_name = [0]
+                    for room in same_name_rooms:
+                        if room.short_name and room.short_name[:2] == short_name:
+                            if all(
+                                character.isdigit()
+                                for character in room.short_name[2:4]
+                            ):
+                                numbers_name.append(int(room.short_name[2:4]))
+                    max_number = max(numbers_name) + 1
+                    if max_number < 10:
+                        max_number = str(max_number).zfill(2)
+                    record.short_name = short_name + str(max_number)
+                else:
+                    record.short_name = record.name
+            else:
+                record.short_name = False
 
     def name_get(self):
         result = []
@@ -173,6 +217,14 @@ class PmsRoom(models.Model):
                             reservation.name,
                         )
                     )
+
+    @api.constrains("short_name")
+    def _check_short_name(self):
+        for record in self:
+            if len(record.short_name) > 4:
+                raise ValidationError(
+                    _("The short name can't contain more than 4 characters")
+                )
 
     # Business methods
 
