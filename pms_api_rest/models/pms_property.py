@@ -84,7 +84,11 @@ class PmsProperty(models.Model):
     to_assign_reservation_color = fields.Char(
         string="OTA Reservation To Assign",
         help="Color for to_assign reservations in the planning.",
+<<<<<<< HEAD
         default="rgba(237,114,46)",
+=======
+        default="rgba(237,114,46,)",
+>>>>>>> 647e4ce13 ([REF]pms_api_rest: changed property colors from module pms to module pms_api_rest)
     )
 
     pending_payment_reservation_color = fields.Char(
@@ -92,6 +96,7 @@ class PmsProperty(models.Model):
         help="Color for pending payment reservations in the planning.",
         default="rgba(162,70,137)",
     )
+<<<<<<< HEAD
 
     overpayment_reservation_color = fields.Char(
         string="Overpayment",
@@ -711,3 +716,5 @@ class PmsProperty(models.Model):
                             "room_type_ids": room_type_ids,
                         }
                     )
+=======
+>>>>>>> 647e4ce13 ([REF]pms_api_rest: changed property colors from module pms to module pms_api_rest)
