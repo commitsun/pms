@@ -181,13 +181,12 @@
                 <field name="sequence" widget="handle" />
                 <field name="pms_property_id" />
                 <field name="name" />
-                <field name="short_name" />
                 <field name="room_type_id" />
                 <field name="ubication_id" />
                 <field name="capacity" />
                 <field name="extra_beds_allowed" />
                 <field name="room_amenity_ids" widget="many2many_tags" />
-
+                <field name="short_name" />
             </tree>
         </field>
     </record>
