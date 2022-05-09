@@ -1,6 +1,7 @@
 from . import pms_folio_service
 from . import pms_room_service
 from . import pms_room_type_services
+from . import pms_room_type_class_services
 from . import pms_calendar_service
 from . import pms_partner_service
 
