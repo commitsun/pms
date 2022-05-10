@@ -21,3 +21,5 @@ from . import pms_pricelist
 from . import pms_pricelist_item
 
 from . import pms_search_param
+
+from . import pms_ubication
