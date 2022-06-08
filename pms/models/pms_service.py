@@ -601,6 +601,10 @@ class PmsService(models.Model):
                         "board_service"
                     ] = reservation.board_service_room_id.id
                 product = self.product_id.with_context(product_context)
+                # HOTFIX - board service breakfast price in property Toro
+                if product.id == 11 and origin.pms_property_id.id == 10:
+                    return 4.5
+
                 return self.env["account.tax"]._fix_tax_included_price_company(
                     self._get_display_price(product),
                     product.taxes_id,

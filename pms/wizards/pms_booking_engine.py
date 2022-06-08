@@ -447,8 +447,14 @@ class AvailabilityWizard(models.TransientModel):
             )
             nights = (checkout - checkin).days
             adults = adults or room_type.get_capacity()
-            room_type_total_price_per_room += (
-                board_service_room.amount * nights * adults
-            )
+            # HOTFIX: Price in board service breakfast toro
+            if (
+                board_service_room.pms_board_service_id.id == 1
+                and pms_property_id == 10
+            ):
+                amount = 4.5
+            else:
+                amount = board_service_room.amount
+            room_type_total_price_per_room += amount * nights * adults
 
         return room_type_total_price_per_room
