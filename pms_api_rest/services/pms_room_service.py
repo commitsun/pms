@@ -51,6 +51,7 @@ class PmsRoomService(Component):
                     roomTypeId=room.room_type_id,
                     capacity=room.capacity,
                     shortName=room.short_name,
+                    extraBedsAllowed=room.extra_beds_allowed,
                 )
             )
         return result_rooms
@@ -77,6 +78,7 @@ class PmsRoomService(Component):
                 roomTypeId=room.room_type_id,
                 capacity=room.capacity,
                 shortName=room.short_name,
+                extraBedsAllowed=room.extra_beds_allowed,
             )
         else:
             raise MissingError(_("Room not found"))
