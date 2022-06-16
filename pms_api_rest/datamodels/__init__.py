@@ -21,3 +21,6 @@ from . import pms_pricelist_item
 
 from . import pms_search_param
 from . import pms_extra_bed
+
+from . import pms_amenity_type
+from . import pms_amenity

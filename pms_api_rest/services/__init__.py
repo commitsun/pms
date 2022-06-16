@@ -9,3 +9,6 @@ from . import pms_property_service
 from . import pms_login_service
 from . import pms_pricelist_service
 from . import pms_extra_beds_service
+
+from . import pms_amenity_service
+from . import pms_amenity_type_service

@@ -18,3 +18,4 @@ class PmsRoomInfo(Datamodel):
     capacity = fields.Integer(required=False, allow_none=True)
     shortName = fields.String(required=False, allow_none=True)
     extraBedsAllowed = fields.Integer(required=False, allow_none=True)
+    roomAmenityIds = fields.List(fields.Integer(), required=False)
