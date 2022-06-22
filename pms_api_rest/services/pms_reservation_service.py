@@ -193,6 +193,11 @@ class PmsReservationService(Component):
                     {"pricelist_id": reservation_lines_changes.pricelistId}
                 )
 
+            if reservation_lines_changes.Overbooking:
+                reservation_vals.update(
+                    {"overbooking": reservation_lines_changes.Overbooking}
+                )
+
             reservation_to_update.write(reservation_vals)
 
     @restapi.method(
