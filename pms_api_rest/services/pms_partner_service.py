@@ -22,17 +22,29 @@ class PmsPartnerService(Component):
         auth="jwt_api_pms",
     )
     def get_partners(self):
-        domain = []
         result_partners = []
         PmsPartnerInfo = self.env.datamodels["pms.partner.info"]
-        for partner in self.env["res.partner"].search(
-            domain,
-        ):
+        for partner in self.env["res.partner"].search([]):
 
             result_partners.append(
                 PmsPartnerInfo(
                     id=partner.id,
                     name=partner.name if partner.name else None,
+                    firstname=partner.firstname if partner.firstname else None,
+                    lastname=partner.lastname if partner.lastname else None,
+                    lastname2=partner.lastname2 if partner.lastname2 else None,
+                    email=partner.email if partner.email else None,
+                    isAgency=partner.is_agency,
+                    countryId=partner.residence_country_id.id
+                    if partner.residence_country_id
+                    else None,
+                    countryChar=partner.residence_country_id.code_alpha3
+                    if partner.residence_country_id
+                    else None,
+                    countryName=partner.residence_country_id.name
+                    if partner.residence_country_id
+                    else None,
+                    tagIds=partner.category_id.ids if partner.category_id else [],
                 )
             )
         return result_partners
@@ -46,7 +58,7 @@ class PmsPartnerService(Component):
                 "GET",
             )
         ],
-        output_param=Datamodel("pms.checkin.partner.info", is_list=True),
+        output_param=Datamodel("pms.partner.info", is_list=True),
         auth="jwt_api_pms",
     )
     def get_partner_by_doc_number(self, document_type, document_number):
@@ -57,7 +69,7 @@ class PmsPartnerService(Component):
             [("name", "=", document_number), ("category_id", "=", doc_type.id)]
         )
         partners = []
-        PmsCheckinPartnerInfo = self.env.datamodels["pms.checkin.partner.info"]
+        PmsPartnerInfo = self.env.datamodels["pms.partner.info"]
         if not doc_number:
             pass
         else:
@@ -68,7 +80,7 @@ class PmsPartnerService(Component):
                     "%d/%m/%Y"
                 )
             partners.append(
-                PmsCheckinPartnerInfo(
+                PmsPartnerInfo(
                     # id=doc_number.partner_id.id,
                     name=doc_number.partner_id.name
                     if doc_number.partner_id.name
