@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 
 from odoo import _, fields
 from odoo.exceptions import MissingError
-from datetime import datetime, timedelta
 
 from odoo.addons.base_rest import restapi
 from odoo.addons.base_rest_datamodel.restapi import Datamodel
@@ -42,8 +41,6 @@ class PmsAgencyService(Component):
             board_service = self.env["pms.board.service.room.type"].search(
                 [("id", "=", prices_search_param.boardServiceId)]
             )
-            print(prices_search_param.boardServiceId)
-        print(board_service)
         if sum([var is not False for var in [product, room_type, board_service]]) != 1:
             raise MissingError(
                 _(
@@ -157,4 +154,4 @@ class PmsAgencyService(Component):
                 product_qty=product_qty,
                 date_consumption=date_consumption,
             )
-        return
+        return price
