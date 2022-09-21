@@ -27,31 +27,14 @@ class PmsPartnerService(Component):
     def get_partners(self, pms_partner_search_params):
         result_partners = []
         domain = []
-        if pms_partner_search_params.vat:
-            domain.append(("vat", "=", pms_partner_search_params.vat))
+        if pms_partner_search_params.vatNumber:
+            domain.append(("vat", "=", pms_partner_search_params.vatNumber))
         PmsPartnerInfo = self.env.datamodels["pms.partner.info"]
         for partner in self.env["res.partner"].search(domain):
-            if partner.id_numbers:
-                doc_type_id = (
-                    self.env["res.partner.id_category"]
-                    .search([("name", "=", "DNI")])
-                    .id
-                )
-                dni = (
-                    self.env["res.partner.id_number"]
-                    .search(
-                        [
-                            ("partner_id", "=", partner.id),
-                            ("category_id", "=", doc_type_id),
-                        ]
-                    )
-                    .name
-                )
-        for partner in self.env["res.partner"].search([]):
             checkouts = (
                 self.env["pms.checkin.partner"]
-                .search([("partner_id.id", "=", partner.id)])
-                .mapped("checkout")
+                    .search([("partner_id.id", "=", partner.id)])
+                    .mapped("checkout")
             )
             result_partners.append(
                 PmsPartnerInfo(
@@ -100,9 +83,6 @@ class PmsPartnerService(Component):
                     agencyStateId=partner.state_id.id if partner.state_id else None,
                     agencyCity=partner.city if partner.city else None,
                     tagIds=partner.category_id.ids if partner.category_id else [],
-                    vat=partner.vat if partner.vat else None,
-                    documentNumber=dni if dni else None,
-                    documentNumbers=partner.id_numbers if partner.id_numbers else [],
                     website=partner.website if partner.website else None,
                     lastStay=max(checkouts).strftime("%d/%m/%Y") if checkouts else "",
                     vatNumber=partner.vat if partner.vat else None,
@@ -164,9 +144,6 @@ class PmsPartnerService(Component):
                 reservation = self.env["pms.reservation"].search(
                     [("id", "=", checkin.reservation_id.id)]
                 )
-                folio = self.env["pms.folio"].search(
-                    [("id", "=", reservation.folio_id.id)]
-                )
                 reservations.append(
                     PmsReservationShortInfo(
                         id=reservation.id,
@@ -174,17 +151,11 @@ class PmsPartnerService(Component):
                         checkout=reservation.checkout.strftime("%d/%m/%Y"),
                         adults=reservation.adults,
                         priceTotal=round(reservation.price_room_services_set, 2),
-                        stateDescription=dict(
-                            reservation.fields_get(["state"])["state"]["selection"]
-                        )[reservation.state],
-                        paymentStateDescription=dict(
-                            folio.fields_get(["payment_state"])["payment_state"][
-                                "selection"
-                            ]
-                        )[folio.payment_state],
+                        stateCode=reservation.state,
+                        paymentState=reservation.folio_payment_state,
                     )
                 )
-            return reservations
+        return reservations
 
     @restapi.method(
         [
@@ -296,7 +267,7 @@ class PmsPartnerService(Component):
                     amount=round(payment.amount, 2),
                     journalId=payment.journal_id.id,
                     date=payment.date.strftime("%d/%m/%Y"),
-                    memo=payment.ref,
+                    memo=payment.ref if payment.ref else None,
                 )
             )
         return payments

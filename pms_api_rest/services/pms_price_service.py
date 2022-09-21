@@ -42,6 +42,8 @@ class PmsAgencyService(Component):
             board_service = self.env["pms.board.service.room.type"].search(
                 [("id", "=", prices_search_param.boardServiceId)]
             )
+            print(prices_search_param.boardServiceId)
+        print(board_service)
         if sum([var is not False for var in [product, room_type, board_service]]) != 1:
             raise MissingError(
                 _(

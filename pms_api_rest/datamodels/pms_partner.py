@@ -6,7 +6,7 @@ from odoo.addons.datamodel.core import Datamodel
 class PmsPartnerSearchParam(Datamodel):
     _name = "pms.partner.search.param"
     id = fields.Integer(required=False, allow_none=True)
-    vat = fields.String(required=False, allow_none=True)
+    vatNumber = fields.String(required=False, allow_none=True)
 
 
 class PmsPartnerInfo(Datamodel):
@@ -19,7 +19,6 @@ class PmsPartnerInfo(Datamodel):
     email = fields.String(required=False, allow_none=True)
     mobile = fields.String(required=False, allow_none=True)
     phone = fields.String(required=False, allow_none=True)
-    vat = fields.String(required=False, allow_none=True)
     documentType = fields.Integer(required=False, allow_none=True)
     documentNumber = fields.String(required=False, allow_none=True)
     documentExpeditionDate = fields.String(required=False, allow_none=True)
