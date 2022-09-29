@@ -105,6 +105,7 @@ class ResPartner(models.Model):
                     )
                 )
 <<<<<<< HEAD
+<<<<<<< HEAD
 
     def _missing_document(self, vals, partners=False):
         res = super(ResPartner, self)._missing_document(vals)
@@ -124,5 +125,7 @@ class ResPartner(models.Model):
         ):
             return True
         return False
+=======
+>>>>>>> [ADD]l10n_es_SII: and refactoring pms documents
 =======
 >>>>>>> [ADD]l10n_es_SII: and refactoring pms documents
