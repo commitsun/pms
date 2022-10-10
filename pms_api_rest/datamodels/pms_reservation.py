@@ -66,7 +66,9 @@ class PmsReservationInfo(Datamodel):
     priceOnlyServices = fields.Float(required=False, allow_none=True)
     priceOnlyRoom = fields.Float(required=False, allow_none=True)
 
-    reservationLines = fields.List(NestedModel("pms.reservation.line.info"))
+    reservationLines = fields.List(
+        NestedModel("pms.reservation.line.info"), required=False, allow_none=True
+    )
     services = fields.List(
         NestedModel("pms.service.info"), required=False, allow_none=True
     )
