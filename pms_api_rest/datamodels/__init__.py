@@ -52,3 +52,4 @@ from . import pms_account_payment_term
 
 from . import pms_room_closure_reason
 from . import pms_report
+from . import pms_payment_report_input
