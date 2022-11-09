@@ -40,10 +40,16 @@ class PmsTransactionService(Component):
                 ("journal_id", "=", pms_transactions_search_param.transactionMethodId),
             )
         elif pms_transactions_search_param.pmsPropertyId:
-            pms_property = self.env['pms.property'].browse(pms_transactions_search_param.pmsPropertyId)
-            available_journals = pms_property._get_payment_methods(automatic_included=True)
+            pms_property = self.env["pms.property"].browse(
+                pms_transactions_search_param.pmsPropertyId
+            )
+            available_journals = pms_property._get_payment_methods(
+                automatic_included=True
+            )
             # REVIEW: avoid send to app generic company journals
-            available_journals = available_journals.filtered(lambda j: j.pms_property_ids)
+            available_journals = available_journals.filtered(
+                lambda j: j.pms_property_ids
+            )
             domain_fields.append(("journal_id", "in", available_journals.ids))
         domain_filter = list()
         if pms_transactions_search_param.filter:
