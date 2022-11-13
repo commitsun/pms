@@ -102,8 +102,6 @@ class PmsInvoiceService(Component):
                         )
                     ][0]
                 )
-        if not new_vals:
-            return invoice.id
 
         # Update Invoice
         # When modifying an invoice, depending on the company's configuration,
@@ -112,32 +110,40 @@ class PmsInvoiceService(Component):
         # with the updated data.
         # TODO: to create core pms correct_invoice_policy field
         # if invoice.state != "draft" and company.corrective_invoice_policy == "strict":
-        if invoice.state != "draft":
-            # invoice create refund
-            # new invoice with new_vals
-            move_reversal = (
-                self.env["account.move.reversal"]
-                .with_context(active_model="account.move", active_ids=invoice.ids)
-                .create(
-                    {
-                        "date": fields.Date.today(),
-                        "reason": _("Invoice modification"),
-                        "refund_method": "modify",
-                    }
+        if new_vals:
+            if invoice.state != "draft":
+                # invoice create refund
+                # new invoice with new_vals
+                move_reversal = (
+                    self.env["account.move.reversal"]
+                    .with_context(active_model="account.move", active_ids=invoice.ids)
+                    .create(
+                        {
+                            "date": fields.Date.today(),
+                            "reason": _("Invoice modification"),
+                            "refund_method": "modify",
+                        }
+                    )
                 )
-            )
-            reversal_action = move_reversal.reverse_moves()
-            reverse_invoice = self.env["account.move"].browse(reversal_action["res_id"])
-            invoice = reverse_invoice
+                reversal_action = move_reversal.reverse_moves()
+                reverse_invoice = self.env["account.move"].browse(
+                    reversal_action["res_id"]
+                )
+                invoice = reverse_invoice
 
-        invoice = self._direct_move_update(invoice, new_vals)
-        # Update invoice lines name
-        for item in pms_invoice_info.moveLines:
-            if item.saleLineId in invoice.invoice_line_ids.mapped("folio_line_ids.id"):
-                invoice_line = invoice.invoice_line_ids.filtered(
-                    lambda r: item.saleLineId in r.folio_line_ids.ids
-                )
-                invoice_line.write({"name": item.name})
+            invoice = self._direct_move_update(invoice, new_vals)
+            # Update invoice lines name
+            for item in pms_invoice_info.moveLines:
+                if item.saleLineId in invoice.invoice_line_ids.mapped(
+                    "folio_line_ids.id"
+                ):
+                    invoice_line = invoice.invoice_line_ids.filtered(
+                        lambda r: item.saleLineId in r.folio_line_ids.ids
+                    )
+                    invoice_line.write({"name": item.name})
+        if pms_invoice_info.state:
+            if pms_invoice_info.state == "confirm" and invoice.state == "draft":
+                invoice.action_post()
         return invoice.id
 
     def _direct_move_update(self, invoice, new_vals):
