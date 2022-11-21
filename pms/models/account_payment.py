@@ -114,7 +114,7 @@ class AccountPayment(models.Model):
 
     def action_post(self):
         res = super(AccountPayment, self).action_post()
-        for payment in self:
+        for payment in self.filtered("folio_ids"):
             if self._check_is_downpayment_to_invoice(payment):
                 partner_id = (
                     payment.partner_id.id or self.env.ref("pms.various_pms_partner").id
@@ -127,7 +127,8 @@ class AccountPayment(models.Model):
 
     @api.model
     def _check_is_downpayment_to_invoice(self, payment):
-        checkout_ref = max(self.folio_ids.mapped("last_checkout"))
+        if payment.folio_ids:
+            checkout_ref = max(self.folio_ids.mapped("last_checkout"))
         if (
             payment.folio_ids
             and payment.partner_type == "customer"
