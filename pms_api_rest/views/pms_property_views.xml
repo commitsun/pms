@@ -4,7 +4,6 @@
         <field name="model">pms.property</field>
         <field name="inherit_id" ref="pms.pms_property_views_form" />
         <field name="arch" type="xml">
-<<<<<<< HEAD
             <xpath
                 expr="//page[@name='property_general']//field[@name='street']"
                 position="before"
@@ -17,8 +16,6 @@
                     />
                 </group>
             </xpath>
-=======
->>>>>>> 647e4ce13 ([REF]pms_api_rest: changed property colors from module pms to module pms_api_rest)
             <xpath expr="//field[@name='default_departure_hour']" position="after">
                 <group string="Planning Colors">
                     <field name="color_option_config" />
@@ -86,6 +83,9 @@
                             attrs="{'invisible': [('color_option_config', '!=', 'advanced')]}"
                         />
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> cac71c6f5 ([IMP]pms_api_rest: added overpayment color to configurate in property)
                         <field
                             name="overpayment_reservation_color"
                             widget="color"
