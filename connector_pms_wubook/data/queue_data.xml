@@ -7,5 +7,29 @@
             <field name="name">wubook</field>
             <field name="parent_id" ref="connector_pms.channel_pms" />
         </record>
+        <record id="channel_wubook" model="queue.job.channel">
+            <field name="name">scheduler_export</field>
+            <field name="parent_id" ref="connector_pms.channel_wubook" />
+        </record>
+        <record id="channel_wubook" model="queue.job.channel">
+            <field name="name">folios</field>
+            <field name="parent_id" ref="connector_pms.channel_wubook" />
+        </record>
+        <record id="channel_wubook" model="queue.job.channel">
+            <field name="name">avail</field>
+            <field name="parent_id" ref="connector_pms.channel_wubook" />
+        </record>
+        <record id="channel_wubook" model="queue.job.channel">
+            <field name="name">rules</field>
+            <field name="parent_id" ref="connector_pms.channel_wubook" />
+        </record>
+        <record id="channel_wubook" model="queue.job.channel">
+            <field name="name">prices</field>
+            <field name="parent_id" ref="connector_pms.channel_wubook" />
+        </record>
+        <record id="channel_wubook" model="queue.job.channel">
+            <field name="name">others</field>
+            <field name="parent_id" ref="connector_pms.channel_wubook" />
+        </record>
     </data>
 </odoo>
