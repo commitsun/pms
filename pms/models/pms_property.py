@@ -18,10 +18,9 @@ from odoo.addons.base.models.res_partner import _tz_get
 
 
 def get_default_logo():
-    with open(modules.get_module_resource('pms',
-                                          'static/img',
-                                          'property_logo.png'),
-              'rb') as f:
+    with open(
+        modules.get_module_resource("pms", "static/img", "property_logo.png"), "rb"
+    ) as f:
         return base64.b64encode(f.read())
 
 
