@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" ?>
 <odoo>
     <template id="traveller_report">
         <t t-call="web.basic_layout">
@@ -21,9 +21,7 @@
                 <p class="amount">
                     Total amount (Reservation Card):
                     <strong>
-                        <span
-                            t-field="docs.reservation_id.folio_id.amount_total"
-                        />
+                        <span t-field="docs.reservation_id.folio_id.amount_total" />
                     </strong>
                 </p>
                 <div class="property amount">
@@ -40,9 +38,7 @@
                     <br />
                     <strong>
                         <span t-field="docs.pms_property_id.company_id.street" />
-                        <span
-                            t-field="docs.pms_property_id.company_id.street2"
-                        />
+                        <span t-field="docs.pms_property_id.company_id.street2" />
                     </strong>
                     <br />
                     <strong>
@@ -74,9 +70,7 @@
                         <td>Expedition date</td>
                         <td>
                             <strong>
-                                <span
-                                    t-field="docs.document_expedition_date"
-                                />
+                                <span t-field="docs.document_expedition_date" />
                             </strong>
                         </td>
                     </tr>
@@ -95,9 +89,7 @@
                         <td>
                             <strong>
                                 <span t-field="docs.lastname" />
-                                <span
-                                    t-field="docs.lastname2"
-                                />
+                                <span t-field="docs.lastname2" />
                             </strong>
                         </td>
                     </tr>
@@ -158,7 +150,9 @@
                         <span t-field="docs.pms_property_id.cardex_warning" />
                     </p>
                     <p>
-                        <span t-field="docs.pms_property_id.company_id.privacy_policy" />
+                        <span
+                            t-field="docs.pms_property_id.company_id.privacy_policy"
+                        />
                     </p>
                 </div>
                 <p style="page-break-after:always;" />
@@ -180,9 +174,7 @@
                 <p class="amount">
                     Total amount (Reservation Card):
                     <strong>
-                        <span
-                            t-field="docs.reservation_id.folio_id.amount_total"
-                        />
+                        <span t-field="docs.reservation_id.folio_id.amount_total" />
                     </strong>
                 </p>
                 <div class="property amount">
@@ -199,9 +191,7 @@
                     <br />
                     <strong>
                         <span t-field="docs.pms_property_id.company_id.street" />
-                        <span
-                            t-field="docs.pms_property_id.company_id.street2"
-                        />
+                        <span t-field="docs.pms_property_id.company_id.street2" />
                     </strong>
                     <br />
                     <strong>
@@ -233,9 +223,7 @@
                         <td>Expedition date</td>
                         <td>
                             <strong>
-                                <span
-                                    t-field="docs.document_expedition_date"
-                                />
+                                <span t-field="docs.document_expedition_date" />
                             </strong>
                         </td>
                     </tr>
@@ -254,9 +242,7 @@
                         <td>
                             <strong>
                                 <span t-field="docs.lastname" />
-                                <span
-                                    t-field="docs.lastname2"
-                                />
+                                <span t-field="docs.lastname2" />
                             </strong>
                         </td>
                     </tr>
@@ -317,7 +303,9 @@
                         <span t-field="docs.pms_property_id.cardex_warning" />
                     </p>
                     <p>
-                        <span t-field="docs.pms_property_id.company_id.privacy_policy" />
+                        <span
+                            t-field="docs.pms_property_id.company_id.privacy_policy"
+                        />
                     </p>
                 </div>
                 <div class="final" />
