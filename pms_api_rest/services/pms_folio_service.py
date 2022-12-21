@@ -105,7 +105,7 @@ class PmsFolioService(Component):
         if folio_search_param.filter:
             target = folio_search_param.filter
             if "@" in target:
-                domain_filter.append(("email", "ilike", target))
+                domain_filter.append([("email", "ilike", target)])
             else:
                 subdomains = [
                     [("name", "ilike", target)],
