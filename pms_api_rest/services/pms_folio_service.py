@@ -106,6 +106,7 @@ class PmsFolioService(Component):
             target = folio_search_param.filter
             if "@" in target:
                 domain_filter.append([("email", "ilike", target)])
+
             else:
                 subdomains = [
                     [("name", "ilike", target)],
@@ -114,20 +115,20 @@ class PmsFolioService(Component):
                     [("external_reference", "ilike", target)],
                 ]
                 domain_filter.append(expression.OR(subdomains))
-        if folio_search_param.filterByState:
+                if folio_search_param.filterByState:
             if folio_search_param.filterByState == "byCheckin":
                 subdomains = [
                     [("state", "in", ("confirm", "arrival_delayed"))],
                     [("checkin", "<=", fields.Date.today())],
                 ]
                 domain_filter.append(expression.AND(subdomains))
-            if folio_search_param.filterByState == "byCheckout":
+            elif folio_search_param.filterByState == "byCheckout":
                 subdomains = [
                     [("state", "in", ("onboard", "departure_delayed"))],
                     [("checkout", "=", fields.Date.today())],
                 ]
                 domain_filter.append(expression.AND(subdomains))
-            if folio_search_param.filterByState == "byCheckinbyCheckout":
+            else:
                 subdomain_checkin = [
                     [("state", "in", ("confirm", "arrival_delayed"))],
                     [("checkin", "<=", fields.Date.today())],

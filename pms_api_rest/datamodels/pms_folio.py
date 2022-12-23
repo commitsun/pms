@@ -12,6 +12,7 @@ class PmsFolioSearchParam(Datamodel):
     filter = fields.String(required=False, allow_none=True)
     filterByState = fields.String(required=False, allow_none=True)
 
+
 class PmsFolioInfo(Datamodel):
     _name = "pms.folio.info"
     id = fields.Integer(required=False, allow_none=True)
