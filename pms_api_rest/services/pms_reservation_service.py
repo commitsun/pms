@@ -136,6 +136,10 @@ class PmsReservationService(Component):
             reservation_vals.update(
                 {"segmentation_ids": [(6, 0, [reservation_data.segmentationId])]}
             )
+        if reservation_data.checkin:
+            reservation_vals.update({"checkin": reservation_data.checkin})
+        if reservation_data.checkout:
+            reservation_vals.update({"checkout": reservation_data.checkout})
         return reservation_vals
 
     @restapi.method(
@@ -204,7 +208,7 @@ class PmsReservationService(Component):
             reservation.room_type_id = reservation_data.roomTypeId
 
         reservation_vals = self._create_vals_from_params(
-            reservation_vals, reservation_data
+            reservation_vals, reservation_data, reservation_id,
         )
         # TODO: this should be @ pms core
         if (
