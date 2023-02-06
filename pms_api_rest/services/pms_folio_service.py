@@ -148,6 +148,11 @@ class PmsFolioService(Component):
                     [("reservation_type", "!=", "out")],
                 ]
                 domain_filter.append(expression.AND(subdomains))
+            elif folio_search_param.filterByState == "byCancel":
+                subdomains = [
+                    [("state", "=", "cancel")],
+                ]
+                domain_filter.append(expression.AND(subdomains))
             else:
                 subdomain_checkin = [
                     [("state", "in", ("confirm", "arrival_delayed"))],
