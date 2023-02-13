@@ -11,6 +11,9 @@ class PmsFolioSearchParam(Datamodel):
     dateTo = fields.String(required=False, allow_none=True)
     filter = fields.String(required=False, allow_none=True)
     filterByState = fields.String(required=False, allow_none=True)
+    cancelFrom = fields.String(required=False, allow_none=True)
+    cancelTo = fields.String(required=False, allow_none=True)
+    agencyIds = fields.String(required=False, allow_none=True)
 
 
 class PmsFolioInfo(Datamodel):

@@ -134,41 +134,62 @@ class PmsFolioService(Component):
                 ]
                 domain_filter.append(expression.OR(subdomains))
         if folio_search_param.filterByState:
-            if folio_search_param.filterByState == "byCheckin":
-                subdomains = [
-                    [("state", "in", ("confirm", "arrival_delayed"))],
-                    [("checkin", "<=", fields.Date.today())],
-                    [("reservation_type", "!=", "out")],
-                ]
-                domain_filter.append(expression.AND(subdomains))
-            elif folio_search_param.filterByState == "byCheckout":
-                subdomains = [
-                    [("state", "in", ("onboard", "departure_delayed"))],
-                    [("checkout", "=", fields.Date.today())],
-                    [("reservation_type", "!=", "out")],
-                ]
-                domain_filter.append(expression.AND(subdomains))
-            elif folio_search_param.filterByState == "byCancel":
-                subdomains = [
-                    [("state", "=", "cancel")],
-                    [("reservation_type", "!=", "out")],
-                    [("checkout", ">=", fields.Date.today())],
-                ]
-                domain_filter.append(expression.AND(subdomains))
-            else:
-                subdomain_checkin = [
-                    [("state", "in", ("confirm", "arrival_delayed"))],
-                    [("checkin", "<=", fields.Date.today())],
-                ]
-                subdomain_checkin = expression.AND(subdomain_checkin)
-                subdomain_checkout = [
-                    [("state", "in", ("onboard", "departure_delayed"))],
-                    [("checkout", "=", fields.Date.today())],
-                ]
-                subdomain_checkout = expression.AND(subdomain_checkout)
-                domain_filter.append(
-                    expression.OR([subdomain_checkin, subdomain_checkout])
+            filter_by_state = folio_search_param.filterByState.split("-")
+            subdomains = []
+            if "byCheckin" in filter_by_state:
+                subdomains.append(
+                    expression.AND(
+                        [
+                            [("state", "in", ("confirm", "arrival_delayed"))],
+                            [("checkin", "<=", fields.Date.today())],
+                            [("reservation_type", "!=", "out")],
+                        ]
+                    )
                 )
+            if "byCheckout" in filter_by_state:
+                subdomains.append(
+                    expression.AND(
+                        [
+                            [("state", "in", ("onboard", "departure_delayed"))],
+                            [("checkout", "=", fields.Date.today())],
+                            [("reservation_type", "!=", "out")],
+                        ]
+                    )
+                )
+            if "byCancel" in filter_by_state:
+                agency_ids = []
+                if folio_search_param.agencyIds:
+                    agency_ids = list(map(int, folio_search_param.agencyIds.split(",")))
+                subdomains.append(
+                    expression.AND(
+                        [
+                            [("state", "=", "cancel")],
+                            [("reservation_type", "!=", "out")],
+                            [
+                                (
+                                    "checkin",
+                                    ">=",
+                                    fields.Date.from_string(
+                                        folio_search_param.cancelFrom
+                                    ),
+                                )
+                            ],
+                            [
+                                (
+                                    "checkin",
+                                    "<=",
+                                    fields.Date.from_string(
+                                        folio_search_param.cancelTo
+                                    ),
+                                )
+                            ],
+                            [("agency_id", "in", agency_ids)]
+                            if folio_search_param.agencyIds
+                            else [],
+                        ]
+                    )
+                )
+            domain_filter.append(expression.OR(subdomains))
         if domain_filter:
             domain = expression.AND([domain_fields, domain_filter[0]])
             if folio_search_param.filter and folio_search_param.filterByState:
