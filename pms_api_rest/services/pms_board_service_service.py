@@ -37,6 +37,7 @@ class PmsBoardServiceService(Component):
             domain.extend(
                 [
                     ("pms_property_id", "=", board_services_search_param.pmsPropertyId),
+                    ("pms_property_id", "in", "board_service.pms_property_ids")
                 ]
             )
 
