@@ -161,6 +161,9 @@ class PmsReservationService(Component):
     def update_reservation(self, reservation_id, reservation_data):
         reservation = self.env["pms.reservation"].search([("id", "=", reservation_id)])
         reservation_vals = {}
+        if reservation_data.overbooking is not None:
+            reservation.overbooking = reservation_data.overbooking
+            reservation.reservation_line_ids.overbooking = reservation_data.overbooking
         if reservation_data.reservationLines:
             reservation_lines_vals = []
             date_list = []
