@@ -23,6 +23,8 @@ class PmsReservationShortInfo(Datamodel):
     priceTotal = fields.Float(required=False, allow_none=True)
     servicesCount = fields.Integer(required=False, allow_none=True)
     folioSequence = fields.Integer(required=False, allow_none=True)
+    pricelistId = fields.Integer(required=False, allow_none=True)
+
 
 
 class PmsReservationInfo(Datamodel):
@@ -33,6 +35,7 @@ class PmsReservationInfo(Datamodel):
     folioSequence = fields.Integer(required=False, allow_none=True)
     partnerName = fields.String(required=False, allow_none=True)
     boardServiceId = fields.Integer(required=False, allow_none=True)
+    boardServices = fields.List(NestedModel("pms.service.info"), required=False, allow_none=True)
     saleChannelId = fields.Integer(required=False, allow_none=True)
     agencyId = fields.Integer(required=False, allow_none=True)
     userId = fields.Integer(required=False, allow_none=True)
