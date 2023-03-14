@@ -434,6 +434,7 @@ class PmsFolioService(Component):
                             folioSequence=reservation.folio_sequence
                             if reservation.folio_sequence
                             else None,
+                            pricelistId=reservation.pricelist_id,
                             servicesCount=sum(
                                 reservation.service_ids.filtered(
                                     lambda x: not x.is_board_service
