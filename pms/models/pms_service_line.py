@@ -187,11 +187,11 @@ class PmsServiceLine(models.Model):
                     if record.product_id.consumed_on == "before"
                     else record.date + datetime.timedelta(days=-1)
                 )
-                record.discount = (
+                """record.discount = (
                     record.service_id.reservation_id.reservation_line_ids.filtered(
                         lambda l: l.date == consumed_date
                     ).discount
-                )
+                )"""
             elif not record.discount:
                 record.discount = 0
 
