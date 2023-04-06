@@ -28,12 +28,13 @@ class ChannelWubookPmsRoomTypeBinding(models.Model):
 
     @api.depends("room_ids", "room_ids.active", "room_ids.pms_property_id")
     def _compute_total_rooms_count(self):
-        for record in self:
-            record.total_rooms_count = len(
-                record.room_ids.filtered(
-                    lambda x: x.pms_property_id == self.backend_id.pms_property_id
-                )
-            )
+        return
+        # for record in self:
+        #     record.total_rooms_count = len(
+        #         record.room_ids.filtered(
+        #             lambda x: x.pms_property_id == self.backend_id.pms_property_id
+        #         )
+        #     )
 
     default_quota = fields.Integer(
         string="Default Quota",
@@ -126,7 +127,7 @@ class ChannelWubookPmsRoomTypeBinding(models.Model):
 
     @api.model
     def export_data(self, backend_record=None):
-        """ Prepare the batch export of Room Types to Channel """
+        """Prepare the batch export of Room Types to Channel"""
         room_types = self.odoo_id.get_room_types_by_property(
             backend_record.pms_property_id.id
         )
