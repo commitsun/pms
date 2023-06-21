@@ -600,7 +600,6 @@ class PmsReservationService(Component):
                         checkinPartnerState=checkin_partner.state,
                     )
                 )
-        print(checkin_partners)
         return checkin_partners
 
     @restapi.method(
