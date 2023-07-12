@@ -117,8 +117,9 @@ class PmsRoomType(models.Model):
 
     @api.depends("room_ids", "room_ids.active")
     def _compute_total_rooms_count(self):
-        for record in self:
-            record.total_rooms_count = len(record.room_ids)
+        return
+        # for record in self:
+        #     record.total_rooms_count = len(record.room_ids)
 
     @api.model
     def get_room_types_by_property(self, pms_property_id, default_code=None):

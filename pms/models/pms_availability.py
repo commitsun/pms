@@ -88,7 +88,6 @@ class PmsAvailability(models.Model):
     @api.depends(
         "reservation_line_ids",
         "reservation_line_ids.occupies_availability",
-        "room_type_id.total_rooms_count",
         "parent_avail_id",
         "parent_avail_id.reservation_line_ids",
         "parent_avail_id.reservation_line_ids.occupies_availability",
