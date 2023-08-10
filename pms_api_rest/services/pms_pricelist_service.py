@@ -33,6 +33,8 @@ class PmsPricelistService(Component):
         ]
         if pms_search_param.daily and pms_search_param.daily is True:
             domain.append(("pricelist_type", "=", 'daily'))
+        else:
+            domain.append(("active", "in", [True, False]))
 
         pricelists = self.env["product.pricelist"].search(domain)
         if pms_search_param.pmsPropertyIds and pms_search_param.pmsPropertyId:
@@ -68,6 +70,7 @@ class PmsPricelistService(Component):
             result_pricelists.append(
                 PmsPricelistInfo(
                     id=pricelist.id,
+                    active=pricelist.active,
                     name=pricelist.name,
                     cancelationRuleId=pricelist.cancelation_rule_id.id
                     if pricelist.cancelation_rule_id
