@@ -3,6 +3,7 @@ import logging
 from datetime import datetime, timedelta
 
 import pytz
+from werkzeug.exceptions import BadRequest
 
 from odoo import _, fields
 from odoo.exceptions import MissingError, ValidationError
@@ -138,6 +139,7 @@ class PmsFolioService(Component):
 
         if folio_search_param.filter:
             target = folio_search_param.filter
+            # TODO: REVIEW THIS: Doesn't seem like a proper way to check if the filter is an email
             if "@" in target:
                 domain_filter.append([("email", "ilike", target)])
             else:
@@ -1478,15 +1480,6 @@ class PmsFolioService(Component):
         if pms_folio_info.state == "cancel":
             folio.action_cancel()
             return folio.id
-        # if (
-        #     pms_folio_info.confirmReservations
-        #     and any(
-        #         reservation.state != "confirm"
-        #         for reservation in folio.reservation_ids
-        #     )
-        # ):
-        #     for reservation in folio.reservation_ids:
-        #         reservation.confirm()
         if (
             pms_folio_info.internalComment is not None
             and folio.internal_comment != pms_folio_info.internalComment
@@ -1524,7 +1517,7 @@ class PmsFolioService(Component):
             if reservations_vals:
                 folio_vals.update({"reservation_ids": reservations_vals})
         if folio_vals:
-            if reservations_vals:
+            if reservations_vals and call_type == "external_app":
                 folio.reservation_ids.filtered(
                     lambda r: r.state != "cancel"
                 ).with_context(modified=True, force_write_blocked=True).action_cancel()
@@ -1545,16 +1538,26 @@ class PmsFolioService(Component):
         """
         cmds = []
         for info_reservation in info_reservations:
+            if info_reservation.id:
+                reservation = self.env['pms.reservation'].browse(info_reservation.id)
+                if not reservation:
+                    raise MissingError(_("Reservation not found"))
+            # creamos el valor de la reserva con su id de folio
             vals = {}
             vals.update({"folio_id": folio.id})
+
             if info_reservation.roomTypeId:
                 vals.update({"room_type_id": info_reservation.roomTypeId})
+
             if info_reservation.checkin:
                 vals.update({"checkin": info_reservation.checkin})
+
             if info_reservation.checkout:
                 vals.update({"checkout": info_reservation.checkout})
+
             if info_reservation.pricelistId:
                 vals.update({"pricelist_id": info_reservation.pricelistId})
+
             if info_reservation.boardServiceId:
                 vals.update(
                     {
@@ -1565,18 +1568,23 @@ class PmsFolioService(Component):
                         )
                     }
                 )
+
             if info_reservation.preferredRoomId:
                 vals.update({"preferred_room_id": info_reservation.preferredRoomId})
+
             if info_reservation.adults:
                 vals.update({"adults": info_reservation.adults})
+
             if info_reservation.children:
                 vals.update({"children": info_reservation.children})
+
             if info_reservation.reservationLines:
                 reservation_lines_cmds = self.wrapper_reservation_lines(
                     info_reservation
                 )
                 if reservation_lines_cmds:
                     vals.update({"reservation_line_ids": reservation_lines_cmds})
+
             if info_reservation.services:
                 reservation_services_cmds = self.wrapper_reservation_services(
                     info_reservation.services
@@ -1619,4 +1627,265 @@ class PmsFolioService(Component):
                     },
                 )
             )
+        return cmds
+
+    @restapi.method(
+        [
+            (
+                [
+                    "/<int:folio_id>/update_temp",
+                ],
+                "PUT",
+            )
+        ],
+        input_param=Datamodel("pms.folio.info", is_list=False),
+        auth="jwt_api_pms",
+    )
+    def update_folio_temp(self, folio_id, pms_folio_info):
+        folio_record = self.env["pms.folio"].search([("id", "=", folio_id)])
+        if not folio_record:
+            raise MissingError(_("Folio not found"))
+        folio_vals = {}
+        # internalComment
+        if (
+            pms_folio_info.internalComment is not None
+            and pms_folio_info.internalComment != folio_record.internal_comment
+        ):
+            folio_vals.update({"internal_comment": pms_folio_info.internalComment})
+        # partnerId
+        if (
+            pms_folio_info.partnerId is not None
+            and pms_folio_info.partnerId != folio_record.partner_id.id
+        ):
+            folio_vals.update({"partner_id": pms_folio_info.partnerId})
+        # partnerName
+        if (
+            pms_folio_info.partnerName is not None
+            and pms_folio_info.partnerName != folio_record.partner_name
+        ):
+            folio_vals.update({"partner_name": pms_folio_info.partnerName})
+        # partnerEmail
+        if (
+            pms_folio_info.partnerEmail is not None
+            and pms_folio_info.partnerEmail != folio_record.email
+        ):
+            folio_vals.update({"email": pms_folio_info.partnerEmail})
+        # partnerPhone
+        if (
+            pms_folio_info.partnerPhone is not None
+            and pms_folio_info.partnerPhone != folio_record.mobile
+        ):
+            folio_vals.update({"mobile": pms_folio_info.partnerPhone})
+        # language
+        if pms_folio_info.language is not None:
+            lang = self.get_language(pms_folio_info.language)
+            if lang != pms_folio_info.language:
+                folio_vals.update({"lang": lang})
+        # reservation_ids
+        if pms_folio_info.reservations is not None:
+            folio_vals.update(
+                {
+                    "reservation_ids": self.build_reservations_cmds(
+                        folio_record,
+                        pms_folio_info.reservations
+                    )
+                }
+            )
+        # folio service_ids
+        if pms_folio_info.services is not None:
+            folio_vals.update(
+                {
+                    "service_ids": self.build_reservation_or_folio_services_cmds(
+                        folio_record,
+                        pms_folio_info.services,
+                        True,
+                    )
+                }
+            )
+        # write folio (context var to avoid compute baord service ids)
+        folio_record.with_context(
+            skip_compute_service_ids=True
+        ).write(folio_vals)
+
+    def build_reservations_cmds(self, folio_record, reservations):
+        cmds = []
+        updated_reservation_ids = []
+        for reservation in reservations:
+            reservation_vals = {}
+            reservation_record = self.env["pms.reservation"].search([("id", "=", reservation.id)])
+
+            # checkin
+            if (
+                reservation.checkin is not None
+                and reservation.checkin != reservation_record.checkin
+            ):
+                reservation_vals.update({"checkin": reservation.checkin})
+            # checkout
+            if (
+                reservation.checkout is not None
+                and reservation.checkout != reservation_record.checkout
+            ):
+                reservation_vals.update({"checkout": reservation.checkout})
+            # roomTypeId
+            if (
+                reservation.roomTypeId is not None
+                and reservation.roomTypeId != reservation_record.room_type_id.id
+            ):
+                reservation_vals.update({"room_type_id": reservation.roomTypeId})
+            # adults
+            if (
+                reservation.adults is not None
+                and reservation.adults != reservation_record.adults
+            ):
+                reservation_vals.update({"adults": reservation.adults})
+            # children
+            if (
+                reservation.children is not None
+                and reservation.children != reservation_record.children
+            ):
+                reservation_vals.update({"children": reservation.children})
+            # board_service_room_id
+            if (
+                reservation.boardServiceId is not None
+                and reservation.boardServiceId != reservation_record.board_service_room_id.id
+            ):
+                reservation_vals.update({"board_service_room_id": reservation.boardServiceId})
+
+            # reservation_lines
+            if reservation.reservationLines is not None:
+                reservation_vals.update(
+                    {
+                        "reservation_line_ids": self.build_reservation_lines_cmds(
+                            reservation_record,
+                            reservation.reservationLines
+                        )
+                    }
+                )
+            # service_ids
+            if reservation.services is not None:
+                reservation_vals.update(
+                    {
+                        "service_ids": self.build_reservation_or_folio_services_cmds(
+                            reservation_record,
+                            reservation.services
+                        )
+                    }
+                )
+            # create/update reservation
+            if reservation_record:
+                updated_reservation_ids.append(reservation_record.id)
+                cmds.append((1, reservation_record.id, reservation_vals))
+            else:
+                cmds.append((0, 0, reservation_vals))
+        # detect if the folio has reservations not in the request
+        if folio_record.reservation_ids.filtered(
+            lambda x: x.id not in updated_reservation_ids and x.state != 'cancel'
+        ):
+            raise BadRequest(_("Remove reservations is not allowed"))
+        return cmds
+
+    def build_reservation_lines_cmds(self, reservation, reservation_lines):
+        cmds = []
+        updated_reservation_line_ids = []
+        for reservation_line in reservation_lines:
+            # date
+            reservation_line_vals = {"date": reservation_line.date}
+            # price
+            if reservation_line.price is not None:
+                reservation_line_vals.update({"price": reservation_line.price})
+            # discount
+            if reservation_line.discount is not None:
+                reservation_line_vals.update({"discount": reservation_line.discount})
+            # roomId
+            if (
+                reservation_line.roomId is not None
+                and reservation_line.roomId != reservation_line.room_id.id
+            ):
+                reservation_line_vals.update({"room_id": reservation_line.roomId})
+
+            reservation_line_record = self.env["pms.reservation.line"].search(
+                [
+                    ("date", "=", reservation_line.date),
+                    ("reservation_id", "=", reservation.id)
+                ]
+            )
+            if not reservation_line_record:
+                cmds.append((0, 0, reservation_line_vals))
+            else:
+                updated_reservation_line_ids.append(reservation_line_record.id)
+                cmds.append((1, reservation_line_record.id, reservation_line_vals))
+
+        for reservation_line_to_remove in reservation.reservation_line_ids.filtered(
+            lambda x: x.id not in updated_reservation_line_ids
+        ):
+            cmds.append((2, reservation_line_to_remove.id))
+        return cmds
+
+    def build_reservation_or_folio_services_cmds(self, reservation_or_record, services, from_folio=False):
+        cmds = []
+        updated_service_ids = []
+        for service in services:
+            service_vals = {"no_auto_add_lines": True}
+            if service.productId is not None:
+                service_vals.update({"product_id": service.productId})
+            if service.name is not None:
+                service_vals.update({"name": service.name})
+            if service.isBoardService is not None:
+                service_vals.update({"is_board_service": service.isBoardService})
+
+            service_record = self.env["pms.service"].search(
+                [
+                    ("id", "=", service.id)
+                ]
+            )
+            service_vals.update(
+                {
+                    "service_line_ids": self.build_service_lines_cmds(service_record, service.serviceLines)
+                }
+            )
+            if not service_record:
+                cmds.append((0, 0, service_vals))
+            else:
+                updated_service_ids.append(service_record.id)
+                cmds.append((1, service_record.id, service_vals))
+        # remove services presents before the change and remove them
+        # if the source is folio, we filter those with null reservation_id
+        for service_to_remove in reservation_or_record.service_ids.filtered(
+            lambda x: x.id not in updated_service_ids and (
+                (from_folio and not x.reservation_id or not from_folio)
+            )
+        ):
+            cmds.append((2, service_to_remove.id))
+        return cmds
+
+    def build_service_lines_cmds(self, service, service_lines):
+        cmds = []
+        updated_service_line_ids = []
+        for service_line in service_lines:
+            service_line_vals = {
+                "date": service_line.date,
+
+            }
+            if service_line.priceUnit is not None:
+                service_line_vals.update({"price_unit": service_line.priceUnit})
+            if service_line.discount is not None:
+                service_line_vals.update({"discount": service_line.discount})
+            if service_line.quantity is not None:
+                service_line_vals.update({"day_qty": service_line.quantity})
+            service_line_record = self.env["pms.service.line"].search(
+                [
+                    ("date", "=", service_line.date),
+                    ("service_id", "=", service.id)
+                ]
+            )
+            if not service_line_record:
+                cmds.append((0, 0, service_line_vals))
+            else:
+                updated_service_line_ids.append(service_line_record.id)
+                cmds.append((1, service_line_record.id, service_line_vals))
+
+        for service_line_to_remove in service.service_line_ids.filtered(
+            lambda x: x.id not in updated_service_line_ids
+        ):
+            cmds.append((2, service_line_to_remove.id))
         return cmds
