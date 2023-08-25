@@ -1642,6 +1642,30 @@ class PmsFolioService(Component):
         auth="jwt_api_pms",
     )
     def update_folio_temp(self, folio_id, pms_folio_info):
+        # service datamodel
+        PmsServiceInfo = self.env.datamodels["pms.service.info"]
+        # add service to reservations which have boardServiceId and not services with field isBoardService = True
+        for reservation in pms_folio_info.reservations:
+            res_has_bs = False
+            if reservation.boardServiceId:
+                for service in reservation.services:
+                    if service.isBoardService:
+                        res_has_bs = True
+                        break
+            if reservation.boardServiceId is not None and not res_has_bs:
+                board_service_record = self.env["pms.board.service.room.type"].browse(
+                    reservation.boardServiceId
+                )
+                if not board_service_record:
+                    raise MissingError(_("Board Service not found"))
+
+                for line in board_service_record.board_service_line_ids:
+                    reservation.services.append(
+                        PmsServiceInfo(
+                            productId=line.product_id.id,
+                            isBoardService=True,
+                        )
+                    )
         folio_record = self.env["pms.folio"].search([("id", "=", folio_id)])
         if not folio_record:
             raise MissingError(_("Folio not found"))
@@ -1706,9 +1730,7 @@ class PmsFolioService(Component):
                         "service_ids": cmds_services_folio
                     }
                 )
-        # write folio (context var to avoid compute board service ids)
         if folio_vals:
-            print(folio_vals)
             folio_record.with_context(
                 skip_compute_service_ids=True
             ).write(folio_vals)
@@ -1797,7 +1819,7 @@ class PmsFolioService(Component):
         if folio_record.reservation_ids.filtered(
             lambda x: x.id not in existing_reservation_ids and x.state != 'cancel'
         ):
-            raise BadRequest(_("Remove reservations is not allowed"))
+            raise BadRequest(_("Removing reservations is not allowed"))
         return cmds
 
     def build_reservation_lines_cmds(self, reservation, reservation_lines):
@@ -1872,7 +1894,6 @@ class PmsFolioService(Component):
             )
             if service_record:
                 existing_service_ids.append(service_record.id)
-
             service_vals = {}
             # product_id
             if service.productId is not None:
@@ -1907,15 +1928,20 @@ class PmsFolioService(Component):
                             "service_line_ids": cmds_service_lines
                         }
                     )
-            if service_vals:
                 service_vals.update({"no_auto_add_lines": True})
+            if service_vals:
                 if service_record:
                     cmds.append((1, service_record.id, service_vals))
                 else:
                     cmds.append((0, 0, service_vals))
         for service_to_remove in reservation_or_folio_record.service_ids.filtered(
             lambda x: x.id not in existing_service_ids and (
-                (from_folio and not x.reservation_id or not from_folio)
+                (
+                    (
+                        from_folio and not x.reservation_id
+                    )
+                    or not from_folio
+                )
             )
         ):
             cmds.append((2, service_to_remove.id))
@@ -1925,12 +1951,14 @@ class PmsFolioService(Component):
         cmds = []
         existing_service_line_ids = []
         for service_line in service_lines:
-            service_line_record = self.env["pms.service.line"].search(
-                [
-                    ("date", "=", service_line.date),
-                    ("service_id", "=", service.id)
-                ]
-            )
+            service_line_record = False
+            if service:
+                service_line_record = self.env["pms.service.line"].search(
+                    [
+                        ("date", "=", service_line.date),
+                        ("service_id", "=", service.id)
+                    ]
+                )
             if service_line_record:
                 existing_service_line_ids.append(service_line_record.id)
 
@@ -1970,9 +1998,9 @@ class PmsFolioService(Component):
                     cmds.append((0, 0, service_line_vals))
                 else:
                     cmds.append((1, service_line_record.id, service_line_vals))
-
-        for service_line_to_remove in service.service_line_ids.filtered(
-            lambda x: x.id not in existing_service_line_ids
-        ):
-            cmds.append((2, service_line_to_remove.id))
+        if service:
+            for service_line_to_remove in service.service_line_ids.filtered(
+                lambda x: x.id not in existing_service_line_ids
+            ):
+                cmds.append((2, service_line_to_remove.id))
         return cmds
