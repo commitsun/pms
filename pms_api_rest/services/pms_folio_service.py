@@ -1647,12 +1647,16 @@ class PmsFolioService(Component):
         # add service to reservations which have boardServiceId and not services with field isBoardService = True
         for reservation in pms_folio_info.reservations:
             res_has_bs = False
-            if reservation.boardServiceId:
+            if reservation.boardServiceId is not None and reservation.boardServiceId != 0:
                 for service in reservation.services:
                     if service.isBoardService:
                         res_has_bs = True
                         break
-            if reservation.boardServiceId is not None and not res_has_bs:
+            if (
+                reservation.boardServiceId is not None
+                and reservation.boardServiceId != 0
+                and not res_has_bs
+            ):
                 board_service_record = self.env["pms.board.service.room.type"].browse(
                     reservation.boardServiceId
                 )
@@ -1782,10 +1786,17 @@ class PmsFolioService(Component):
             # board_service_room_id
             if reservation.boardServiceId is not None:
                 if (
-                    reservation_record and reservation.boardServiceId != reservation_record.board_service_room_id.id
+                    reservation_record
+                    and reservation.boardServiceId != reservation_record.board_service_room_id.id
                     or not reservation_record
                 ):
-                    reservation_vals.update({"board_service_room_id": reservation.boardServiceId})
+                    reservation_vals.update(
+                        {
+                            "board_service_room_id": reservation.boardServiceId if (
+                                reservation.boardServiceId != 0
+                            ) else False
+                        }
+                    )
             # reservation_lines
             if reservation.reservationLines is not None:
                 cmds_reservation_lines = self.build_reservation_lines_cmds(
