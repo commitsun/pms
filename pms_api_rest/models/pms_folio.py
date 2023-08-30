@@ -78,18 +78,17 @@ class PmsFolio(models.Model):
                         }
                     )
             # service_ids
-            if reservation.services is not None:
-                cmds_service_ids = self.env['pms.reservation'].build_reservation_services_cmds(
-                    reservation_record,
-                    reservation.services,
-                    reservation.boardServiceId,
+            cmds_service_ids = self.env['pms.reservation'].build_reservation_services_cmds(
+                reservation_record,
+                reservation.services if reservation.services else [],
+                reservation.boardServiceId if reservation.boardServiceId else False,
+            )
+            if cmds_service_ids:
+                reservation_vals.update(
+                    {
+                        "service_ids": cmds_service_ids
+                    }
                 )
-                if cmds_service_ids:
-                    reservation_vals.update(
-                        {
-                            "service_ids": cmds_service_ids
-                        }
-                    )
             if reservation_vals:
                 if reservation_record:
                     cmds.append((1, reservation_record.id, reservation_vals))

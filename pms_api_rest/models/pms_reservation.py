@@ -66,7 +66,7 @@ class PmsReservation(models.Model):
         return cmds
 
     def build_reservation_services_cmds(self, reservation_record, services, board_service_id):
-        cmds, existing_service_ids = self.env['pms.folio'].build_services_cmds(services)
+        cmds, existing_service_ids = self.env['pms.folio'].build_creation_update_services_cmds(services)
         # remove board services if board_service_id is 0
         if board_service_id == 0:
             for board_service_to_remove in reservation_record.service_ids.filtered(lambda x: x.is_board_service):

@@ -273,20 +273,18 @@ class PmsReservationService(Component):
                     )
                 )
         # service_ids
-        if reservation_data.services is not None:
-            cmds_service_ids = self.env['pms.reservation'].build_reservation_services_cmds(
-                reservation_record,
-                reservation_data.services,
-                reservation_data.boardServiceId,
+        cmds_service_ids = self.env['pms.reservation'].build_reservation_services_cmds(
+            reservation_record,
+            reservation_data.services if reservation_data.services else [],
+            reservation_data.boardServiceId if reservation_data.boardServiceId else False,
+        )
+        if cmds_service_ids:
+            reservation_vals.update(
+                {
+                    "service_ids": cmds_service_ids
+                }
             )
-            if cmds_service_ids:
-                reservation_vals.update(
-                    {
-                        "service_ids": cmds_service_ids
-                    }
-                )
         if reservation_vals:
-            print(reservation_vals)
             reservation_record.with_context(
                 skip_compute_service_ids=True
             ).write(reservation_vals)
