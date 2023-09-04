@@ -9,6 +9,7 @@ from odoo import _, fields
 from odoo.exceptions import MissingError, ValidationError
 from odoo.osv import expression
 from odoo.tools import get_lang
+from ..models import pms_reservation
 
 from odoo.addons.base_rest import restapi
 from odoo.addons.base_rest_datamodel.restapi import Datamodel
@@ -171,12 +172,7 @@ class PmsFolioService(Component):
                 ]
                 domain_filter.append(expression.AND(subdomains))
             elif folio_search_param.filterByState == "toAssign":
-                subdomains = [
-                    [("to_assign", "=", True)],
-                    [("state", "in", ("draft", "confirm", "arrival_delayed"))],
-                    [("reservation_type", "!=", "out")],
-                ]
-                domain_filter.append(expression.AND(subdomains))
+                domain_filter.append(pms_reservation.get_domain_reservations_to_assign())
             elif folio_search_param.filterByState == "cancelled":
                 subdomains = [
                     [("state", "=", "cancel")],

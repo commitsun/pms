@@ -5,6 +5,7 @@ from odoo import fields
 from odoo.addons.base_rest import restapi
 from odoo.addons.base_rest_datamodel.restapi import Datamodel
 from odoo.addons.component.core import Component
+from ..models import pms_reservation
 
 
 class PmsNotificationService(Component):
@@ -29,11 +30,7 @@ class PmsNotificationService(Component):
     )
     def get_reservations_to_assign_notifications(self, pms_notification_search):
         num_reservation_ids_to_assign = self.env["pms.reservation"].search_count(
-            [
-                ("pms_property_id", "=", pms_notification_search.pmsPropertyId),
-                ("checkin", ">=", fields.Date.today()),
-                ("to_assign", "=", True),
-            ],
+            pms_reservation.get_domain_reservations_to_assign(),
         )
         PmsNotificationInfo = self.env.datamodels["pms.notification.info"]
         return PmsNotificationInfo(
