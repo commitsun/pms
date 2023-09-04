@@ -1,6 +1,15 @@
 from odoo import fields, models
 
 
+def get_domain_reservations_to_assign():
+    return [
+        ("checkin", ">=", fields.Date.today()),
+        ("to_assign", "=", True),
+        ("state", "in", ("draft", "confirm", "arrival_delayed")),
+        ("reservation_type", "!=", "out")
+    ]
+
+
 class PmsReservation(models.Model):
     _inherit = "pms.reservation"
 
@@ -75,3 +84,4 @@ class PmsReservation(models.Model):
         for service_to_remove in reservation_record.service_ids.filtered(lambda x: x.id not in existing_service_ids):
             cmds.append((2, service_to_remove.id))
         return cmds
+
