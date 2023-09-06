@@ -1,3 +1,4 @@
+from odoo import http
 from odoo.addons.base_rest import restapi
 from odoo.addons.base_rest_datamodel.restapi import Datamodel
 from odoo.addons.component.core import Component
@@ -28,6 +29,20 @@ class PmsPropertyService(Component):
         for prop in self.env["pms.property"].search(
             domain,
         ):
+            prop_image_attach = self.env['ir.attachment'].sudo().search([
+                ('res_model', '=', 'pms.property'),
+                ('res_id', '=', prop.id),
+                ('res_field', '=', 'hotel_image_pms_api_rest'),
+            ])
+            if prop_image_attach and not prop_image_attach.access_token:
+                prop_image_attach.generate_access_token()
+            hotel_image_url = (
+                http.request.env['ir.config_parameter']
+                    .sudo().get_param('web.base.url') +
+                '/web/image/%s?access_token=%s' % (
+                    prop_image_attach.id, prop_image_attach.access_token
+                ) if prop_image_attach else False
+            )
             result_properties.append(
                 PmsPropertyInfo(
                     id=prop.id,
@@ -48,6 +63,7 @@ class PmsPropertyService(Component):
                     simpleInColor=prop.simple_in_color,
                     simpleFutureColor=prop.simple_future_color,
                     language=prop.lang,
+                    hotelImageUrl=hotel_image_url if hotel_image_url else None,
                 )
             )
         return result_properties

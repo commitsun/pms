@@ -1,4 +1,4 @@
-from odoo import _
+from odoo import _, http
 from odoo.exceptions import MissingError
 
 from odoo.addons.base_rest import restapi
@@ -55,6 +55,20 @@ class PmsSaleChannelService(Component):
         for sale_channel in self.env["pms.sale.channel"].search(
             domain,
         ):
+            sale_channel_attach = self.env['ir.attachment'].sudo().search([
+                ('res_model', '=', 'pms.sale.channel'),
+                ('res_id', '=', sale_channel.id),
+                ('res_field', '=', 'icon'),
+            ])
+            if sale_channel_attach and not sale_channel_attach.access_token:
+                sale_channel_attach.generate_access_token()
+            sale_channel_image_url = (
+                http.request.env['ir.config_parameter']
+                    .sudo().get_param('web.base.url') +
+                '/web/image/%s?access_token=%s' % (
+                    sale_channel_attach.id, sale_channel_attach.access_token
+                ) if sale_channel_attach else False
+            )
             result_sale_channels.append(
                 PmsSaleChannelInfo(
                     id=sale_channel.id,
@@ -62,9 +76,7 @@ class PmsSaleChannelService(Component):
                     channelType=sale_channel.channel_type
                     if sale_channel.channel_type
                     else None,
-                    icon=sale_channel.icon
-                    if sale_channel.icon
-                    else None,
+                    iconUrl=sale_channel_image_url if sale_channel_image_url else "",
                 )
             )
         return result_sale_channels

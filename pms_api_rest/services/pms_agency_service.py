@@ -1,4 +1,4 @@
-from odoo import _
+from odoo import _, http
 from odoo.exceptions import MissingError
 
 from odoo.addons.base_rest import restapi
@@ -34,14 +34,26 @@ class PmsAgencyService(Component):
         for agency in self.env["res.partner"].search(
             domain,
         ):
+            agency_attach = self.env['ir.attachment'].sudo().search([
+                ('res_model', '=', 'res.partner'),
+                ('res_id', '=', agency.id),
+                ('res_field', '=', 'image_128'),
+            ])
+            if agency_attach and not agency_attach.access_token:
+                agency_attach.generate_access_token()
+            agency_image_url = (
+                http.request.env['ir.config_parameter']
+                    .sudo().get_param('web.base.url') +
+                '/web/image/%s?access_token=%s' % (
+                    agency_attach.id, agency_attach.access_token
+                ) if agency_attach else False
+            )
 
             result_agencies.append(
                 PmsAgencyInfo(
                     id=agency.id,
                     name=agency.name,
-                    image=agency.image_1024.decode("utf-8")
-                    if agency.image_1024
-                    else None,
+                    imageUrl=agency_image_url if agency_image_url else "",
                 )
             )
         return result_agencies

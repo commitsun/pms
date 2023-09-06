@@ -3,7 +3,7 @@ import time
 import werkzeug.exceptions
 from jose import jwt
 
-from odoo import _
+from odoo import _, http
 from odoo.exceptions import AccessDenied
 
 from odoo.addons.base_rest import restapi
@@ -68,6 +68,20 @@ class PmsLoginService(Component):
         for avail_field in user_record.availability_rule_field_ids:
             avail_rule_names.append(avail_field.name)
 
+        avatar_attach = self.env['ir.attachment'].sudo().search([
+            ('res_model', '=', 'res.partner'),
+            ('res_id', '=', user_record.partner_id.id),
+            ('res_field', '=', 'image_128'),
+        ])
+        if avatar_attach and not avatar_attach.access_token:
+            avatar_attach.generate_access_token()
+        avatar_url = (
+            http.request.env['ir.config_parameter']
+                .sudo().get_param('web.base.url') +
+            '/web/image/%s?access_token=%s' % (
+                avatar_attach.id, avatar_attach.access_token
+            ) if avatar_attach else False
+        )
         return PmsApiRestUserOutput(
             token=token,
             expirationDate=timestamp_expire_in_a_min,
@@ -80,6 +94,7 @@ class PmsLoginService(Component):
             userImageBase64=user_record.partner_id.image_1024
             if user_record.partner_id.image_1024
             else None,
+            userImageUrl=avatar_url if avatar_url else "",
             isNewInterfaceUser=user_record.is_new_interface_app_user,
             availabilityRuleFields=avail_rule_names,
         )
