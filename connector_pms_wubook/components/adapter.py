@@ -86,6 +86,7 @@ class ChannelWubookAdapter(AbstractComponent):
         self.property_code = self.backend_record.property_code
 
     def _exec(self, funcname, *args, pms_property=True):
+        return
         cc = ChannelCallControl(self, funcname, args)
         s = xmlrpc.client.Server(self.url)
         res, token = s.acquire_token(self.username, self.password, self.apikey)
