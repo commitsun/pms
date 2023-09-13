@@ -61,6 +61,16 @@ class PmsReservation(models.Model):
                     or not reservation_line_record
                 ):
                     reservation_line_vals.update({"room_id": reservation_line.roomId})
+            # isReselling
+            if reservation_line.isReselling is not None:
+                if (
+                    (
+                        reservation_line_record
+                        and reservation_line.isReselling != reservation_line_record.is_reselling
+                    )
+                    or not reservation_line_record
+                ):
+                    reservation_line_vals.update({"is_reselling": reservation_line.isReselling})
 
             if reservation_line_vals:
                 if not reservation_line_record:

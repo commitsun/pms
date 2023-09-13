@@ -164,7 +164,7 @@ class PmsReservationService(Component):
                     }
                 )
         # toAssign
-        if reservation_data.toAssign is not None and not reservation_data.toAssign and reservation_record.toAssign:
+        if reservation_data.toAssign is not None and not reservation_data.toAssign and reservation_record.to_assign:
             reservation_record.action_assign()
         # stateCode
         if reservation_data.stateCode is not None:
