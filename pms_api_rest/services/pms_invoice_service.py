@@ -260,7 +260,12 @@ class PmsInvoiceService(Component):
                             cmd_new_invoice_lines.append((1, new_id, item[2]))
                 if cmd_new_invoice_lines:
                     new_vals["invoice_line_ids"] = cmd_new_invoice_lines
-                invoice._reverse_moves(cancel=True)
+                invoice.with_context(
+                    {
+                        "sii_refund_type": "I",
+                        "supplier_invoice_number": invoice.name,
+                    }
+                )._reverse_moves(cancel=True)
                 # Update Journal by partner if necessary (simplified invoice -> normal invoice)
                 new_vals["journal_id"] = (
                     invoice.pms_property_id._get_folio_default_journal(
