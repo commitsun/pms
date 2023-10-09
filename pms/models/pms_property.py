@@ -1,10 +1,12 @@
 # Copyright 2019  Pablo Quesada
 # Copyright 2019  Dario Lodeiros
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
-
 import base64
 import datetime
+import logging
 import time
+import json
+import requests
 
 import pytz
 from dateutil.relativedelta import relativedelta
@@ -15,6 +17,8 @@ from odoo.osv import expression
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT
 
 from odoo.addons.base.models.res_partner import _tz_get
+
+_logger = logging.getLogger(__name__)
 
 
 def get_default_logo():
@@ -952,3 +956,420 @@ class PmsProperty(models.Model):
                     (record.id, "[" + record.pms_property_code + "] " + record.name)
                 )
         return result
+
+    # NEOBOOKINGS HOTHACK ------------------------------------------------------
+
+    def get_neobookings_payload_avail(self, avails):
+        self.ensure_one()
+        endpoint = "https://ws.neobookings.com/roomdoo/avail"
+        pms_property_id = self.id
+        avails_dict = {"pmsPropertyId": pms_property_id, "avails": []}
+        room_type_ids = avails.mapped("room_type_id.id")
+        for room_type_id in room_type_ids:
+            room_type_avails = sorted(
+                avails.filtered(lambda r: r.room_type_id.id == room_type_id),
+                key=lambda r: r.date,
+            )
+            avail_room_type_index = {}
+            for avail in room_type_avails:
+                previus_date = avail.date - datetime.timedelta(days=1)
+                avail_index = avail_room_type_index.get(previus_date)
+                if avail_index and avail_index["avail"] == avail.real_avail:
+                    avail_room_type_index[avail.date] = {
+                        "date_from": avail_index["date_from"],
+                        "date_to": datetime.datetime.strftime(avail.date, "%Y-%m-%d"),
+                        "roomTypeId": room_type_id,
+                        "avail": avail.real_avail,
+                    }
+                    avail_room_type_index.pop(previus_date)
+                else:
+                    avail_room_type_index[avail.date] = {
+                        "date_from": datetime.datetime.strftime(avail.date, "%Y-%m-%d"),
+                        "date_to": datetime.datetime.strftime(avail.date, "%Y-%m-%d"),
+                        "roomTypeId": room_type_id,
+                        "avail": avail.real_avail,
+                    }
+            avails_dict["avails"].extend(avail_room_type_index.values())
+        return avails_dict, endpoint
+
+    def get_neobookings_payload_prices(self, prices):
+        self.ensure_one()
+        endpoint = "https://ws.neobookings.com/roomdoo/prices"
+        pms_property_id = self.id
+        prices_dict = {"pmsPropertyId": pms_property_id, "prices": []}
+        product_ids = prices.mapped("product_id.id")
+        for product_id in product_ids:
+            room_type_id = (
+                self.env["pms.room.type"].search([("product_id", "=", product_id)]).id
+            )
+            product_prices = sorted(
+                prices.filtered(lambda r: r.product_id.id == product_id),
+                key=lambda r: r.date_end_consumption,
+            )
+            price_product_index = {}
+            for price in product_prices:
+                previus_date = price.date_end_consumption - datetime.timedelta(days=1)
+                price_index = price_product_index.get(previus_date)
+                if price_index and round(price_index["price"], 2) == round(
+                    price.fixed_price, 2
+                ):
+                    price_product_index[price.date_end_consumption] = {
+                        "date_from": price_index["date_from"],
+                        "date_to": datetime.datetime.strftime(
+                            price.date_end_consumption, "%Y-%m-%d"
+                        ),
+                        "roomTypeId": room_type_id,
+                        "price": price.fixed_price,
+                    }
+                    price_product_index.pop(previus_date)
+                else:
+                    price_product_index[price.date_end_consumption] = {
+                        "date_from": datetime.datetime.strftime(
+                            price.date_end_consumption, "%Y-%m-%d"
+                        ),
+                        "date_to": datetime.datetime.strftime(
+                            price.date_end_consumption, "%Y-%m-%d"
+                        ),
+                        "roomTypeId": room_type_id,
+                        "price": price.fixed_price,
+                    }
+            prices_dict["prices"].extend(price_product_index.values())
+        return prices_dict, endpoint
+
+    def get_neobookings_payload_rules(self, rules):
+        self.ensure_one()
+        endpoint = "https://ws.neobookings.com/roomdoo/avail_rules"
+        pms_property_id = self.id
+        rules_dict = {"pmsPropertyId": pms_property_id, "rules": []}
+        room_type_ids = rules.mapped("room_type_id.id")
+        for room_type_id in room_type_ids:
+            room_type_rules = sorted(
+                rules.filtered(lambda r: r.room_type_id.id == room_type_id),
+                key=lambda r: r.date,
+            )
+            rules_room_type_index = {}
+            for rule in room_type_rules:
+                previus_date = rule.date - datetime.timedelta(days=1)
+                avail_index = rules_room_type_index.get(previus_date)
+                if (
+                    avail_index
+                    and avail_index["min_stay"] == rule.min_stay
+                    and avail_index["max_stay"] == rule.max_stay
+                    and avail_index["closed"] == rule.closed
+                    and avail_index["closed_arrival"] == rule.closed_arrival
+                    and avail_index["closed_departure"] == rule.closed_departure
+                ):
+                    rules_room_type_index[rule.date] = {
+                        "date_from": avail_index["date_from"],
+                        "date_to": datetime.datetime.strftime(rule.date, "%Y-%m-%d"),
+                        "roomTypeId": room_type_id,
+                        "min_stay": rule.min_stay,
+                        "max_stay": rule.max_stay,
+                        "closed": rule.closed,
+                        "closed_arrival": rule.closed_arrival,
+                        "closed_departure": rule.closed_departure,
+                    }
+                    rules_room_type_index.pop(previus_date)
+                else:
+                    rules_room_type_index[rule.date] = {
+                        "date_from": datetime.datetime.strftime(rule.date, "%Y-%m-%d"),
+                        "date_to": datetime.datetime.strftime(rule.date, "%Y-%m-%d"),
+                        "roomTypeId": room_type_id,
+                        "min_stay": rule.min_stay,
+                        "max_stay": rule.max_stay,
+                        "closed": rule.closed,
+                        "closed_arrival": rule.closed_arrival,
+                        "closed_departure": rule.closed_departure,
+                    }
+            rules_dict["rules"].extend(rules_room_type_index.values())
+        return rules_dict, endpoint
+
+    def push_neobookings_payload(self, payload, endpoint):
+        token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRlIjoiMjAyMy0wNy0wNlQxMTo1MzoxOS44MzErMDI6MDAiLCJzdWIiOiJYTUwjcm9vbWRvbyNhbGRhIiwic3lzdGVtQ29kZSI6IlhNTCIsImNsaWVudENvZGUiOiJyb29tZG9vIiwiaXNzIjoibmVvYm9va2luZ3MiLCJ1c2VybmFtZSI6ImFsZGFob3RlbHMifQ.61z0SemfIao7QC8ybGZgVPMceVmQ5aI7hW91-wS6ZmI"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+            "accept": "text/json",
+        }
+        _logger.info(f"neobookings Payload: {payload} - {endpoint} - {headers}")
+        response = requests.post(endpoint, headers=headers, data=json.dumps(payload))
+        _logger.info(f"neobookings Response: {response.status_code} - {response.text}")
+
+    # NEOBOOKINGS BATCH PUSH
+
+    def generate_availability_json(
+        self, date_from, date_to, pms_property_id, room_type_id
+    ):
+        avail_records = self.env["pms.availability"].search(
+            [
+                ("date", ">=", date_from),
+                ("date", "<=", date_to),
+                ("pms_property_id", "=", pms_property_id),
+                ("room_type_id", "=", room_type_id),
+            ],
+            order="date",
+        )
+        avail_data = []
+        current_avail = None
+        current_date_from = None
+        current_date_to = None
+        all_dates = [
+            date_from + datetime.timedelta(days=x)
+            for x in range((date_to - date_from).days + 1)
+        ]
+        for date in all_dates:
+            avail_record = avail_records.filtered(lambda r: r.date == date)
+            if avail_record:
+                avail = avail_record[0].real_avail
+            else:
+                # Obtener el valor por defecto del campo rooms_count
+                room_type = self.env["pms.room.type"].browse(room_type_id)
+                avail = len(
+                    room_type.room_ids.filtered(
+                        lambda r: r.active and r.pms_property_id.id == pms_property_id
+                    )
+                )
+            if current_avail is None:
+                current_avail = avail
+                current_date_from = date
+                current_date_to = date
+            elif current_avail == avail:
+                current_date_to = date
+            else:
+                avail_data.append(
+                    {
+                        "date_from": datetime.datetime.strftime(
+                            current_date_from, "%Y-%m-%d"
+                        ),
+                        "date_to": datetime.datetime.strftime(
+                            current_date_to, "%Y-%m-%d"
+                        ),
+                        "roomTypeId": room_type_id,
+                        "avail": current_avail,
+                    }
+                )
+                current_avail = avail
+                current_date_from = date
+                current_date_to = date
+        if current_avail is not None:
+            avail_data.append(
+                {
+                    "date_from": datetime.datetime.strftime(
+                        current_date_from, "%Y-%m-%d"
+                    ),
+                    "date_to": datetime.datetime.strftime(current_date_to, "%Y-%m-%d"),
+                    "roomTypeId": room_type_id,
+                    "avail": current_avail,
+                }
+            )
+        return avail_data
+
+    def generate_restrictions_json(
+        self, date_from, date_to, pms_property_id, room_type_id
+    ):
+        """
+        Group by range of dates with the same restrictions
+        Output format:
+        rules_data: [
+                {
+                    'date_from': '2023-08-01',
+                    'date_to': '2023-08-30',
+                    'roomTypeId': 2,
+                    'min_stay': 2,
+                    'max_stay': 6,
+                    'closed': false,
+                    'closed_arrival': false,
+                    'closed_departure': false
+                }
+            ]
+        """
+        rules_records = self.env["pms.availability.plan.rule"].search(
+            [
+                ("date", ">=", date_from),
+                ("date", "<=", date_to),
+                ("pms_property_id", "=", pms_property_id),
+                ("room_type_id", "=", room_type_id),
+            ],
+            order="date",
+        )
+        rules_data = []
+        current_rule = None
+        current_date_from = None
+        current_date_to = None
+        # Obtener todas las fechas dentro del rango
+        all_dates = [
+            date_from + datetime.timedelta(days=x)
+            for x in range((date_to - date_from).days + 1)
+        ]
+        for date in all_dates:
+            rules_record = rules_records.filtered(lambda r: r.date == date)
+            if rules_record:
+                rule = rules_record[0]
+            else:
+                rule = None
+            if current_rule is None:
+                current_rule = rule
+                current_date_from = date
+                current_date_to = date
+            elif (
+                current_rule.min_stay == rule.min_stay
+                and current_rule.max_stay == rule.max_stay
+                and current_rule.closed == rule.closed
+                and current_rule.closed_arrival == rule.closed_arrival
+                and current_rule.closed_departure == rule.closed_departure
+            ):
+                current_date_to = date
+            else:
+                if current_rule:
+                    rules_data.append(
+                        {
+                            "date_from": datetime.datetime.strftime(
+                                current_date_from, "%Y-%m-%d"
+                            ),
+                            "date_to": datetime.datetime.strftime(
+                                current_date_to, "%Y-%m-%d"
+                            ),
+                            "roomTypeId": room_type_id,
+                            "min_stay": current_rule.min_stay,
+                            "max_stay": current_rule.max_stay,
+                            "closed": current_rule.closed,
+                            "closed_arrival": current_rule.closed_arrival,
+                            "closed_departure": current_rule.closed_departure,
+                        }
+                    )
+                current_rule = rule
+                current_date_from = date
+                current_date_to = date
+        return rules_data
+
+    def generate_prices_json(self, date_from, date_to, pms_property_id, room_type_id):
+        """
+        prices: [
+            {
+                'date_from': '2023-07-02',
+                'date_to': '2023-07-05',
+                'roomTypeId': 2,
+                'price': 50
+            }
+        ]
+        """
+        all_dates = [
+            date_from + datetime.timedelta(days=x)
+            for x in range((date_to - date_from).days + 1)
+        ]
+        product = self.env["pms.room.type"].browse(room_type_id).product_id
+        pms_property = self.env["pms.property"].browse(pms_property_id)
+        pricelist = self.env["product.pricelist"].search(
+            [("pricelist_type", "=", "daily")], limit=1
+        )
+        product_context = dict(
+            self.env.context,
+            date=datetime.datetime.today().date(),
+            pricelist=3,  # self.get_default_pricelist(),
+            uom=product.uom_id.id,
+            fiscal_position=False,
+            property=pms_property_id,
+        )
+        prices_data = []
+        current_price = None
+        current_date_from = None
+        current_date_to = None
+        for date in all_dates:
+            product_context["consumption_date"] = date
+            product = product.with_context(product_context)
+            price = round(
+                self.env["account.tax"]._fix_tax_included_price_company(
+                    self.env["product.product"]._pms_get_display_price(
+                        pricelist_id=pricelist.id,
+                        product=product,
+                        company_id=pms_property.company_id.id,
+                        product_qty=1,
+                        partner_id=False,
+                    ),
+                    product.taxes_id,
+                    product.taxes_id,
+                    pms_property.company_id,
+                ),
+                2,
+            )
+            if current_price is None:
+                current_price = price
+                current_date_from = date
+                current_date_to = date
+            elif current_price == price:
+                current_date_to = date
+            else:
+                prices_data.append(
+                    {
+                        "date_from": datetime.datetime.strftime(
+                            current_date_from, "%Y-%m-%d"
+                        ),
+                        "date_to": datetime.datetime.strftime(
+                            current_date_to, "%Y-%m-%d"
+                        ),
+                        "roomTypeId": room_type_id,
+                        "price": current_price,
+                    }
+                )
+                current_price = price
+                current_date_from = date
+                current_date_to = date
+        return prices_data
+
+    def neobookings_push_batch(
+        self,
+        call_type,
+        date_from=lambda: datetime.datetime.today().date(),
+        date_to=lambda: datetime.datetime.today().date() + datetime.timedelta(days=365),
+        room_type_id=False,
+    ):
+        self.ensure_one()
+        _logger.info("Neobookings push batch")
+        if isinstance(date_from, str):
+            date_from = datetime.datetime.strptime(date_from, "%Y-%m-%d").date()
+        if isinstance(date_to, str):
+            date_to = datetime.datetime.strptime(date_to, "%Y-%m-%d").date()
+        pms_property_id = self.id
+        room_type_ids = (
+            [room_type_id]
+            if room_type_id
+            else self.env["pms.room"]
+            .search([("pms_property_id", "=", pms_property_id)])
+            .mapped("room_type_id")
+            .filtered(lambda r: r.channel_wubook_bind_ids)
+            .ids
+        )
+        payload = {
+            "pmsPropertyId": pms_property_id,
+        }
+        data = []
+        for room_type_id in room_type_ids:
+            if call_type == "availability":
+                endpoint = "https://ws.neobookings.com/roomdoo/avail"
+                data.extend(
+                    self.generate_availability_json(
+                        date_from, date_to, pms_property_id, room_type_id
+                    )
+                )
+                key_data = "avails"
+            elif call_type == "restrictions":
+                endpoint = "https://ws.neobookings.com/roomdoo/avail_rules"
+                data.extend(
+                    self.generate_restrictions_json(
+                        date_from, date_to, pms_property_id, room_type_id
+                    )
+                )
+                key_data = "rules"
+            elif call_type == "prices":
+                endpoint = "https://ws.neobookings.com/roomdoo/prices"
+                data.extend(
+                    self.generate_prices_json(
+                        date_from, date_to, pms_property_id, room_type_id
+                    )
+                )
+                key_data = "prices"
+            else:
+                raise ValidationError(_("Invalid call type"))
+        if data:
+            payload[key_data] = data
+            self.push_neobookings_payload(payload, endpoint)

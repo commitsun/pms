@@ -163,7 +163,10 @@ class ChannelWubookPmsAvailabilityBinding(models.Model):
 
     def _write(self, vals):
         cr = self._cr
-        if any([field in vals for field in AUTO_EXPORT_FIELDS]):
+        export_fields = AUTO_EXPORT_FIELDS
+        if self.pms_property_id.id == 38:
+            export_fields = AUTO_EXPORT_FIELDS + ["real_avail"]
+        if any([field in vals for field in export_fields]):
             query = 'UPDATE "%s" SET "actual_write_date"=%s WHERE id IN %%s' % (
                 self._table,
                 AsIs("(now() at time zone 'UTC')"),

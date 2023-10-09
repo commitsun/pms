@@ -871,6 +871,7 @@ class PmsFolio(models.Model):
                     self.env["folio.sale.line"].browse(sale_lines_vals_to_drop).unlink()
             if not sale_lines_vals:
                 folio.sale_line_ids = False
+            folio._compute_amount_all()
 
     @api.depends("pms_property_id")
     def _compute_company_id(self):
