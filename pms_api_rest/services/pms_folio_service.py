@@ -589,6 +589,12 @@ class PmsFolioService(Component):
             }
             if reservation.reservationLines:
                 vals_lines = []
+                # The service price is included in day price when it is a board service (external api)
+                if call_type == "external_app" and vals.get("board_service_room_id"):
+                    board = self.env["pms.board.service.room.type"].browse(
+                        vals["board_service_room_id"]
+                    )
+                    board_day_price = board.amount * reservation.adults
                 for reservationLine in reservation.reservationLines:
                     vals_lines.append(
                         (
@@ -596,7 +602,7 @@ class PmsFolioService(Component):
                             0,
                             {
                                 "date": reservationLine.date,
-                                "price": reservationLine.price,
+                                "price": reservationLine.price - board_day_price,
                                 "discount": reservationLine.discount,
                             },
                         )
@@ -1524,7 +1530,7 @@ class PmsFolioService(Component):
                     lambda r: r.state != "cancel"
                 ).with_context(modified=True, force_write_blocked=True).action_cancel()
             folio.with_context(
-                skip_compute_service_ids=True,
+                skip_compute_service_ids=False if call_type == "external_app" else True,
                 force_overbooking=True if call_type == "external_app" else False,
             ).write(folio_vals)
         if pms_folio_info.transactions:
@@ -1567,8 +1573,16 @@ class PmsFolioService(Component):
             if info_reservation.children:
                 vals.update({"children": info_reservation.children})
             if info_reservation.reservationLines:
+                # The service price is included in day price when it is a board service (external api)
+                board_day_price = 0
+                if self.get_api_client_type() == "external_app" and vals.get("board_service_room_id"):
+                    board = self.env["pms.board.service.room.type"].browse(
+                        vals["board_service_room_id"]
+                    )
+                    board_day_price = board.amount * info_reservation.adults
                 reservation_lines_cmds = self.wrapper_reservation_lines(
-                    info_reservation
+                    reservation=info_reservation,
+                    board_day_price=board_day_price,
                 )
                 if reservation_lines_cmds:
                     vals.update({"reservation_line_ids": reservation_lines_cmds})
@@ -1584,7 +1598,7 @@ class PmsFolioService(Component):
                 cmds.append((0, False, vals))
         return cmds
 
-    def wrapper_reservation_lines(self, reservation):
+    def wrapper_reservation_lines(self, reservation, board_day_price=0):
         cmds = []
         for line in reservation.reservationLines:
             cmds.append(
@@ -1593,7 +1607,7 @@ class PmsFolioService(Component):
                     False,
                     {
                         "date": line.date,
-                        "price": line.price,
+                        "price": line.price - board_day_price,
                         "discount": line.discount or 0,
                     },
                 )

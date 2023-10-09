@@ -57,6 +57,25 @@ class PmsBoardServiceService(Component):
                     ),
                 )
             )
+        if "neobookings" in self.env.user.login:
+            room_type_ids = board_services_search_param.roomTypeId or self.env[
+                "pms.room"
+            ].search(
+                [("pms_property_id", "=", board_services_search_param.pmsPropertyId)]
+            ).mapped(
+                "room_type_id.id"
+            )
+            for room_type_id in room_type_ids:
+                result_board_services.append(
+                    PmsBoardServiceInfo(
+                        id=0,
+                        name="Solo Alojamiento",
+                        roomTypeId=room_type_id,
+                        amount=0,
+                        boardServiceId=0,
+                        productIds=[],
+                    )
+                )
         return result_board_services
 
     @restapi.method(
