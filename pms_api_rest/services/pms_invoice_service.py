@@ -280,7 +280,12 @@ class PmsInvoiceService(Component):
                     }
                     for move in invoice
                 ]
-                invoice._reverse_moves(default_values_list, cancel=True)
+                invoice.with_context(
+                    {
+                        "sii_refund_type": "I",
+                        "supplier_invoice_number": invoice.name,
+                    }
+                )._reverse_moves(default_values_list, cancel=True)
                 # Update Journal by partner if necessary (simplified invoice -> normal invoice)
                 new_vals["journal_id"] = (
                     invoice.pms_property_id._get_folio_default_journal(
