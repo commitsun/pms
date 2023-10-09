@@ -298,7 +298,12 @@ class PmsInvoiceService(Component):
                     }
                     for move in invoice
                 ]
-                invoice._reverse_moves(default_values_list, cancel=True)
+                invoice.with_context(
+                    {
+                        "sii_refund_type": "I",
+                        "supplier_invoice_number": invoice.name,
+                    }
+                )._reverse_moves(default_values_list, cancel=True)
                 new_invoice.write(new_vals)
                 new_invoice.sudo().action_post()
             else:
