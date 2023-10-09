@@ -781,7 +781,9 @@ class PmsProperty(models.Model):
                     .filtered(lambda i: i.is_simplified_invoice)
                 )
                 if downpayment_invoices:
-                    downpayment_invoices._reverse_moves(cancel=True)
+                    downpayment_invoices.with_context(
+                        {"sii_refund_type": "I"}
+                    )._reverse_moves(cancel=True)
                 invoices = folio.with_context(autoinvoice=True)._create_invoices(
                     grouped=True,
                     final=True,

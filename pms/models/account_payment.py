@@ -113,7 +113,9 @@ class AccountPayment(models.Model):
                     lambda inv: inv._is_downpayment()
                 )
                 if downpayment_invoices.state == "posted":
-                    downpayment_invoices._reverse_moves(cancel=True)
+                    downpayment_invoices.with_context(
+                        {"sii_refund_type": "I"}
+                    )._reverse_moves(cancel=True)
                 else:
                     downpayment_invoices.unlink()
         return super(AccountPayment, self).action_draft()
