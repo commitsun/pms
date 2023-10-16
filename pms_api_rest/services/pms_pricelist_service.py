@@ -72,9 +72,7 @@ class PmsPricelistService(Component):
                     cancelationRuleId=pricelist.cancelation_rule_id.id
                     if pricelist.cancelation_rule_id
                     else None,
-                    defaultAvailabilityPlanId=pricelist.availability_plan_id.id
-                    if pricelist.availability_plan_id
-                    else None,
+                    defaultAvailabilityPlanId=4,
                     pmsPropertyIds=pricelist.pms_property_ids.ids,
                     saleChannelIds=pricelist.pms_sale_channel_ids.ids,
                 )
