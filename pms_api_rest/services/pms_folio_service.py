@@ -590,6 +590,7 @@ class PmsFolioService(Component):
             if reservation.reservationLines:
                 vals_lines = []
                 # The service price is included in day price when it is a board service (external api)
+                board_day_price = 0
                 if call_type == "external_app" and vals.get("board_service_room_id"):
                     board = self.env["pms.board.service.room.type"].browse(
                         vals["board_service_room_id"]
@@ -1575,7 +1576,9 @@ class PmsFolioService(Component):
             if info_reservation.reservationLines:
                 # The service price is included in day price when it is a board service (external api)
                 board_day_price = 0
-                if self.get_api_client_type() == "external_app" and vals.get("board_service_room_id"):
+                if self.get_api_client_type() == "external_app" and vals.get(
+                    "board_service_room_id"
+                ):
                     board = self.env["pms.board.service.room.type"].browse(
                         vals["board_service_room_id"]
                     )
