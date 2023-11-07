@@ -31,6 +31,7 @@ class PmsRoomTypeClassService(Component):
         output_param=Datamodel("pms.api.rest.user.output", is_list=False),
         auth="jwt_api_pms",
     )
+
     def get_user(self, user_id):
         user = self.env["res.users"].sudo().search([("id", "=", user_id)])
         if user:
@@ -146,6 +147,7 @@ class PmsRoomTypeClassService(Component):
         self.env["res.users"].sudo().signup(values, input_data.resetToken)
         return True
 
+
     @restapi.method(
         [
             (
@@ -160,21 +162,18 @@ class PmsRoomTypeClassService(Component):
         cors="*",
     )
     def send_mail_to_reset_password(self, input_data):
-        user = (
-            self.env["res.users"].sudo().search([("email", "=", input_data.userEmail)])
-        )
+        user = self.env["res.users"].sudo().search([("email", "=", input_data.userEmail)])
         if user:
             template_id = self.env.ref("pms_api_rest.pms_reset_password_email").id
-            template = self.env["mail.template"].sudo().browse(template_id)
+            template = self.env['mail.template'].sudo().browse(template_id)
             if not template:
                 return False
             expiration_datetime = datetime.now() + timedelta(minutes=15)
             user.partner_id.sudo().signup_prepare(expiration=expiration_datetime)
-            template.with_context({"app_url": input_data.url}).send_mail(
-                user.id, force_send=True
-            )
+            template.with_context({'app_url': input_data.url}).send_mail(user.id, force_send=True)
             return True
         return False
+
 
     @restapi.method(
         [
@@ -189,9 +188,7 @@ class PmsRoomTypeClassService(Component):
         cors="*",
     )
     def check_reset_password_token(self, reset_token):
-        user = (
-            self.env["res.partner"].sudo().search([("signup_token", "=", reset_token)])
-        )
+        user = self.env["res.partner"].sudo().search([("signup_token", "=", reset_token)])
         is_token_expired = False
         if not user:
             return True
