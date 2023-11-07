@@ -1,5 +1,5 @@
 import re
-from datetime import datetime
+from datetime import datetime, date, timedelta
 
 from odoo.osv import expression
 
@@ -83,16 +83,49 @@ class PmsPartnerService(Component):
     def get_partners(self, pms_partner_search_params):
         result_partners = []
         domain = []
+        print("pms_partner_search_params", pms_partner_search_params)
 
-        if pms_partner_search_params.name:
-            domain.append(("name", "ilike", pms_partner_search_params.name))
-        if pms_partner_search_params.housed:
-            partners_housed = (
+        if pms_partner_search_params.housedNow:
+            partners_housed_now = (
                 self.env["pms.checkin.partner"]
                 .search([("state", "=", "onboard")])
                 .mapped("partner_id")
             )
-            domain.append(("id", "in", partners_housed.ids))
+            domain.append(("id", "in", partners_housed_now.ids))
+        if pms_partner_search_params.housedLastWeek:
+            today = date.today()
+            last_week_day = today - timedelta(days=7)
+            partners_housed_last_week = (
+                self.env["pms.checkin.partner"]
+                .search(
+                    [
+                        '|',
+                        '&', ('checkin', '>=', last_week_day), ('checkin', '<=', today),
+                        '|', ('checkout', '>=', last_week_day), ('checkout', '<=', today),
+                        '|', '&', ('checkin', '<=', last_week_day), ('checkout', '<', today),
+                        '&', ('checkin', '>=', last_week_day), ('checkout', '>', today),
+                        '|', ('checkin', '<', last_week_day), ('checkout', '>', today),
+                    ]
+                ).mapped("partner_id")
+            )
+            domain.append(("id", "in", partners_housed_last_week.ids))
+        if pms_partner_search_params.housedLastMonth:
+            today = date.today()
+            last_month_day = today - timedelta(days=30)
+            partners_housed_last_month = (
+                self.env["pms.checkin.partner"]
+                .search(
+                    [
+                        '|',
+                        '&', ('checkin', '>=', last_month_day), ('checkin', '<=', today),
+                        '|', ('checkout', '>=', last_month_day), ('checkout', '<=', today),
+                        '|', '&', ('checkin', '<=', last_month_day), ('checkout', '<', today),
+                        '&', ('checkin', '>=', last_month_day), ('checkout', '>', today),
+                        '|', ('checkin', '<', last_month_day), ('checkout', '>', today),
+                    ]
+                ).mapped("partner_id")
+            )
+            domain.append(("id", "in", partners_housed_last_month.ids))
         if (
             pms_partner_search_params.filterByType
             and pms_partner_search_params.filterByType != "all"
@@ -104,6 +137,7 @@ class PmsPartnerService(Component):
             elif pms_partner_search_params.filterByType == "individual":
                 domain.append(("is_company", "=", False))
                 domain.append(("is_agency", "=", False))
+
         if pms_partner_search_params.filter:
             subdomains = [
                 [("vat", "ilike", pms_partner_search_params.filter)],
@@ -128,7 +162,6 @@ class PmsPartnerService(Component):
 
         for partner in self.env["res.partner"].search(
             domain,
-            order=pms_partner_search_params.orderBy,
             limit=pms_partner_search_params.limit,
             offset=pms_partner_search_params.offset,
         ):
@@ -281,6 +314,7 @@ class PmsPartnerService(Component):
         PmsTransactiontInfo = self.env.datamodels["pms.transaction.info"]
         payments = []
         for payment in partnerPayments:
+            destination_journal_id = False
             if payment.is_internal_transfer:
                 destination_journal_id = (
                     payment.pms_api_counterpart_payment_id.journal_id.id
@@ -291,10 +325,11 @@ class PmsPartnerService(Component):
                     name=payment.name if payment.name else None,
                     amount=payment.amount,
                     journalId=payment.journal_id.id if payment.journal_id else None,
-                    destinationJournalId=destination_journal_id or None,
+                    destinationJournalId=destination_journal_id if destination_journal_id else None,
                     date=datetime.combine(
                         payment.date, datetime.min.time()
                     ).isoformat(),
+                    folioId=payment.folio_ids[0].id if payment.folio_ids else None,
                     partnerId=payment.partner_id.id if payment.partner_id else None,
                     partnerName=payment.partner_id.name if payment.partner_id else None,
                     reference=payment.ref if payment.ref else None,
@@ -327,21 +362,82 @@ class PmsPartnerService(Component):
                 ("move_type", "in", self.env["account.move"].get_invoice_types()),
             ]
         )
-        PmsAcoountMoveInfo = self.env.datamodels["pms.invoice.info"]
         invoices = []
-        for invoice in partnerInvoices:
-            invoices.append(
-                PmsAcoountMoveInfo(
-                    id=invoice.id,
-                    name=invoice.name,
-                    amount=round(invoice.amount_total, 2),
-                    date=invoice.date.strftime("%d/%m/%Y"),
-                    state=invoice.state,
-                    paymentState=invoice.payment_state
-                    if invoice.payment_state
-                    else None,
+        PmsFolioInvoiceInfo = self.env.datamodels["pms.invoice.info"]
+        PmsInvoiceLineInfo = self.env.datamodels["pms.invoice.line.info"]
+        if partnerInvoices:
+            for move in partnerInvoices:
+                move_lines = []
+                for move_line in move.invoice_line_ids:
+                    move_lines.append(
+                        PmsInvoiceLineInfo(
+                            id=move_line.id,
+                            name=move_line.name if move_line.name else None,
+                            quantity=move_line.quantity
+                            if move_line.quantity
+                            else None,
+                            priceUnit=move_line.price_unit
+                            if move_line.price_unit
+                            else None,
+                            total=move_line.price_total
+                            if move_line.price_total
+                            else None,
+                            discount=move_line.discount
+                            if move_line.discount
+                            else None,
+                            displayType=move_line.display_type
+                            if move_line.display_type
+                            else None,
+                            saleLineId=move_line.folio_line_ids[0]
+                            if move_line.folio_line_ids
+                            else None,
+                            isDownPayment=move_line.move_id._is_downpayment(),
+                        )
+                    )
+                move_url = (
+                    move.get_proforma_portal_url()
+                    if move.state == "draft"
+                    else move.get_portal_url()
                 )
-            )
+                portal_url = (
+                    self.env["ir.config_parameter"].sudo().get_param("web.base.url")
+                    + move_url
+                )
+                invoice_date = (
+                    move.invoice_date.strftime("%d/%m/%Y")
+                    if move.invoice_date
+                    else move.invoice_date_due.strftime("%d/%m/%Y")
+                    if move.invoice_date_due
+                    else None
+                )
+                invoices.append(
+                    PmsFolioInvoiceInfo(
+                        id=move.id if move.id else None,
+                        folioId=move.folio_ids[0] if move.folio_ids else None,
+                        name=move.name if move.name else None,
+                        amount=round(move.amount_total, 2)
+                        if move.amount_total
+                        else None,
+                        date=invoice_date,
+                        state=move.state if move.state else None,
+                        paymentState=move.payment_state
+                        if move.payment_state
+                        else None,
+                        partnerName=move.partner_id.name
+                        if move.partner_id.name
+                        else None,
+                        partnerId=move.partner_id.id
+                        if move.partner_id.id
+                        else None,
+                        moveLines=move_lines if move_lines else None,
+                        portalUrl=portal_url,
+                        moveType=move.move_type,
+                        isReversed=move.payment_state == "reversed",
+                        isDownPaymentInvoice=move._is_downpayment(),
+                        isSimplifiedInvoice=move.journal_id.is_simplified_invoice,
+                    )
+                )
+
         return invoices
 
     @restapi.method(
