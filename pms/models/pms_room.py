@@ -111,6 +111,21 @@ class PmsRoom(models.Model):
         "the room name and two incremental numbers",
     )
 
+    room_state = fields.Selection(
+        string="Room State",
+        help="Room status at a specific time. It can be 'occupied', 'ready', 'dirty' 'out of service' or 'out of order'"
+             "'dirty', 'out of order', 'out of service' mean that the room is unavailable.",
+        store=True,
+        readonly=False,
+        selection=[("occupied", "Occupied"), ("ready", "Ready"), ("dirty", "Dirty"), ("out_of_service", "Out of Service"), ("out_of_order", "Out of Order")],
+        default="ready",
+    )
+
+    out_of_service_reason = fields.Text(
+        string="Cause of out of service",
+        help="Indicates the cause of out of service",
+    )
+
     _sql_constraints = [
         (
             "room_property_unique",

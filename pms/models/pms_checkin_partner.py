@@ -841,6 +841,7 @@ class PmsCheckinPartner(models.Model):
             }
             record.update(vals)
             record.reservation_id.state = "onboard"
+            record.reservation_id.preferred_room_id.room_state = "occupied"
             record.identifier = (
                 record.reservation_id.pms_property_id.checkin_sequence_id._next_do()
             )
