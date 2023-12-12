@@ -74,7 +74,8 @@ class ChannelWubookPmsAvailabilityBinding(models.Model):
                         else:
                             raise ValidationError(
                                 _(
-                                    "More than one rule found, you need to specify the rule in the context"
+                                    """More than one rule found, you need to
+                                    specify the rule in the context"""
                                 )
                             )
                     if record.sale_avail != sale_avail:
@@ -164,8 +165,6 @@ class ChannelWubookPmsAvailabilityBinding(models.Model):
     def _write(self, vals):
         cr = self._cr
         export_fields = AUTO_EXPORT_FIELDS
-        if self.pms_property_id.id == 38:
-            export_fields = AUTO_EXPORT_FIELDS + ["real_avail"]
         if any([field in vals for field in export_fields]):
             query = 'UPDATE "%s" SET "actual_write_date"=%s WHERE id IN %%s' % (
                 self._table,

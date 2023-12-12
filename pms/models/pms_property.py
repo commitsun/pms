@@ -3,12 +3,12 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 import base64
 import datetime
+import json
 import logging
 import time
-import json
-import requests
 
 import pytz
+import requests
 from dateutil.relativedelta import relativedelta
 
 from odoo import _, api, fields, models, modules
@@ -1117,17 +1117,48 @@ class PmsProperty(models.Model):
             date_from + datetime.timedelta(days=x)
             for x in range((date_to - date_from).days + 1)
         ]
+        # TODO: field to check the avail plan to use in neobookings
+        # by the moment, we use the first avail plan (the main)
+        neobookings_plan_avail = self.env["pms.availability.plan"].search([], limit=1)
         for date in all_dates:
             avail_record = avail_records.filtered(lambda r: r.date == date)
             if avail_record:
-                avail = avail_record[0].real_avail
+                avail_rule = avail_record.avail_rule_ids.filtered(
+                    lambda r: r.availability_plan_id == neobookings_plan_avail
+                )
+                if avail_rule:
+                    avail = avail_rule.plan_avail
+                else:
+                    room_type = avail_rule.room_type_id
+                    avail = min(
+                        [
+                            avail_record.real_avail,
+                            room_type.default_max_avail
+                            if room_type.default_max_avail >= 0
+                            else avail_record.real_avail,
+                            room_type.default_quota
+                            if room_type.default_quota >= 0
+                            else avail_record.real_avail,
+                        ]
+                    )
             else:
                 # Obtener el valor por defecto del campo rooms_count
                 room_type = self.env["pms.room.type"].browse(room_type_id)
-                avail = len(
-                    room_type.room_ids.filtered(
-                        lambda r: r.active and r.pms_property_id.id == pms_property_id
-                    )
+                avail = min(
+                    [
+                        len(
+                            room_type.room_ids.filtered(
+                                lambda r: r.active
+                                and r.pms_property_id.id == pms_property_id
+                            )
+                        ),
+                        room_type.default_max_avail
+                        if room_type.default_max_avail >= 0
+                        else avail_record.real_avail,
+                        room_type.default_quota
+                        if room_type.default_quota >= 0
+                        else avail_record.real_avail,
+                    ]
                 )
             if current_avail is None:
                 current_avail = avail
@@ -1316,60 +1347,76 @@ class PmsProperty(models.Model):
                 current_date_to = date
         return prices_data
 
+    @api.model
     def neobookings_push_batch(
         self,
         call_type,
         date_from=lambda: datetime.datetime.today().date(),
         date_to=lambda: datetime.datetime.today().date() + datetime.timedelta(days=365),
-        room_type_id=False,
+        filter_room_type_id=False,
+        pms_property_codes=False,
     ):
-        self.ensure_one()
+        if not pms_property_codes:
+            pms_property_codes = (
+                self.env["ir.config_parameter"]
+                .sudo()
+                .get_param("neobooking.property.codes")
+            ).split(",")
         _logger.info("Neobookings push batch")
         if isinstance(date_from, str):
             date_from = datetime.datetime.strptime(date_from, "%Y-%m-%d").date()
+            if date_from < datetime.datetime.today().date():
+                raise ValidationError(_("Invalid date from"))
         if isinstance(date_to, str):
             date_to = datetime.datetime.strptime(date_to, "%Y-%m-%d").date()
-        pms_property_id = self.id
-        room_type_ids = (
-            [room_type_id]
-            if room_type_id
-            else self.env["pms.room"]
-            .search([("pms_property_id", "=", pms_property_id)])
-            .mapped("room_type_id")
-            .filtered(lambda r: r.channel_wubook_bind_ids)
-            .ids
-        )
-        payload = {
-            "pmsPropertyId": pms_property_id,
-        }
-        data = []
-        for room_type_id in room_type_ids:
-            if call_type == "availability":
-                endpoint = "https://ws.neobookings.com/roomdoo/avail"
-                data.extend(
-                    self.generate_availability_json(
-                        date_from, date_to, pms_property_id, room_type_id
+            if date_to <= date_from:
+                raise ValidationError(_("Invalid date to"))
+        for pms_property_code in pms_property_codes:
+            pms_property = self.env["pms.property"].search(
+                [("pms_property_code", "=", pms_property_code)]
+            )
+            pms_property_id = pms_property.id
+            room_type_ids = (
+                [filter_room_type_id]
+                if filter_room_type_id
+                else self.env["pms.room"]
+                .search([("pms_property_id", "=", pms_property_id)])
+                .mapped("room_type_id")
+                .filtered(lambda r: r.channel_wubook_bind_ids)
+                .ids
+            )
+            payload = {
+                "pmsPropertyId": pms_property_id,
+            }
+            data = []
+            for room_type_id in room_type_ids:
+                if call_type == "availability":
+                    endpoint = "https://ws.neobookings.com/roomdoo/avail"
+                    data.extend(
+                        pms_property.generate_availability_json(
+                            date_from, date_to, pms_property_id, room_type_id
+                        )
                     )
-                )
-                key_data = "avails"
-            elif call_type == "restrictions":
-                endpoint = "https://ws.neobookings.com/roomdoo/avail_rules"
-                data.extend(
-                    self.generate_restrictions_json(
-                        date_from, date_to, pms_property_id, room_type_id
+                    key_data = "avails"
+                elif call_type == "restrictions":
+                    endpoint = "https://ws.neobookings.com/roomdoo/avail_rules"
+                    data.extend(
+                        pms_property.generate_restrictions_json(
+                            date_from, date_to, pms_property_id, room_type_id
+                        )
                     )
-                )
-                key_data = "rules"
-            elif call_type == "prices":
-                endpoint = "https://ws.neobookings.com/roomdoo/prices"
-                data.extend(
-                    self.generate_prices_json(
-                        date_from, date_to, pms_property_id, room_type_id
+                    key_data = "rules"
+                elif call_type == "prices":
+                    endpoint = "https://ws.neobookings.com/roomdoo/prices"
+                    data.extend(
+                        pms_property.generate_prices_json(
+                            date_from, date_to, pms_property_id, room_type_id
+                        )
                     )
-                )
-                key_data = "prices"
-            else:
-                raise ValidationError(_("Invalid call type"))
-        if data:
-            payload[key_data] = data
-            self.push_neobookings_payload(payload, endpoint)
+                    key_data = "prices"
+                else:
+                    raise ValidationError(_("Invalid call type"))
+            if data:
+                payload[key_data] = data
+                self.push_neobookings_payload(payload, endpoint)
+            self.invalidate_cache()

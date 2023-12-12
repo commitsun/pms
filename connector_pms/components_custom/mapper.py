@@ -113,7 +113,17 @@ class ChannelChildMapperImport(AbstractComponent):
                 mapped.append(item_values)
                 if hasattr(items, "_name"):
                     neobooking_item_ids.append(item.id)
-        neobookings_property_ids = [4, 38, 55, 57, 59, 62, 68, 101]
+        neobooking_property_codes = (
+            self.env["ir.config_parameter"]
+            .sudo()
+            .get_param("neobooking.property.codes")
+        ).split(",")
+        neobookings_property_ids = (
+            self.env["pms.property"]
+            .search([("code", "in", neobooking_property_codes)])
+            .ids
+        )
+
         if self.backend_record.pms_property_id.id not in neobookings_property_ids:
             return mapped
 
