@@ -18,7 +18,13 @@
         "feed_rss",
     ],
     "external_dependencies": {
-        "python": ["jwt", "simplejson", "marshmallow", "jose"],
+        "python": [
+            "jwt",
+            "simplejson",
+            "marshmallow",
+            "jose",
+            "regula.documentreader.webclient",
+        ],
     },
     "data": [
         "data/sql_reports.xml",
