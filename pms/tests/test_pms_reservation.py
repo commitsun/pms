@@ -754,12 +754,9 @@ class TestPmsReservations(TestPms):
 
         # ASSERT
         error_msm = (
-            (
-                "The priority of a reservation to be assigned \
+            "The priority of a reservation to be assigned \
                 should be %d and this is %d"
-            )
-            % (expected_priority, computed_priority)
-        )
+        ) % (expected_priority, computed_priority)
 
         self.assertEqual(
             computed_priority,
@@ -794,12 +791,9 @@ class TestPmsReservations(TestPms):
 
         # ASSERT
         error_msm = (
-            (
-                "The priority of a arrival delayed reservation \
+            "The priority of a arrival delayed reservation \
                 should be %d and this is %d"
-            )
-            % (expected_priority, computed_priority)
-        )
+        ) % (expected_priority, computed_priority)
 
         self.assertEqual(
             computed_priority,
@@ -895,12 +889,9 @@ class TestPmsReservations(TestPms):
 
         # ASSERT
         error_msm = (
-            (
-                "The priority of a cancelled reservation with pending amount \
+            "The priority of a cancelled reservation with pending amount \
                 should be %d and this is %d"
-            )
-            % (expected_priority, computed_priority)
-        )
+        ) % (expected_priority, computed_priority)
 
         self.assertEqual(
             computed_priority,
@@ -963,12 +954,9 @@ class TestPmsReservations(TestPms):
 
         # ASSERT
         error_msm = (
-            (
-                "The priority of a done reservation with pending amount\
+            "The priority of a done reservation with pending amount\
                 should be %d and this is %d"
-            )
-            % (expected_priority, computed_priority)
-        )
+        ) % (expected_priority, computed_priority)
 
         self.assertEqual(
             computed_priority,
@@ -1024,12 +1012,9 @@ class TestPmsReservations(TestPms):
 
         # ASSERT
         error_msm = (
-            (
-                "The priority of a onboard with payment amount reservation \
+            "The priority of a onboard with payment amount reservation \
                 should be %d and this is %d"
-            )
-            % (expected_priority, computed_priority)
-        )
+        ) % (expected_priority, computed_priority)
 
         self.assertEqual(
             computed_priority,
@@ -1063,12 +1048,9 @@ class TestPmsReservations(TestPms):
 
         # ASSERT
         error_msm = (
-            (
-                "The priority of a confirm with less than 3 days for arrival \
+            "The priority of a confirm with less than 3 days for arrival \
                 reservation should be %d and this is %d"
-            )
-            % (expected_priority, computed_priority)
-        )
+        ) % (expected_priority, computed_priority)
 
         self.assertEqual(
             computed_priority,
@@ -1124,12 +1106,9 @@ class TestPmsReservations(TestPms):
 
         # ASSERT
         error_msm = (
-            (
-                "The priority of onboard all pay reservation \
+            "The priority of onboard all pay reservation \
                 should be %d and this is %d"
-            )
-            % (expected_priority, computed_priority)
-        )
+        ) % (expected_priority, computed_priority)
 
         self.assertEqual(
             computed_priority,
@@ -1200,12 +1179,9 @@ class TestPmsReservations(TestPms):
 
         # ASSERT
         error_msm = (
-            (
-                "The priority of a done reservation without pending amount\
+            "The priority of a done reservation without pending amount\
                 and checkout yesterday should be %d and this is %d"
-            )
-            % (expected_priority, computed_priority)
-        )
+        ) % (expected_priority, computed_priority)
 
         self.assertEqual(
             computed_priority,
@@ -1239,12 +1215,9 @@ class TestPmsReservations(TestPms):
 
         # ASSERT
         error_msm = (
-            (
-                "The priority of a confirm with between 3 and 20 days for arrival \
+            "The priority of a confirm with between 3 and 20 days for arrival \
                 reservation should be %d and this is %d"
-            )
-            % (expected_priority, computed_priority)
-        )
+        ) % (expected_priority, computed_priority)
 
         self.assertEqual(
             computed_priority,
@@ -1278,12 +1251,9 @@ class TestPmsReservations(TestPms):
 
         # ASSERT
         error_msm = (
-            (
-                "The priority of a confirm with more than 20 days for arrival \
+            "The priority of a confirm with more than 20 days for arrival \
                 reservation should be %d and this is %d"
-            )
-            % (expected_priority, computed_priority)
-        )
+        ) % (expected_priority, computed_priority)
 
         self.assertEqual(
             computed_priority,
@@ -1355,12 +1325,9 @@ class TestPmsReservations(TestPms):
 
         # ASSERT
         error_msm = (
-            (
-                "The priority of a done reservation without pending amount\
+            "The priority of a done reservation without pending amount\
                 and checkout less than 15 days before should be %d and this is %d"
-            )
-            % (expected_priority, computed_priority)
-        )
+        ) % (expected_priority, computed_priority)
 
         self.assertEqual(
             computed_priority,
@@ -1432,12 +1399,9 @@ class TestPmsReservations(TestPms):
 
         # ASSERT
         error_msm = (
-            (
-                "The priority of a done reservation without pending amount\
+            "The priority of a done reservation without pending amount\
                 and checkout between 30 and 90 days before should be %d and this is %d"
-            )
-            % (expected_priority, computed_priority)
-        )
+        ) % (expected_priority, computed_priority)
 
         self.assertEqual(
             computed_priority,
@@ -1509,12 +1473,9 @@ class TestPmsReservations(TestPms):
 
         # ASSERT
         error_msm = (
-            (
-                "The priority of a done reservation without pending amount\
+            "The priority of a done reservation without pending amount\
                 and checkout more than 90 days before should be %d and this is %d"
-            )
-            % (expected_priority, computed_priority)
-        )
+        ) % (expected_priority, computed_priority)
 
         self.assertEqual(
             computed_priority,

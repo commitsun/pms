@@ -510,7 +510,6 @@ class TestPmsRoomTypeAvailabilityRules(TestPms):
 
         for test_case in test_cases:
             with self.subTest(k=test_case):
-
                 # ACT
                 self.test_room_type_availability_rule1.write(test_case)
 

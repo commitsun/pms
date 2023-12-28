@@ -2223,12 +2223,8 @@ class PmsReservation(models.Model):
         services_to_update_channel = self.env["pms.service"]
         for record in self:
             for service in record.service_ids:
-                if (
-                    service.sale_channel_origin_id == record.sale_channel_origin_id
-                    and (
-                        vals["sale_channel_origin_id"]
-                        != service.sale_channel_origin_id.id
-                    )
+                if service.sale_channel_origin_id == record.sale_channel_origin_id and (
+                    vals["sale_channel_origin_id"] != service.sale_channel_origin_id.id
                 ):
                     services_to_update_channel += service
         return services_to_update_channel

@@ -190,7 +190,6 @@ class ProductPricelist(models.Model):
     #                 )
 
     def open_massive_changes_wizard(self):
-
         if self.ensure_one():
             return {
                 "view_type": "form",

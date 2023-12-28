@@ -146,7 +146,7 @@ class TestPmsFolioSaleLine(TestPms):
         self.assertEqual(
             expected_sale_lines,
             len(r_test.folio_id.sale_line_ids.filtered(lambda x: not x.display_type)),
-            "Folio should contain {} sale lines".format(expected_sale_lines),
+            f"Folio should contain {expected_sale_lines} sale lines",
         )
 
     def test_comp_fsl_rooms_different_prices(self):
@@ -181,9 +181,7 @@ class TestPmsFolioSaleLine(TestPms):
         self.assertEqual(
             expected_sale_lines,
             len(r_test.folio_id.sale_line_ids.filtered(lambda x: not x.display_type)),
-            "Folio should contain {} reservation sale lines".format(
-                expected_sale_lines
-            ),
+            f"Folio should contain {expected_sale_lines} reservation sale lines",
         )
 
     def test_comp_fsl_rooms_different_discount(self):
@@ -218,9 +216,7 @@ class TestPmsFolioSaleLine(TestPms):
         self.assertEqual(
             expected_sale_lines,
             len(r_test.folio_id.sale_line_ids.filtered(lambda x: not x.display_type)),
-            "Folio should contain {} reservation sale lines".format(
-                expected_sale_lines
-            ),
+            f"Folio should contain {expected_sale_lines} reservation sale lines",
         )
 
     def test_comp_fsl_rooms_different_cancel_discount(self):
@@ -257,9 +253,7 @@ class TestPmsFolioSaleLine(TestPms):
         self.assertEqual(
             expected_sale_lines,
             len(r_test.folio_id.sale_line_ids.filtered(lambda x: not x.display_type)),
-            "Folio should contain {} reservation sale lines".format(
-                expected_sale_lines
-            ),
+            f"Folio should contain {expected_sale_lines} reservation sale lines",
         )
 
     def test_comp_fsl_rooms_one_full_cancel_discount(self):
@@ -293,9 +287,7 @@ class TestPmsFolioSaleLine(TestPms):
         self.assertEqual(
             expected_sale_lines,
             len(r_test.folio_id.sale_line_ids.filtered(lambda x: not x.display_type)),
-            "Folio should contain {} reservation sale lines".format(
-                expected_sale_lines
-            ),
+            f"Folio should contain {expected_sale_lines} reservation sale lines",
         )
 
     def test_comp_fsl_rooms_increase_stay(self):
@@ -421,7 +413,6 @@ class TestPmsFolioSaleLine(TestPms):
 
     # BOARD SERVICES
     def test_comp_fsl_board_services_all_same_group(self):
-
         """
         Check that the board services of reservation with the same price, discount
         and cancel discount values, should only generate one sale line.

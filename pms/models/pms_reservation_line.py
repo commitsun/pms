@@ -152,7 +152,7 @@ class PmsReservationLine(models.Model):
         result = []
         for res in self:
             date = fields.Date.from_string(res.date)
-            name = "{}/{}".format(date.day, date.month)
+            name = f"{date.day}/{date.month}"
             result.append((res.id, name))
         return result
 
@@ -235,7 +235,6 @@ class PmsReservationLine(models.Model):
                     reservation = reservation.with_context(not_split=True)
                     # if the reservation has a preferred room
                     if reservation.preferred_room_id:
-
                         # if the preferred room is available
                         if reservation.preferred_room_id in rooms_available:
                             line.room_id = reservation.preferred_room_id
@@ -338,7 +337,6 @@ class PmsReservationLine(models.Model):
 
                         # if there is a tie in the rankings
                         if len(bests) > 1:
-
                             # we get the line from last night
                             date_last_night = line.date + datetime.timedelta(days=-1)
                             line_past_night = self.env["pms.reservation.line"].search(

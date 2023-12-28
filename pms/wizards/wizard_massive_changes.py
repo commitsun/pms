@@ -4,7 +4,6 @@ from odoo import _, api, fields, models
 
 
 class AvailabilityWizard(models.TransientModel):
-
     _name = "pms.massive.changes.wizard"
     _description = "Wizard for massive changes on Availability Plans & Pricelists."
     _check_pms_properties_auto = True
@@ -894,7 +893,6 @@ class AvailabilityWizard(models.TransientModel):
             self.start_date + datetime.timedelta(days=x)
             for x in range(0, (self.end_date - self.start_date).days + 1)
         ]:
-
             if (
                 not self.apply_on_all_week
                 and not week_days_to_apply[date.timetuple()[6]]
@@ -966,7 +964,6 @@ class AvailabilityWizard(models.TransientModel):
                             )
                             items.append(pricelist_item.id)
                 elif self.massive_changes_on == "availability_plan":
-
                     new_items = self.create_availability_plans_rules(
                         room_types,
                         self.availability_plan_ids,

@@ -10,7 +10,6 @@ from .common import TestPms
 
 
 class TestPmsFolio(TestPms):
-
     # SetUp and Common Scenarios methods
 
     @classmethod

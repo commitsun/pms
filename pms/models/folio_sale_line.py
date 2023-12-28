@@ -898,7 +898,7 @@ class FolioSaleLine(models.Model):
                 else:
                     name += ", " + date.strftime("%d")
 
-            return "{} ({}).".format(product_id.name, name)
+            return f"{product_id.name} ({name})."
         elif service_line_ids:
             month = False
             name = False
@@ -921,7 +921,7 @@ class FolioSaleLine(models.Model):
                     month = date.month
                 else:
                     name += ", " + date.strftime("%d")
-            return "{} ({}).".format(service_id.name, name)
+            return f"{service_id.name} ({name})."
         else:
             return service_id.name
 

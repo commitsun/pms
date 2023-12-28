@@ -4,7 +4,8 @@ from odoo.http import request
 
 from odoo.addons.account.controllers.portal import PortalAccount
 from odoo.addons.payment.controllers.portal import PaymentProcessing
-from odoo.addons.portal.controllers.portal import CustomerPortal, pager as portal_pager
+from odoo.addons.portal.controllers.portal import CustomerPortal
+from odoo.addons.portal.controllers.portal import pager as portal_pager
 from odoo.addons.portal.models.portal_mixin import PortalMixin
 
 
@@ -227,7 +228,7 @@ class PortalReservation(CustomerPortal):
             values,
             "my_reservations_history",
             False,
-            **kwargs
+            **kwargs,
         )
 
     @http.route(
@@ -316,7 +317,7 @@ class PortalPrecheckin(CustomerPortal):
             values,
             "my_precheckins_history",
             False,
-            **kwargs
+            **kwargs,
         )
 
     @http.route(

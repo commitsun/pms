@@ -478,9 +478,9 @@ class PmsService(models.Model):
         result = []
         for rec in self:
             name = []
-            name.append("{name}".format(name=rec.name))
+            name.append(f"{rec.name}")
             if rec.reservation_id.name:
-                name.append("{name}".format(name=rec.reservation_id.name))
+                name.append(f"{rec.reservation_id.name}")
             result.append((rec.id, ", ".join(name)))
         return result
 

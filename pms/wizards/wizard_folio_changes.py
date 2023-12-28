@@ -4,7 +4,6 @@ from odoo import api, fields, models
 
 
 class WizardFolioChanges(models.TransientModel):
-
     _name = "wizard.folio.changes"
     _description = "Folio Changes"
 

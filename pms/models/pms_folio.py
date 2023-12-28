@@ -975,17 +975,17 @@ class PmsFolio(models.Model):
         for folio in self:
             if folio.partner_id:
                 addr = folio.partner_id.address_get(["invoice"])
-                if not addr["invoice"] in folio.partner_invoice_ids.ids:
+                if addr["invoice"] not in folio.partner_invoice_ids.ids:
                     folio.partner_invoice_ids = [(4, addr["invoice"])]
             for reservation in folio.reservation_ids:
                 if reservation.partner_id:
                     addr = reservation.partner_id.address_get(["invoice"])
-                    if not addr["invoice"] in folio.partner_invoice_ids.ids:
+                    if addr["invoice"] not in folio.partner_invoice_ids.ids:
                         folio.partner_invoice_ids = [(4, addr["invoice"])]
                 for checkin in reservation.checkin_partner_ids:
                     if checkin.partner_id:
                         addr = checkin.partner_id.address_get(["invoice"])
-                        if not addr["invoice"] in folio.partner_invoice_ids.ids:
+                        if addr["invoice"] not in folio.partner_invoice_ids.ids:
                             folio.partner_invoice_ids = [(4, addr["invoice"])]
         self.filtered(lambda f: not f.partner_invoice_ids).partner_invoice_ids = False
 
@@ -2156,7 +2156,7 @@ class PmsFolio(models.Model):
         reference = folio.name
         if folio.external_reference:
             reference += " - " + folio.external_reference
-        if ref and not ref in reference:
+        if ref and ref not in reference:
             reference += ": " + ref
         vals = {
             "journal_id": journal.id,
@@ -2249,7 +2249,7 @@ class PmsFolio(models.Model):
         reference = folio.name
         if folio.external_reference:
             reference += " - " + folio.external_reference
-        if ref and not ref in reference:
+        if ref and ref not in reference:
             reference += ": " + ref
         vals = {
             "journal_id": journal.id,

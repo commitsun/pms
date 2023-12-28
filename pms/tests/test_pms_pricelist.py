@@ -1241,7 +1241,6 @@ class TestPmsPricelist(TestPms):
 
         for tc in test_cases:
             with self.subTest(k=tc):
-
                 # ARRANGE
                 items = []
                 for item in tc["items"]:
