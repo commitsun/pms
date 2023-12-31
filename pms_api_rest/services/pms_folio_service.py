@@ -701,12 +701,7 @@ class PmsFolioService(Component):
                     ("ref", "ilike", transaction.reference),
                 ]
             ):
-                # TODO: Move this to the user API payment configuration
-                journal = (
-                    self.env["channel.wubook.backend"]
-                    .search([("pms_property_id", "=", folio.pms_property_id.id)])
-                    .wubook_journal_id
-                )
+                journal = transaction.journalId
                 if transaction.transactionType == "inbound":
                     folio.do_payment(
                         journal,
@@ -1367,7 +1362,7 @@ class PmsFolioService(Component):
         #    - Channel Manager
         #    - Booking Engine
         #    - ...
-        if "neobookings" in self.env.user.login:
+        if self.env.user.pms_api_client:
             return "external_app"
         return "internal_app"
 
@@ -1534,8 +1529,50 @@ class PmsFolioService(Component):
                 skip_compute_service_ids=False if call_type == "external_app" else True,
                 force_overbooking=True if call_type == "external_app" else False,
             ).write(folio_vals)
+        # Compute OTA transactions
+        pms_folio_info.transactions = self.normalize_payments_structure(pms_folio_info)
         if pms_folio_info.transactions:
             self.compute_transactions(folio, pms_folio_info.transactions)
+
+    def normalize_payments_structure(self, pms_folio_info):
+        """
+        This method use the OTA payment structure to normalize the structure
+        and incorporate them in the transactions datamodel param
+        """
+        if pms_folio_info.transactions:
+            for transaction in pms_folio_info.transactions:
+                if not transaction.journalId:
+                    transaction.journalId = self.env.user.pms_api_payment_journal_id.id
+        elif pms_folio_info.agencyId:
+            ota_conf = self.env["ota.property.settings"].search(
+                [
+                    ("pms_property_id", "=", pms_folio_info.pmsPropertyId),
+                    ("agency_id", "=", pms_folio_info.agencyId),
+                ]
+            )
+            # TODO: Review where to input the data to identify payments,
+            # as partnerRequest in the reservation doesn't seem like the best location.
+            if (
+                ota_conf
+                and ota_conf.pms_api_alowed_payments
+                and any(
+                    [
+                        ota_conf.pms_api_payment_identifier
+                        in reservation.partnerRequests
+                        for reservation in pms_folio_info.reservations
+                    ]
+                )
+            ):
+                journal = ota_conf.pms_api_payment_journal_id
+                pms_folio_info.transactions = [
+                    {
+                        "journalId": journal.id,
+                        "transactionType": "inbound",
+                        "amount": pms_folio_info.totalPrice,
+                        "date": fields.Date.today().strftime("%Y-%m-%d"),
+                        "reference": pms_folio_info.externalReference,
+                    }
+                ]
 
     def wrapper_reservations(self, folio, info_reservations):
         """
