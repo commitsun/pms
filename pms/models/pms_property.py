@@ -965,29 +965,56 @@ class PmsProperty(models.Model):
         pms_property_id = self.id
         avails_dict = {"pmsPropertyId": pms_property_id, "avails": []}
         room_type_ids = avails.mapped("room_type_id.id")
+        # TODO: field to check the avail plan to use in neobookings
+        # by the moment, we use the first avail plan (the main)
+        neobookings_plan_avail = self.env["pms.availability.plan"].search([], limit=1)
         for room_type_id in room_type_ids:
             room_type_avails = sorted(
                 avails.filtered(lambda r: r.room_type_id.id == room_type_id),
                 key=lambda r: r.date,
             )
             avail_room_type_index = {}
-            for avail in room_type_avails:
-                previus_date = avail.date - datetime.timedelta(days=1)
+            for record_avail in room_type_avails:
+                avail_rule = record_avail.avail_rule_ids.filtered(
+                    lambda r: r.availability_plan_id == neobookings_plan_avail
+                )
+                if avail_rule:
+                    avail = avail_rule.plan_avail
+                else:
+                    room_type = avail_rule.room_type_id
+                    avail = min(
+                        [
+                            record_avail.real_avail,
+                            room_type.default_max_avail
+                            if room_type.default_max_avail >= 0
+                            else record_avail.real_avail,
+                            room_type.default_quota
+                            if room_type.default_quota >= 0
+                            else record_avail.real_avail,
+                        ]
+                    )
+                previus_date = record_avail.date - datetime.timedelta(days=1)
                 avail_index = avail_room_type_index.get(previus_date)
-                if avail_index and avail_index["avail"] == avail.real_avail:
-                    avail_room_type_index[avail.date] = {
+                if avail_index and avail_index["avail"] == avail:
+                    avail_room_type_index[record_avail.date] = {
                         "date_from": avail_index["date_from"],
-                        "date_to": datetime.datetime.strftime(avail.date, "%Y-%m-%d"),
+                        "date_to": datetime.datetime.strftime(
+                            record_avail.date, "%Y-%m-%d"
+                        ),
                         "roomTypeId": room_type_id,
-                        "avail": avail.real_avail,
+                        "avail": record_avail,
                     }
                     avail_room_type_index.pop(previus_date)
                 else:
-                    avail_room_type_index[avail.date] = {
-                        "date_from": datetime.datetime.strftime(avail.date, "%Y-%m-%d"),
-                        "date_to": datetime.datetime.strftime(avail.date, "%Y-%m-%d"),
+                    avail_room_type_index[record_avail.date] = {
+                        "date_from": datetime.datetime.strftime(
+                            record_avail.date, "%Y-%m-%d"
+                        ),
+                        "date_to": datetime.datetime.strftime(
+                            record_avail.date, "%Y-%m-%d"
+                        ),
                         "roomTypeId": room_type_id,
-                        "avail": avail.real_avail,
+                        "avail": avail,
                     }
             avails_dict["avails"].extend(avail_room_type_index.values())
         return avails_dict, endpoint
