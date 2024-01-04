@@ -1332,7 +1332,7 @@ class PmsProperty(models.Model):
         current_price = None
         current_date_from = None
         current_date_to = None
-        for date in all_dates:
+        for index, date in enumerate(all_dates):
             product_context["consumption_date"] = date
             product = product.with_context(product_context)
             price = round(
@@ -1354,7 +1354,7 @@ class PmsProperty(models.Model):
                 current_price = price
                 current_date_from = date
                 current_date_to = date
-            elif current_price == price:
+            elif current_price == price and index < len(all_dates) - 1:
                 current_date_to = date
             else:
                 prices_data.append(
