@@ -102,6 +102,10 @@ class ChannelChildMapperImport(AbstractComponent):
 
     def get_all_items(self, mapper, items, parent, to_attr, options):
         mapped = []
+        neobookings_user = self.env["res.users"].search(
+            [("login", "=", "neobookings@roomdoo.com")]
+        )
+        neobooking_item_ids = []
         for item in items:
             map_record = mapper.map_record(item, parent=parent)
             if self.skip_item(map_record):
@@ -110,6 +114,61 @@ class ChannelChildMapperImport(AbstractComponent):
             if item_values:
                 self._child_bind(map_record, item_values)
                 mapped.append(item_values)
+                if hasattr(items, "_name"):
+                    neobooking_item_ids.append(item.id)
+        neobookings_property_ids = neobookings_user.pms_property_ids.ids
+
+        if self.backend_record.pms_property_id.id not in neobookings_property_ids:
+            return mapped
+
+        neobookings_property_id = self.backend_record.pms_property_id.id
+        neobookings_property = self.env["pms.property"].browse(neobookings_property_id)
+        payload = False
+        items_to_upload = False
+        if (
+            hasattr(items, "_name")
+            and items._name == "channel.wubook.product.pricelist.item"
+        ):
+            items_to_upload = (
+                self.env["channel.wubook.product.pricelist.item"]
+                .browse(neobooking_item_ids)
+                .filtered(
+                    lambda r: r.pricelist_id.id == 3
+                    and neobookings_property_id in r.pms_property_ids.ids
+                )
+            )
+            if items_to_upload:
+                payload, endpoint = neobookings_property.get_payload_prices(
+                    prices=items_to_upload, client=neobookings_user
+                )
+        if hasattr(items, "_name") and items._name == "channel.wubook.pms.availability":
+            items_to_upload = (
+                self.env["channel.wubook.pms.availability"]
+                .browse(neobooking_item_ids)
+                .filtered(lambda r: r.pms_property_id.id == neobookings_property_id)
+            )
+            if items_to_upload:
+                payload, endpoint = neobookings_property.get_payload_avail(
+                    avails=items_to_upload, client=neobookings_user
+                )
+        if (
+            hasattr(items, "_name")
+            and items._name == "channel.wubook.pms.availability.plan.rule"
+        ):
+            items_to_upload = (
+                self.env["channel.wubook.pms.availability.plan.rule"]
+                .browse(neobooking_item_ids)
+                .filtered(lambda r: r.pms_property_id.id == neobookings_property_id)
+            )
+            if items_to_upload:
+                payload, endpoint = neobookings_property.get_payload_rules(
+                    rules=items_to_upload, client=neobookings_user
+                )
+        if payload:
+            _logger.info("Exporting Neobookings")
+            neobookings_property.pms_api_push_payload(
+                payload=payload, endpoint=endpoint, client=neobookings_user
+            )
         return mapped
 
     def get_items(self, items, parent, to_attr, options):
