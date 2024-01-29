@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 
 import werkzeug.exceptions
 from jose import jwt
@@ -39,7 +40,7 @@ class PmsLoginService(Component):
         )
         # formula = ms_now + ms in 1 sec * secs in 1 min
         minutes = 10000
-        timestamp_expire_in_a_min = int(time.time() * 1000.0) + 1000 * 60 * minutes
+        expiration_date = int(time.time() * 1000.0) + 1000 * 60 * minutes
 
         if not user_record:
             raise werkzeug.exceptions.Unauthorized(_("wrong user/pass"))
@@ -59,7 +60,7 @@ class PmsLoginService(Component):
             {
                 "aud": "api_pms",
                 "iss": "pms",
-                "exp": timestamp_expire_in_a_min,
+                "exp": expiration_date,
                 "username": user.username,
             },
             key=validator.secret_key,
@@ -69,9 +70,18 @@ class PmsLoginService(Component):
         for avail_field in user_record.availability_rule_field_ids:
             avail_rule_names.append(avail_field.name)
 
+        module_purchase_portal = (
+            self.env["ir.module.module"]
+            .sudo()
+            .search([("name", "=", "purchase_portal")])
+        )
+        if module_purchase_portal.state == "installed":
+            expiration_datetime = datetime.utcfromtimestamp(expiration_date / 1000.0)
+            user_record.partner_id.sudo().signup_prepare(expiration=expiration_datetime)
+
         return PmsApiRestUserOutput(
             token=token,
-            expirationDate=timestamp_expire_in_a_min,
+            expirationDate=expiration_date,
             userId=user_record.id,
             userName=user_record.name,
             userFirstName=user_record.firstname or None,
@@ -87,4 +97,13 @@ class PmsLoginService(Component):
             ),
             isNewInterfaceUser=user_record.is_new_interface_app_user,
             availabilityRuleFields=avail_rule_names,
+            portalPurchaseLink=(
+                self.env["ir.config_parameter"].sudo().get_param("web.base.url")
+                + "/portal_purchase_login_by_token/"
+                + str(user_record.id)
+                + "?signup_token="
+                + user_record.signup_token
+            )
+            if module_purchase_portal.state == "installed" and user_record.signup_token
+            else "",
         )
