@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 
 import werkzeug.exceptions
 from jose import jwt
@@ -68,6 +69,15 @@ class PmsLoginService(Component):
         for avail_field in user_record.availability_rule_field_ids:
             avail_rule_names.append(avail_field.name)
 
+        module_purchase_portal = (
+            self.env["ir.module.module"]
+            .sudo()
+            .search([("name", "=", "purchase_portal")])
+        )
+        if module_purchase_portal.state == "installed":
+            expiration_datetime = datetime.fromtimestamp(timestamp_expire_in_a_sec, datetime.timezone.utc)
+            user_record.partner_id.sudo().signup_prepare(expiration=expiration_datetime)
+
         return PmsApiRestUserOutput(
             token=token,
             expirationDate=timestamp_expire_in_a_sec,
@@ -86,4 +96,13 @@ class PmsLoginService(Component):
             ),
             availabilityRuleFields=avail_rule_names,
             userRole=user_record.pms_api_user_role,
+            portalPurchaseLink=(
+                self.env["ir.config_parameter"].sudo().get_param("web.base.url")
+                + "/portal_purchase_login_by_token/"
+                + str(user_record.id)
+                + "?signup_token="
+                + user_record.signup_token
+            )
+            if module_purchase_portal.state == "installed" and user_record.signup_token
+            else "",
         )

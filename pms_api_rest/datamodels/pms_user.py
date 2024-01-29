@@ -31,6 +31,7 @@ class PmsApiRestUserOutput(Datamodel):
         fields.String(), required=False, allow_none=True
     )
     userRole = fields.String(required=False, allow_none=True)
+    portalPurchaseLink = fields.String(required=False, allow_none=True)
 
 
 class PmsApiRestUserLoginOutput(Datamodel):

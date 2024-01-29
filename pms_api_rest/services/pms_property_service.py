@@ -29,6 +29,16 @@ class PmsPropertyService(Component):
         auth="jwt_api_pms",
     )
     def get_properties(self):
+        self.env.user.partner_id.sudo().signup_prepare()
+
+        is_point_of_sale_installed = self.env["ir.module.module"].search(
+            [("name", "=", "point_of_sale"), ("state", "=", "installed")]
+        )
+
+        is_pos_hr_installed = self.env["ir.module.module"].search(
+            [("name", "=", "pos_hr"), ("state", "=", "installed")]
+        )
+
         domain = [("user_ids", "in", [self.env.user.id])]
         result_properties = []
         PmsPropertyInfo = self.env.datamodels["pms.property.info"]
@@ -43,6 +53,7 @@ class PmsPropertyService(Component):
                 privacy_policy = re.sub(
                     tokens_to_replace, "", prop.company_id.privacy_policy
                 )
+            points_of_sale = False
             if prop.state_id:
                 state_name = (
                     self.env["res.country.state"]
@@ -57,6 +68,14 @@ class PmsPropertyService(Component):
                     + prop.ine_category_id.type
                     + ")"
                 )
+            if is_point_of_sale_installed and is_pos_hr_installed:
+                points_of_sale = self.env["pos.config"].search(
+                    [
+                        ("reservation_allowed_propertie_ids", "in", prop.id),
+                        ("employee_ids", "in", self.env.user.employee_id.id),
+                    ]
+                )
+
             result_properties.append(
                 PmsPropertyInfo(
                     id=prop.id,
@@ -98,6 +117,19 @@ class PmsPropertyService(Component):
                     maxAmountSimplifiedInvoice=prop.max_amount_simplified_invoice
                     if prop.max_amount_simplified_invoice
                     else None,
+                    pointOfSaleLink=(
+                        self.env["ir.config_parameter"].sudo().get_param("web.base.url")
+                        + "/pos_login_by_token/"
+                        + str(self.env.user.id)
+                        + "?signup_token="
+                        + self.env.user.signup_token
+                        + "&config_id="
+                        + str(points_of_sale[0].id)
+                    )
+                    if is_point_of_sale_installed
+                    and is_pos_hr_installed
+                    and points_of_sale
+                    else "",
                 )
             )
         return result_properties
