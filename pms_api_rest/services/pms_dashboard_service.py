@@ -151,7 +151,7 @@ class PmsDashboardServices(Component):
         ],
         auth="jwt_api_pms",
         input_param=Datamodel("pms.dashboard.range.dates.search.param"),
-        output_param=Datamodel("pms.dashboard.state.rooms", is_list=True),
+        output_param=Datamodel("pms.dashboard.sale.state.rooms", is_list=True),
     )
     def get_state_rooms(self, pms_dashboard_search_param):
         dateFrom = fields.Date.from_string(pms_dashboard_search_param.dateFrom)
@@ -203,7 +203,7 @@ class PmsDashboardServices(Component):
 
         result = self.env.cr.dictfetchall()
         state_rooms_result = []
-        DashboardStateRooms = self.env.datamodels["pms.dashboard.state.rooms"]
+        DashboardStateRooms = self.env.datamodels["pms.dashboard.sale.state.rooms"]
         for item in result:
             state_rooms_result.append(
                 DashboardStateRooms(
@@ -213,7 +213,7 @@ class PmsDashboardServices(Component):
                     numOccupiedRooms=item["num_occupied_rooms"]
                     if item["num_occupied_rooms"]
                     else 0,
-                    numOutOfServiceRooms=item["num_out_of_service_rooms"]
+                    numOutOfOrderRooms=item["num_out_of_service_rooms"]
                     if item["num_out_of_service_rooms"]
                     else 0,
                     numFreeRooms=item["free_rooms"] if item["free_rooms"] else 0,
@@ -231,7 +231,9 @@ class PmsDashboardServices(Component):
             )
         ],
         input_param=Datamodel("pms.dashboard.range.dates.search.param"),
-        output_param=Datamodel("pms.dashboard.state.rooms", is_list=True),
+        output_param=Datamodel(
+            "pms.dashboard.reservations.by.sale.channel", is_list=True
+        ),
         auth="jwt_api_pms",
     )
     def get_reservations_by_sale_channel(self, pms_dashboard_search_param):
@@ -559,7 +561,7 @@ class PmsDashboardServices(Component):
             )
         ],
         input_param=Datamodel("pms.dashboard.range.dates.search.param"),
-        output_param=Datamodel("pms.dashboard.state.rooms", is_list=True),
+        output_param=Datamodel("pms.dashboard.sale.state.rooms", is_list=True),
         auth="jwt_api_pms",
     )
     def get_occupied_rooms(self, pms_dashboard_search_param):
@@ -593,7 +595,7 @@ class PmsDashboardServices(Component):
 
         result = self.env.cr.dictfetchall()
         occupied_rooms_result = []
-        DashboardStateRooms = self.env.datamodels["pms.dashboard.state.rooms"]
+        DashboardStateRooms = self.env.datamodels["pms.dashboard.sale.state.rooms"]
         for item in result:
             occupied_rooms_result.append(
                 DashboardStateRooms(
@@ -617,7 +619,7 @@ class PmsDashboardServices(Component):
             )
         ],
         input_param=Datamodel("pms.dashboard.range.dates.search.param"),
-        output_param=Datamodel("pms.dashboard.state.rooms", is_list=True),
+        output_param=Datamodel("pms.dashboard.daily.billing", is_list=True),
         auth="jwt_api_pms",
     )
     def get_daily_billings(self, pms_dashboard_search_param):

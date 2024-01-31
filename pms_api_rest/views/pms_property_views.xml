@@ -82,10 +82,6 @@
                             widget="color"
                             attrs="{'invisible': [('color_option_config', '!=', 'advanced')]}"
                         />
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> cac71c6f5 ([IMP]pms_api_rest: added overpayment color to configurate in property)
                         <field
                             name="overpayment_reservation_color"
                             widget="color"
@@ -123,11 +119,6 @@
                     </field>
                 </group>
             </xpath>
-=======
-                    </group>
-                </group>
-            </xpath>
->>>>>>> 647e4ce13 ([REF]pms_api_rest: changed property colors from module pms to module pms_api_rest)
         </field>
     </record>
 </odoo>

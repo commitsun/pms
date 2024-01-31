@@ -44,7 +44,7 @@ class PmsFolioInfo(Datamodel):
     agencyId = fields.Integer(required=False, allow_none=True)
     externalReference = fields.String(required=False, allow_none=True)
     closureReasonId = fields.Integer(required=False, allow_none=True)
-    outOfServiceDescription = fields.String(required=False, allow_none=True)
+    outOfOrderDescription = fields.String(required=False, allow_none=True)
     preconfirm = fields.Boolean(required=False, allow_none=True)
     internalComment = fields.String(required=False, allow_none=True)
     # REVIEW: Mail workflow folio

@@ -44,6 +44,8 @@ class PmsReservationShortInfo(Datamodel):
     reservationType = fields.String(required=False, allow_none=True)
     segmentationId = fields.Integer(required=False, allow_none=True)
     createDate = fields.String(required=False, allow_none=True)
+    closureReasonId = fields.Integer(required=False, allow_none=True)
+    outOfOrderDescription = fields.String(required=False, allow_none=True)
 
 
 class PmsReservationInfo(Datamodel):
@@ -108,6 +110,7 @@ class PmsReservationInfo(Datamodel):
     isReselling = fields.Boolean(required=False, allow_none=True)
     createdBy = fields.String(required=False, allow_none=True)
     isBlocked = fields.Boolean(required=False, allow_none=True)
+    outOfOrderDescription = fields.String(required=False, allow_none=True)
 
     # TODO: Refact
     # messages = fields.List(fields.Dict(required=False, allow_none=True))

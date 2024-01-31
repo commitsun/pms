@@ -25,12 +25,12 @@ class PmsDashboardPendingReservations(Datamodel):
     completedDepartureReservations = fields.Integer(required=False, allow_none=True)
 
 
-class PmsDashboardStateRooms(Datamodel):
-    _name = "pms.dashboard.state.rooms"
+class PmsDashboardSaleStateRooms(Datamodel):
+    _name = "pms.dashboard.sale.state.rooms"
     date = fields.String(required=False, allow_none=True)
     numOccupiedRooms = fields.Integer(required=False, allow_none=True)
     numFreeRooms = fields.Integer(required=False, allow_none=True)
-    numOutOfServiceRooms = fields.Integer(required=False, allow_none=True)
+    numOutOfOrderRooms = fields.Integer(required=False, allow_none=True)
 
 
 class PmsDashboardReservationsBySaleChannel(Datamodel):

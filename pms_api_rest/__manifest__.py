@@ -34,8 +34,6 @@
     ],
     "demo": [
         "demo/pms_api_rest_master_data.xml",
-        "data/auth_jwt_validator.xml",
-        "views/pms_property_views.xml",
     ],
     "installable": True,
 }

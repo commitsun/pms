@@ -167,6 +167,10 @@ class PmsReservationService(Component):
             reservation_vals.update({"checkin": reservation_data.checkin})
         if reservation_data.checkout:
             reservation_vals.update({"checkout": reservation_data.checkout})
+        if reservation_data.outOfOrderDescription:
+            reservation_vals.update(
+                {"out_order_description": reservation_data.outOfOrderDescription}
+            )
 
         return reservation_vals
 

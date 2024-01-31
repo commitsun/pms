@@ -25,3 +25,7 @@ class PmsRoomInfo(Datamodel):
     extraBedsAllowed = fields.Integer(required=False, allow_none=True)
     roomAmenityIds = fields.List(fields.Integer(), required=False, allow_none=True)
     roomAmenityInName = fields.String(required=False, allow_none=True)
+    roomState = fields.String(required=False, allow_none=True)
+    outOfService = fields.Boolean(required=False, allow_none=False)
+    outOfServiceReason = fields.String(required=False, allow_none=True)
+    outOfOrder = fields.Boolean(required=False, allow_none=False)
