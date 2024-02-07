@@ -133,37 +133,6 @@ class PmsReservationService(Component):
             )
         return res
 
-    def _create_vals_from_params(
-        self, reservation_vals, reservation_data, reservation_id
-    ):
-        if reservation_data.preferredRoomId:
-            reservation_vals.update(
-                {"preferred_room_id": reservation_data.preferredRoomId}
-            )
-        if reservation_data.boardServiceId is not None:
-            reservation_vals.update(
-                {"board_service_room_id": reservation_data.boardServiceId or False}
-            )
-        if reservation_data.pricelistId:
-            reservation_vals.update({"pricelist_id": reservation_data.pricelistId})
-        if reservation_data.adults:
-            reservation_vals.update({"adults": reservation_data.adults})
-        if reservation_data.children is not None:
-            reservation_vals.update({"children": reservation_data.children})
-        if reservation_data.segmentationId is not None:
-            if reservation_data.segmentationId != 0:
-                reservation_vals.update(
-                    {"segmentation_ids": [(6, 0, [reservation_data.segmentationId])]}
-                )
-            else:
-                reservation_vals.update({"segmentation_ids": [(5, 0, 0)]})
-        if reservation_data.checkin:
-            reservation_vals.update({"checkin": reservation_data.checkin})
-        if reservation_data.checkout:
-            reservation_vals.update({"checkout": reservation_data.checkout})
-
-        return reservation_vals
-
     @restapi.method(
         [
             (
@@ -178,111 +147,147 @@ class PmsReservationService(Component):
     )
     # TODO: route changed because bug route CORS patch
     def update_reservation(self, reservation_id, reservation_data):
-        reservation = self.env["pms.reservation"].search([("id", "=", reservation_id)])
+        reservation_record = self.env["pms.reservation"].search([("id", "=", reservation_id)])
+        if not reservation_record:
+            raise MissingError(_("Reservation not found"))
         reservation_vals = {}
-        if reservation_data.reservationLines:
-            reservation_lines_vals = []
-            date_list = []
-            for line_data in sorted(
+        # reservationLines
+        if reservation_data.reservationLines is not None:
+            cmds = self.env['pms.reservation'].build_reservation_lines_cmds(
+                reservation_record,
                 reservation_data.reservationLines,
-                key=lambda x: datetime.strptime(x.date, "%Y-%m-%d"),
-            ):
-                date_line = datetime.strptime(line_data.date, "%Y-%m-%d").date()
-                date_list.append(date_line)
-                # 1- update values in existing lines
-                reservation_line = self.env["pms.reservation.line"].search(
-                    [("reservation_id", "=", reservation_id), ("date", "=", date_line)]
-                )
-                if reservation_line:
-                    line_vals = self._get_reservation_lines_mapped(
-                        line_data, reservation_line
-                    )
-                    if line_vals:
-                        reservation_lines_vals.append(
-                            (1, reservation_line.id, line_vals)
-                        )
-                # 2- create new lines
-                else:
-                    line_vals = self._get_reservation_lines_mapped(line_data)
-                    line_vals["date"] = line_data.date
-                    reservation_lines_vals.append((0, False, line_vals))
-            # 3- delete old lines:
-            for line in reservation.reservation_line_ids.filtered(
-                lambda l: l.date not in date_list
-            ):
-                reservation_lines_vals.append((2, line.id))
-            if reservation_lines_vals:
+            )
+            if cmds:
                 reservation_vals.update(
                     {
-                        "reservation_line_ids": reservation_lines_vals,
+                        "reservation_line_ids": cmds,
                     }
                 )
-        self._update_reservation_state(reservation, reservation_data)
-
-        reservation_vals = self._create_vals_from_params(
-            reservation_vals,
-            reservation_data,
-            reservation_id,
-        )
-
-        service_cmds = []
+        # toAssign
+        if reservation_data.toAssign is not None and not reservation_data.toAssign and reservation_record.to_assign:
+            reservation_record.action_assign()
+        # stateCode
+        if reservation_data.stateCode is not None:
+            # cancel
+            if reservation_data.stateCode == "cancel" and reservation_record.state != "cancel":
+                reservation_record.action_cancel()
+            # confirm
+            if reservation_data.stateCode == "confirm" and reservation_record.state != "confirm":
+                reservation_record.confirm()
+        # toCheckout
+        if (
+            reservation_data.toCheckout is not None
+            and reservation_record.state != "done"
+            and reservation_data.toCheckout
+        ):
+            reservation_record.action_reservation_checkout()
+        # preferredRoomId
+        if (
+            reservation_data.preferredRoomId is not None
+            and reservation_data.preferredRoomId != reservation_record.preferred_room_id.id
+        ):
+            reservation_vals.update(
+                {"preferred_room_id": reservation_data.preferredRoomId}
+            )
+        # boardServiceId
         if (
             reservation_data.boardServiceId is not None
-            or reservation_data.boardServices is not None
+            and reservation_data.boardServiceId != reservation_record.board_service_room_id.id
         ):
-            for service in reservation.service_ids.filtered(
-                lambda x: x.is_board_service
-            ):
-                service_cmds.append((2, service.id))
-
-        if reservation_data.boardServices is not None:
-            for bs in reservation_data.boardServices:
-                service_line_cmds = []
-                for line in bs.serviceLines:
-                    service_line_cmds.append(
-                        (
-                            0,
-                            False,
-                            {
-                                "price_unit": line.priceUnit,
-                                "date": line.date,
-                                "discount": line.discount,
-                                "day_qty": line.quantity,
-                                "auto_qty": True,
-                            },
-                        )
+            reservation_vals.update(
+                {
+                    "board_service_room_id": (
+                        reservation_data.boardServiceId if reservation_data.boardServiceId != 0
+                        else False
                     )
-                service_cmds.append(
-                    (
-                        0,
-                        False,
-                        {
-                            "product_id": bs.productId,
-                            "is_board_service": True,
-                            "reservation_id": reservation_id,
-                            "service_line_ids": service_line_cmds,
-                        },
+                }
+            )
+        # pricelistId
+        if (
+            reservation_data.pricelistId is not None
+            and reservation_data.pricelistId != reservation_record.pricelist_id.id
+        ):
+            reservation_vals.update({"pricelist_id": reservation_data.pricelistId})
+        # adults
+        if (
+            reservation_data.adults is not None
+            and reservation_data.adults != reservation_record.adults
+        ):
+            reservation_vals.update({"adults": reservation_data.adults})
+        # children
+        if (
+            reservation_data.children is not None
+            and reservation_data.children != reservation_record.children
+        ):
+            reservation_vals.update({"children": reservation_data.children})
+        # segmentationId
+        if (
+            reservation_data.segmentationId
+            and reservation_data.segmentationId != reservation_record.segmentation_id.id
+        ):
+            reservation_vals.update(
+                {"segmentation_ids": [(6, 0, [reservation_data.segmentationId])]}
+            )
+        # checkin
+        if (
+            reservation_data.checkin is not None
+            and reservation_data.checkin != str(reservation_record.checkin)
+        ):
+            reservation_vals.update({"checkin": reservation_data.checkin})
+        # checkout
+        if (
+            reservation_data.checkout is not None
+            and reservation_data.checkout != str(reservation_record.checkout)
+        ):
+            reservation_vals.update({"checkout": reservation_data.checkout})
+        # adjust boardService lines
+        res_has_bs = False
+        if (
+            reservation_data.boardServiceId is not None
+            and reservation_data.boardServiceId != 0
+            and reservation_data.services is not None
+        ):
+            for service in reservation_data.services:
+                if service.isBoardService:
+                    res_has_bs = True
+                    break
+        if (
+            reservation_data.boardServiceId is not None
+            and reservation_data.boardServiceId != 0
+            and not res_has_bs
+        ):
+            PmsServiceInfo = self.env.datamodels["pms.service.info"]
+
+            board_service_record = self.env["pms.board.service.room.type"].browse(
+                reservation_data.boardServiceId
+            )
+            if not board_service_record:
+                raise MissingError(_("Board Service not found"))
+            if reservation_data.services is None:
+                reservation_data.services = []
+            for line in board_service_record.board_service_line_ids:
+                reservation_data.services.append(
+                    PmsServiceInfo(
+                        productId=line.product_id.id,
+                        isBoardService=True,
                     )
                 )
-        if service_cmds:
-            reservation_vals.update({"service_ids": service_cmds})
-
-        if reservation_vals and reservation_data.boardServices:
-            reservation.with_context(skip_compute_service_ids=True).write(
-                reservation_vals
+        # service_ids
+        cmds_service_ids = self.env['pms.reservation'].build_reservation_services_cmds(
+            reservation_record,
+            reservation_data.services if reservation_data.services else [],
+            reservation_data.boardServiceId if reservation_data.boardServiceId else False,
+        )
+        if cmds_service_ids:
+            reservation_vals.update(
+                {
+                    "service_ids": cmds_service_ids
+                }
             )
-        elif reservation_vals:
-            reservation.write(reservation_vals)
-
-    def _update_reservation_state(self, reservation, reservation_data):
-        if reservation_data.toAssign is not None and not reservation_data.toAssign:
-            reservation.action_assign()
-        if reservation_data.stateCode == "cancel":
-            reservation.action_cancel()
-        if reservation_data.stateCode == "confirm":
-            reservation.confirm()
-        if reservation_data.toCheckout is not None and reservation_data.toCheckout:
-            reservation.action_reservation_checkout()
+        if reservation_vals:
+            reservation_record.with_context(
+                skip_compute_service_ids=True
+            ).write(reservation_vals)
 
     def _get_reservation_lines_mapped(self, origin_data, reservation_line=False):
         # Return dict witch reservation.lines values (only modified if line exist,
