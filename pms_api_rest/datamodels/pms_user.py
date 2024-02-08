@@ -31,6 +31,7 @@ class PmsApiRestUserOutput(Datamodel):
     availabilityRuleFields = fields.List(
         fields.String(), required=False, allow_none=True
     )
+    portalPurchaseLink = fields.String(required=False, allow_none=True)
 
 
 class PmsApiRestUserLoginOutput(Datamodel):
