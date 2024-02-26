@@ -21,10 +21,40 @@ class ResUsers(models.Model):
         store=True,
         readonly=False,
     )
-
     pms_api_client = fields.Boolean(
         string="PMS API Client",
         help="PMS API Client",
+    )
+    url_endpoint_prices = fields.Char(
+        string="URL Endpoint Prices",
+        help="URL Endpoint Prices",
+    )
+    url_endpoint_availability = fields.Char(
+        string="URL Endpoint Availability",
+        help="URL Endpoint Availability",
+    )
+    url_endpoint_rules = fields.Char(
+        string="URL Endpoint Rules",
+        help="URL Endpoint Rules",
+    )
+    external_public_token = fields.Char(
+        string="External Public Token",
+        help="External Public Token",
+    )
+    main_avail_plan_id = fields.Many2one(
+        string="Main Availability Plan",
+        help="Main Availability Plan",
+        comodel_name="pms.availability.plan",
+    )
+    main_pricelist_id = fields.Many2one(
+        string="Main Pricelist",
+        help="Main Pricelist",
+        comodel_name="product.pricelist",
+    )
+    excluded_room_type_ids = fields.Many2many(
+        string="Excluded Room Types",
+        help="Excluded Room Types",
+        comodel_name="pms.room.type",
     )
 
     def _get_default_avail_rule_fields(self):
