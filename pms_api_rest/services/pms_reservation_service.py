@@ -1164,7 +1164,8 @@ class PmsReservationService(Component):
                 "domain": "[('state', '=',  'confirm'),"
                           f"('checkin', '=', '{today}'),"
                           "('pending_checkin_data', '=', 0),"
-                          "('reservation_type', 'in', ['normal', 'staff'])"
+                          "('reservation_type', 'in', ['normal', 'staff']),"
+                          "('segmentation_ids', '!=', False)"
                           "]",
                 "text": "Todos los huéspedes de esta reserva tienen los datos registrados, "
                         " puedes marcar la entrada directamente desde aquí",
