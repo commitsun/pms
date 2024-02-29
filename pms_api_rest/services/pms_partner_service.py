@@ -209,7 +209,9 @@ class PmsPartnerService(Component):
                 if doc_number.category_id:
                     document_type = doc_number.category_id.id
                 if doc_number.valid_from:
-                    document_expedition_date = doc_number.valid_from.strftime("%d/%m/%Y")
+                    document_expedition_date = datetime.combine(
+                        doc_number.valid_from, datetime.min.time()
+                    ).isoformat()
                 if doc_number.support_number:
                     document_support_number = doc_number.support_number
             result_partners.append(
@@ -512,10 +514,10 @@ class PmsPartnerService(Component):
 
             document_expedition_date = False
             if doc_number.valid_from:
-                document_expedition_date = doc_number.valid_from.strftime("%d/%m/%Y")
+                document_expedition_date = datetime.combine(doc_number.valid_from, datetime.min.time()).isoformat()
             birthdate_date = False
             if partner.birthdate_date:
-                birthdate_date = partner.birthdate_date.strftime("%d/%m/%Y")
+                birthdate_date = datetime.combine(partner.birthdate_date, datetime.min.time()).isoformat()
             partners.append(
                 PmsCheckinPartnerInfo(
                     partnerId=partner.id or None,

@@ -562,11 +562,10 @@ class PmsReservationService(Component):
             # )
             for checkin_partner in reservation.checkin_partner_ids:
                 if checkin_partner.document_expedition_date:
-                    document_expedition_date = (
-                        checkin_partner.document_expedition_date.strftime("%d/%m/%Y")
-                    )
+                    document_expedition_date = datetime.combine(checkin_partner.document_expedition_date, datetime.min.time()).isoformat()
+
                 if checkin_partner.birthdate_date:
-                    birthdate_date = checkin_partner.birthdate_date.strftime("%d/%m/%Y")
+                    birthdate_date = datetime.combine(checkin_partner.birthdate_date, datetime.min.time()).isoformat()
                 checkin_partners.append(
                     PmsCheckinPartnerInfo(
                         id=checkin_partner.id,
@@ -1164,8 +1163,7 @@ class PmsReservationService(Component):
                 "domain": "[('state', '=',  'confirm'),"
                           f"('checkin', '=', '{today}'),"
                           "('pending_checkin_data', '=', 0),"
-                          "('reservation_type', 'in', ['normal', 'staff']),"
-                          "('segmentation_ids', '!=', False)"
+                          "('reservation_type', 'in', ['normal', 'staff'])"
                           "]",
                 "text": "Todos los huéspedes de esta reserva tienen los datos registrados, "
                         " puedes marcar la entrada directamente desde aquí",
