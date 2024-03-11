@@ -885,6 +885,7 @@ class PmsReservationService(Component):
             "residence_city": pms_checkin_partner_info.residenceCity,
             "residence_state_id": pms_checkin_partner_info.countryState,
             "residence_country_id": pms_checkin_partner_info.countryId,
+            "origin_input_data": pms_checkin_partner_info.originInputData,
         }
         if pms_checkin_partner_info.documentExpeditionDate:
             document_expedition_date = datetime.strptime(
