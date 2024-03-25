@@ -103,6 +103,8 @@
         "views/account_analytic_distribution_view.xml",
         "views/account_analytic_line_view.xml",
         "views/res_partner_category.xml",
+        "views/res_partner_id_category_view.xml",
+        "views/res_partner_id_number_view.xml",
     ],
     "demo": [
         "demo/pms_master_data_no_update.xml",
