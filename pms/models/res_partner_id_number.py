@@ -24,6 +24,7 @@ class ResPartnerIdNumber(models.Model):
         readonly=False,
         store=True,
         compute="_compute_category_id",
+        domain="[('id', 'in', allowed_category_ids)]",
     )
 
     valid_from = fields.Date(
@@ -31,6 +32,16 @@ class ResPartnerIdNumber(models.Model):
         store=True,
         compute="_compute_valid_from",
     )
+
+    allowed_category_ids = fields.Many2many(
+        comodel_name="res.partner.id_category",
+        string="Allowed ID Categories",
+        help="Allowed ID Categories for the partner",
+        compute="_compute_allowed_category_ids",
+        store=False,
+        readonly=True,
+    )
+
 
     @api.depends("partner_id", "partner_id.pms_checkin_partner_ids.document_number")
     def _compute_name(self):
@@ -95,6 +106,16 @@ class ResPartnerIdNumber(models.Model):
                 if last_update_category_id and last_update_category_id[0].document_type:
                     record.category_id = last_update_category_id[0].document_type
 
+    @api.depends("partner_id.document_country_id")
+    def _compute_allowed_category_ids(self):
+        document_type_no_country_ids = self.env['res.partner.id_category'].search([('country_ids', '=', False)])
+        for record in self:
+            if record.partner_id.document_country_id:
+                document_type_ids = self.env['res.partner.id_category'].search([('country_ids', 'in', [record.partner_id.document_country_id.id])])
+                record.allowed_category_ids = document_type_ids.union(document_type_no_country_ids).ids
+            else:
+                record.allowed_category_ids = document_type_no_country_ids.ids
+
     @api.constrains("partner_id", "category_id")
     def _check_category_id_unique(self):
         for record in self:
@@ -106,3 +127,4 @@ class ResPartnerIdNumber(models.Model):
             )
             if len(id_number) > 1:
                 raise ValidationError(_("Partner already has this document type"))
+
