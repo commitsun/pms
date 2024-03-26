@@ -24,7 +24,6 @@ class ResPartnerIdNumber(models.Model):
         readonly=False,
         store=True,
         compute="_compute_category_id",
-        domain="[('id', 'in', allowed_category_ids)]",
     )
 
     valid_from = fields.Date(
@@ -33,13 +32,13 @@ class ResPartnerIdNumber(models.Model):
         compute="_compute_valid_from",
     )
 
-    allowed_category_ids = fields.Many2many(
-        comodel_name="res.partner.id_category",
-        string="Allowed ID Categories",
-        help="Allowed ID Categories for the partner",
-        compute="_compute_allowed_category_ids",
-        store=False,
-        readonly=True,
+    country_id = fields.Many2one(
+        string='Country',
+        comodel_name='res.country',
+        help='Country of the document',
+        compute='_compute_country_id',
+        store=True,
+        readonly=False,
     )
 
 
@@ -106,15 +105,19 @@ class ResPartnerIdNumber(models.Model):
                 if last_update_category_id and last_update_category_id[0].document_type:
                     record.category_id = last_update_category_id[0].document_type
 
-    @api.depends("partner_id.document_country_id")
-    def _compute_allowed_category_ids(self):
-        document_type_no_country_ids = self.env['res.partner.id_category'].search([('country_ids', '=', False)])
+    @api.depends("partner_id", "partner_id.pms_checkin_partner_ids.document_country_id")
+    def _compute_country_id(self):
         for record in self:
-            if record.partner_id.document_country_id:
-                document_type_ids = self.env['res.partner.id_category'].search([('country_ids', 'in', [record.partner_id.document_country_id.id])])
-                record.allowed_category_ids = document_type_ids.union(document_type_no_country_ids).ids
-            else:
-                record.allowed_category_ids = document_type_no_country_ids.ids
+            if record.partner_id.pms_checkin_partner_ids:
+                last_update_document = record.partner_id.pms_checkin_partner_ids.filtered(
+                    lambda x: x.document_id == record
+                              and x.write_date
+                              == max(
+                        record.partner_id.pms_checkin_partner_ids.mapped("write_date")
+                    )
+                )
+                if last_update_document and last_update_document[0].document_country_id:
+                    record.country_id = last_update_document[0].document_country_id
 
     @api.constrains("partner_id", "category_id")
     def _check_category_id_unique(self):
@@ -127,4 +130,13 @@ class ResPartnerIdNumber(models.Model):
             )
             if len(id_number) > 1:
                 raise ValidationError(_("Partner already has this document type"))
+
+    @api.constrains("country_id", "category_id")
+    def _check_document_country_id_category_id_consistence(self):
+        for record in self:
+            if record.category_id and record.country_id:
+                if record.country_id not in record.category_id.country_ids:
+                    raise ValidationError(
+                        _("Country is not allowed for this document type")
+                    )
 
