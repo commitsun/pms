@@ -237,6 +237,7 @@ class PmsCheckinPartner(models.Model):
         index=True,
         comodel_name="res.partner.id_category",
         compute="_compute_document_type",
+        domain="['|', ('country_ids', '=', False), ('country_ids', 'in', document_country_id)]"
     )
     document_expedition_date = fields.Date(
         string="Expedition Date",
@@ -256,6 +257,16 @@ class PmsCheckinPartner(models.Model):
         compute="_compute_document_id",
         ondelete="restrict",
     )
+
+    document_country_id = fields.Many2one(
+        string="Document Country",
+        help="Country of the document",
+        comodel_name="res.country",
+        compute="_compute_document_country_id",
+        store=True,
+        readonly=False,
+    )
+
 
     partner_incongruences = fields.Char(
         string="partner_incongruences",
@@ -279,29 +290,54 @@ class PmsCheckinPartner(models.Model):
     @api.depends("partner_id")
     def _compute_document_number(self):
         for record in self:
-            if not record.document_number:
-                if record.partner_id.id_numbers:
-                    record.document_number = record.partner_id.id_numbers[0].name
+            if not record.document_number and record.partner_id.id_numbers:
+                last_update_document = record.partner_id.id_numbers.filtered(
+                    lambda x: x.write_date
+                    == max(
+                        record.partner_id.id_numbers.mapped("write_date")
+                    )
+                )
+                if last_update_document and last_update_document[0].name:
+                    record.document_number = last_update_document[0].name
 
     @api.depends("partner_id")
     def _compute_document_type(self):
         for record in self:
-            if record.partner_id and record.partner_id.id_numbers:
-                if not record.document_type:
-                    if record.partner_id.id_numbers:
-                        record.document_type = record.partner_id.id_numbers[
-                            0
-                        ].category_id
+            if not record.document_type and record.partner_id.id_numbers:
+                last_update_document = record.partner_id.id_numbers.filtered(
+                    lambda x: x.write_date
+                    == max(
+                        record.partner_id.id_numbers.mapped("write_date")
+                    )
+                )
+                if last_update_document and last_update_document[0].category_id:
+                    record.document_type = last_update_document[0].category_id
 
     @api.depends("partner_id")
     def _compute_document_expedition_date(self):
         for record in self:
-            if not record.document_expedition_date:
-                record.document_expedition_date = False
-                if record.partner_id and record.partner_id.id_numbers:
-                    record.document_expedition_date = record.partner_id.id_numbers[
-                        0
-                    ].valid_from
+            if not record.document_expedition_date and record.partner_id.id_numbers:
+                last_update_document = record.partner_id.id_numbers.filtered(
+                    lambda x: x.write_date
+                    == max(
+                        record.partner_id.id_numbers.mapped("write_date")
+                    )
+                )
+                if last_update_document and last_update_document[0].valid_from:
+                    record.document_expedition_date = last_update_document[0].valid_from
+
+    @api.depends("partner_id")
+    def _compute_document_country_id(self):
+        for record in self:
+            if not record.document_country_id and record.partner_id.id_numbers:
+                last_update_document = record.partner_id.id_numbers.filtered(
+                    lambda x: x.write_date
+                              == max(
+                        record.partner_id.id_numbers.mapped("write_date")
+                    )
+                )
+                if last_update_document and last_update_document[0].country_id:
+                    record.document_country_id = last_update_document[0].country_id
 
     @api.depends("partner_id")
     def _compute_firstname(self):
@@ -694,6 +730,14 @@ class PmsCheckinPartner(models.Model):
                         % (record.document_number, record.document_type.name)
                     )
 
+    @api.constrains("document_country_id", "document_type")
+    def _check_document_country_id_document_type_consistence(self):
+        for record in self:
+            if record.document_country_id and record.document_type:
+                if record.document_country_id not in record.document_type.country_ids:
+                    raise ValidationError(
+                        _("Document type and country of document do not match")
+                    )
     @api.model
     def create(self, vals):
         # The checkin records are created automatically from adult depends
