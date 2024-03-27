@@ -8,3 +8,8 @@ class ResPartnerIdCategory(models.Model):
         comodel_name="res.country",
         string="Countries",
     )
+
+    priority = fields.Integer(
+        string="Priority",
+        default=100,
+    )

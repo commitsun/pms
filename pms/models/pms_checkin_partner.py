@@ -456,7 +456,7 @@ class PmsCheckinPartner(models.Model):
                 elif any(
                     not getattr(record, field)
                     for field in record._checkin_mandatory_fields(
-                        country=record.nationality_id
+                        country=record.residence_country_id
                     )
                 ):
                     record.state = "draft"
@@ -734,7 +734,7 @@ class PmsCheckinPartner(models.Model):
     def _check_document_country_id_document_type_consistence(self):
         for record in self:
             if record.document_country_id and record.document_type:
-                if record.document_country_id not in record.document_type.country_ids:
+                if record.document_type.country_ids and record.document_country_id not in record.document_type.country_ids:
                     raise ValidationError(
                         _("Document type and country of document do not match")
                     )
