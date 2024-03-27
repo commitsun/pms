@@ -135,7 +135,7 @@ class ResPartnerIdNumber(models.Model):
     def _check_document_country_id_category_id_consistence(self):
         for record in self:
             if record.category_id and record.country_id:
-                if record.country_id not in record.category_id.country_ids:
+                if record.category_id.country_ids and record.country_id not in record.category_id.country_ids:
                     raise ValidationError(
                         _("Country is not allowed for this document type")
                     )
