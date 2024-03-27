@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+    <!-- Categorías -->
+    <record id="rooms_category" model="product.category">
+        <field name="name">Rooms</field>
+        <field name="parent_id" ref="product.product_category_1" />
+    </record>
+    <record id="services_category" model="product.category">
+        <field name="name">Services</field>
+        <field name="parent_id" ref="product.product_category_1" />
+    </record>
+</odoo>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+    <!-- Tipo de amenity -->
+    <record id="roomdoo_amenity_type_bed_type" model="pms.amenity.type">
+        <field name="name">Tipo de cama</field>
+    </record>
+</odoo>

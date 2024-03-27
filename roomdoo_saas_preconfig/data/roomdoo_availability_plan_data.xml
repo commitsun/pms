@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+    <!-- Plan de dispo -->
+    <record id="plan_dispo_wubook" model="pms.availability.plan">
+        <field name="name">Wubook restrictions</field>
+        <!--añadir binding-->
+    </record>
+
+</odoo>

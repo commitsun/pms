@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+    <!-- Tarifas -->
+    <record id="tarifa_estandar" model="product.pricelist">
+        <field name="name">Tarifa Estándar</field>
+        <field name="is_pms_available">True</field>
+        <field name="availability_plan_id" ref="plan_dispo_wubook" />
+    </record>
+
+</odoo>

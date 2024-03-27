@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+    <record id="roomdoo_backend_type" model="channel.backend.type">
+        <field name="name">Wubook Type</field>
+        <field
+            name="model_type_id"
+            ref="connector_pms_wubook.model_channel_wubook_backend_type"
+        />
+    </record>
+    <record id="roomdoo_wubook_backend_type" model="channel.wubook.backend.type">
+        <field name="parent_id" ref="roomdoo_saas_preconfig.roomdoo_backend_type" />
+        <field
+            name="direct_channel_type_id"
+            ref="connector_pms_wubook.main_pms_sale_channel_wubook"
+        />
+        <field
+            name="room_type_class_ids"
+            eval="[(0, 0, {'wubook_room_type': '1','room_type_shortname': 'HAB'})]"
+        />
+    </record>
+</odoo>

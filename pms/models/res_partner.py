@@ -779,6 +779,9 @@ class ResPartner(models.Model):
 
     @api.constrains("is_agency", "property_product_pricelist")
     def _check_agency_pricelist(self):
+        # for record in self:
+        #     print(record.property_product_pricelist.is_pms_available)
+        #     print(record.name)
         if any(
             record.is_agency and not record.property_product_pricelist.is_pms_available
             for record in self

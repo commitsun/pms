@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+    <record id="roomdoo_backend" model="channel.backend">
+        <field name="name">Wubook Backend</field>
+        <field name="pms_property_id" ref="pms.main_pms_property" />
+        <field
+            name="backend_type_id"
+            ref="roomdoo_saas_preconfig.roomdoo_backend_type"
+        />
+    </record>
+    <record id="roomdoo_wubook_backend" model="channel.wubook.backend">
+        <field name="name">Wubook Backend</field>
+        <field name="parent_id" ref="roomdoo_saas_preconfig.roomdoo_backend" />
+        <!-- <field name="backend_type_id" ref="connector_pms_wubook.model_channel_wubook_backend_type" /> -->
+        <field name="property_code">TEMP</field>
+        <field name="pkey">TEMP</field>
+        <field name="username">TEMP</field>
+        <field name="password">TEMP</field>
+        <field
+            name="wubook_journal_id"
+            ref="roomdoo_saas_preconfig.journal_tpv_online"
+        />
+        <field name="pricelist_external_id" ref="tarifa_estandar" />
+    </record>
+</odoo>

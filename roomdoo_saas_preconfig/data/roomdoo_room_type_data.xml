@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+    <!-- Tipo de habitación -->
+    <record id="roomdoo_room_type_economic" model="pms.room.type">
+        <field name="name">Economic</field>
+        <field name="default_code">ECON</field>
+        <field name="list_price">21.00</field>
+        <field name="class_id" ref="roomdoo_room_type_class_bedroom" />
+        <!-- <field name="channel_wubook_bind_ids" eval="[(4, ref('roomdoo_wubook_backend'))]"/> -->
+    </record>
+</odoo>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+    <!-- Diarios de pago -->
+    <record id="journal_bank" model="account.journal">
+        <field name="name">Banco</field>
+        <field name="code">BNK</field>
+        <field name="allowed_pms_payments">True</field>
+        <field
+            name="pms_property_ids"
+            eval="[(4, ref('pms.main_pms_property'))]"
+        />        <field name="type">bank</field>
+    </record>
+    <record id="journal_phone_and_shell" model="account.journal">
+        <field name="name">Phone&amp;Shell</field>
+        <field name="code">P&amp;S</field>
+        <field name="allowed_pms_payments">True</field>
+        <field
+            name="pms_property_ids"
+            eval="[(4, ref('pms.main_pms_property'))]"
+        />        <field name="type">bank</field>
+    </record>
+    <record id="journal_tpv" model="account.journal">
+        <field name="name">TPV</field>
+        <field name="code">TPV</field>
+        <field name="allowed_pms_payments">True</field>
+        <field
+            name="pms_property_ids"
+            eval="[(4, ref('pms.main_pms_property'))]"
+        />        <field name="type">bank</field>
+    </record>
+    <record id="journal_tpv_online" model="account.journal">
+        <field name="name">Pasarela de pago (TPV online)</field>
+        <field name="code">TPVON</field>
+        <field name="allowed_pms_payments">True</field>
+        <field
+            name="pms_property_ids"
+            eval="[(4, ref('pms.main_pms_property'))]"
+        />        <field name="type">bank</field>
+    </record>
+    <record id="journal_cash" model="account.journal">
+        <field name="name">Efectivo</field>
+        <field name="code">CSH</field>
+        <field name="allowed_pms_payments">True</field>
+        <field
+            name="pms_property_ids"
+            eval="[(4, ref('pms.main_pms_property'))]"
+        />        <field name="type">cash</field>
+    </record>
+    <!-- Diario de facturación -->
+    <record id="customer_invoice" model="account.journal">
+        <field name="name">Factura de cliente</field>
+        <field name="code">FC</field>
+        <field name="type">sale</field>
+        <field
+            name="pms_property_ids"
+            eval="[(4, ref('pms.main_pms_property'))]"
+        />        <field name="refund_sequence" eval="True" />
+        <field name="check_chronology" eval="True" />
+    </record>
+    <record id="customer_invoice_simplified" model="account.journal">
+        <field name="name">Facturas simplificadas</field>
+        <field name="code">FS</field>
+        <field name="type">sale</field>
+        <field
+            name="pms_property_ids"
+            eval="[(4, ref('pms.main_pms_property'))]"
+        />        <field name="refund_sequence" eval="True" />
+        <field name="check_chronology" eval="True" />
+        <field name="is_simplified_invoice" eval="True" />
+    </record>
+    <record id="provider_invoice" model="account.journal">
+        <field name="name">Factura de proveedor</field>
+        <field name="code">FP</field>
+        <field name="type">purchase</field>
+        <field
+            name="pms_property_ids"
+            eval="[(4, ref('pms.main_pms_property'))]"
+        />        <field name="refund_sequence" eval="True" />
+        <field name="check_chronology" eval="True" />
+    </record>
+</odoo>

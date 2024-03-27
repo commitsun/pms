@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+    <!-- Users -->
+    <record id="base.user_admin" model="res.users">
+        <field name="name">Roomdoo</field>
+        <field
+            name="image_1920"
+            type="base64"
+            file="roomdoo_saas_preconfig/static/img/roomdoo-logo.svg"
+        />
+    </record>
+    <record id="base.user_root" model="res.users">
+        <field name="name">RoomdooBot</field>
+        <field
+            name="image_1920"
+            type="base64"
+            file="roomdoo_saas_preconfig/static/img/roomdoo-logo.svg"
+        />
+    </record>
+    <record id="usuario_gerente" model="res.users">
+        <field name="name">Gerente</field>
+        <field name="login">gerente_roomdoo</field>
+        <field name="password">gerente_roomdoo</field>
+        <field name="pms_property_id" ref="pms.main_pms_property" />
+        <field name="pms_property_ids" eval="[(4, ref('pms.main_pms_property'))]" />
+<!--         <field name="sel_groups_43_44">usuario</field>
+        <field name="sel_groups_2_3"></field> -->
+        <field name="in_group_48">True</field>
+        <field name="in_group_39">True</field>
+        <!-- <field name="availability_rule_field_ids"></field> -->
+    </record>
+    <record id="usuario_recepcion" model="res.users">
+        <field name="name">Recepción</field>
+        <field name="login">recepcion_roomdoo</field>
+        <field name="password">recepcion_roomdoo</field>
+        <field name="pms_property_id" ref="pms.main_pms_property" />
+        <field name="pms_property_ids" eval="[(4, ref('pms.main_pms_property'))]" />
+        <field name="in_group_48">True</field>
+    </record>
+</odoo>

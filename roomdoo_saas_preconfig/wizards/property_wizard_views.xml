@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="property_wizard_view" model="ir.ui.view">
+        <field name="name">Property wizard</field>
+        <field name="model">property.wizard</field>
+        <field name="mode">primary</field>
+        <field name="inherit_id" ref="multi_step_wizard.multi_step_wizard_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//footer" position="before">
+                <group name="start" attrs="{'invisible': [('state', '!=', 'start')]}">
+                    <field name="selected_company" select="1" />
+                    <group>
+                        <field
+                            name="company_name"
+                            class="oe_inline"
+                            placeholder="Name"
+                        />
+                        <field name="company_nif" />
+                        <field name="company_logo" />
+                        <field name="company_mail" />
+                        <field name="company_address" />
+                        <field name="company_web" />
+                        <field name="company_tlf" />
+                    </group>
+                </group>
+                <group
+                    name="property"
+                    attrs="{'invisible': [('state', '!=', 'property')]}"
+                >
+                    <!-- <field name="selected_property"/> -->
+                      <field name="property_name" />
+                      <field name="property_logo" />
+                      <field name="property_address" />
+                      <field name="property_photo" />
+                      <field name="property_tlf" />
+                      <field name="property_web" />
+                      <field name="property_lang" />
+                  </group>
+                  <group
+                    name="property"
+                    attrs="{'invisible': [('state', '!=', 'rooms')]}"
+                >
+                    <!-- <field name="room_type_ids" nolabel="1">
+                        <tree create="false" delete="false" editable="bottom">
+                            <field name="name" />
+                        </tree>
+                    </field> -->
+                  </group>
+                  <div name="final" attrs="{'invisible': [('state', '!=', 'final')]}">
+                    <p>The property is now configured.</p>
+                  </div>
+            </xpath>
+        </field>
+    </record>
+    <record id="action_wizard_property" model="ir.actions.act_window">
+        <field name="name">Property wizard</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">property.wizard</field>
+        <field name="view_id" ref="property_wizard_view" />
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+    <menuitem
+        name="Property wizard"
+        id="menu_property_wizard"
+        action="action_wizard_property"
+        sequence="77"
+        parent="pms.revenue_management_menu"
+    />
+</odoo>

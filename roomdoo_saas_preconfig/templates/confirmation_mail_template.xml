@@ -1,0 +1,1482 @@
+<?xml version="1.0" ?>
+<odoo>
+    <template id="template_reservation_confirmed">
+        <style type="text/css">
+/*Global Styles*/
+
+.marco {
+    bgcolor: #f6f6f6;
+
+    margin: 0;
+
+    padding: 0;
+
+    min-width: 100% !important;
+}
+
+a {
+    color: #263941;
+
+    text-decoration: none;
+
+    font-weight: bold;
+}
+
+img {
+    height: auto;
+}
+
+.content {
+    border: 1px solid #eeeeee;
+}
+
+.logo {
+    font-family: sans-serif;
+
+    font-size: 36px;
+
+    font-weight: bold;
+
+    color: #ffffff;
+}
+
+.link a {
+    font-family: sans-serif;
+
+    font-size: 12px;
+
+    color: #263941;
+}
+
+.subheading {
+    font-size: 14px;
+
+    color: #cccccc;
+
+    font-family: sans-serif;
+
+    font-weight: bold;
+
+    padding: 0 0 0 0;
+
+    text-transform: uppercase;
+
+    letter-spacing: 1px;
+}
+
+.h1 {
+    font-family: sans-serif;
+
+    font-size: 48px;
+
+    font-weight: bold;
+
+    line-height: 56px;
+
+    color: #ffffff;
+
+    padding: 0 0 0 0;
+}
+
+.h2 {
+    font-family: sans-serif;
+
+    font-size: 18px;
+
+    font-weight: bold;
+
+    color: #444444;
+
+    padding: 0 0 0 0;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.5px;
+}
+
+.h3 {
+    font-family: sans-serif;
+
+    font-size: 24px;
+
+    font-weight: regular;
+
+    color: #555555;
+
+    padding: 0 0 0 0;
+}
+
+.h4 {
+    font-family: sans-serif;
+
+    font-size: 18px;
+
+    font-weight: bold;
+
+    color: #666666;
+
+    padding: 0 0 0 0;
+}
+
+.paragraph {
+    font-family: sans-serif;
+
+    font-size: 14px;
+
+    line-height: 22px;
+
+    color: #666666;
+
+    font-weight: 200;
+
+    padding: 20px 0 0 0;
+}
+
+.listitem {
+    font-family: sans-serif;
+
+    font-size: 15px;
+
+    color: #666666;
+
+    font-weight: 200;
+
+    padding: 0 0 20px 0;
+}
+
+.smalltext {
+    font-family: sans-serif;
+
+    font-size: 14px;
+
+    color: #cccccc;
+
+    padding: 3px 0 0 0;
+}
+
+.borderbottom {
+    border-bottom: 1px solid #f2eeed;
+}
+
+/*Media Queries*/
+
+@media only screen and (max-width: 651px) {
+    .columns {
+        width: 100% !important;
+    }
+
+    .columncontainer {
+        display: block !important;
+
+        width: 100% !important;
+    }
+
+    .paragraph,
+    .listitem {
+        font-size: 18px;
+    }
+
+    .link {
+        float: left;
+    }
+}
+
+@media only screen and (min-width: 651px) {
+    .content {
+        width: 650px !important;
+    }
+}
+        </style>
+
+                                <div
+            style="background-color:#ffffff;margin: 0; padding: 0; min-width: 100%;font-family: sans-serif; font-size: 16px; line-height: 22px; color: #666666; font-weight: 200; padding: 20px 0 0 0;"
+        >
+
+                                  <div
+                style="background-color:#ffffff;margin: 0; padding: 0; min-width: 100%;font-family: sans-serif; font-size: 16px; line-height: 22px; color: #666666; font-weight: 200; padding: 20px 0 0 0;"
+            >
+
+                                        <table
+                    background-color="#ffffff"
+                    width="100%"
+                    cellspacing="0"
+                    cellpadding="0"
+                    border="0"
+                >
+
+                                            </table><table
+                    class="content"
+                    background-color="#f6f6f6"
+                    style="border-left-color:rgb(238, 238, 238);border-bottom-color:rgb(238, 238, 238);border-right-color:rgb(238, 238, 238);border-top-color:rgb(238, 238, 238);width:650px;border: 1px solid #eeeeee; background-color: #FFFFFF;"
+                    cellspacing="0"
+                    cellpadding="0"
+                    border="0"
+                    align="center"
+                >
+
+                                                <!--Header-->
+
+                                                <tbody><tr width="100%">
+
+                                                    <td
+                                style="padding:30px 30px 20px 30px;background-color:#ffffff; width:100%"
+                            >
+
+                                                        <table
+                                    class="columns"
+                                    width="100%"
+                                    cellspacing="0"
+                                    cellpadding="0"
+                                    border="0x"
+                                >
+
+                                                            <tbody><tr valign="top">
+
+                                                            </tr>
+
+                                                        </tbody></table>
+
+                                                       <img
+                                    src="/web/image/res.company/${object.company_id.id}/logo"
+                                    t-att-alt="${object.pms_property_id.name}"
+                                    style="height: auto; vertical-align: middle; width: auto;"
+                                />
+
+                                                            <table
+                                    class="columns"
+                                    width="100%"
+                                    cellspacing="0"
+                                    cellpadding="0"
+                                    border="0x"
+                                >
+
+                                                            <tbody><tr valign="top"><td
+                                                class="columncontainer"
+                                                width="50%"
+                                                valign="middle"
+                                            >
+
+                                                                    <table
+                                                    width="100%"
+                                                    cellspacing="0"
+                                                    cellpadding="0"
+                                                    border="0"
+                                                >
+
+                                                                        <tbody><tr>
+
+                                                                            <td
+                                                                style="padding:0px 0px 0px 0px;"
+                                                                valign="middle"
+                                                                align="right"
+                                                            >
+
+
+
+                                                                                  % if object.pms_property_id.website
+
+                                                                                  <table
+                                                                    class="link"
+                                                                    cellspacing="0"
+                                                                    cellpadding="0"
+                                                                    border="0"
+                                                                ><tbody><tr>
+
+                                                                                        <td
+                                                                                style="padding:0px 15px 0px 0px;"
+                                                                            >
+
+                                                                                            <a
+                                                                                    href="${object.pms_property_id.website}"
+                                                                                    style="color:#4BB1E0"
+                                                                                >${object.pms_property_id.website}</a>
+
+                                                                                        </td>
+
+                                                                                    </tr>
+
+                                                                                </tbody></table>
+
+                                                                                  % endif
+
+                                                                            </td>
+
+                                                                        </tr>
+
+                                                                    </tbody></table>
+
+                                                                </td></tr>
+
+                                                        </tbody></table>
+
+                                                    </td>
+
+                                                </tr>
+
+                                                <tr>
+
+                                                </tr>
+
+                                                <!--1 Column resume-->
+
+                                                <tr>
+
+                                                    <td
+                                class="borderbottom"
+                                style="padding:60px 30px 60px 30px;"
+                            >
+
+                                                        <table
+                                    width="100%"
+                                    cellspacing="0"
+                                    cellpadding="0"
+                                    border="0"
+                                >
+
+                                                            <tbody><tr>
+
+                                                                <td
+                                                class="h2"
+                                                style="color:#444444;padding: 0 0 0 0; text-transform: uppercase; letter-spacing: 0.5px;"
+                                                align="center"
+                                            > Confirmación de reserva
+
+                                                                    en
+
+                                                                    ${object.pms_property_id.name}</td>
+
+                                                            </tr>
+
+                                                            <tr>
+
+                                                                <td
+                                                style="padding:20px 0 0 0;"
+                                                align="center"
+                                            >
+
+                                                                    <p
+                                                    style="font-size:2em;line_height=0px;color:#4BB1E0;"
+                                                >__</p>
+
+                                                                </td>
+
+                                                            </tr>
+
+                                                            <tr>
+
+                                                                <td
+                                                class="paragraph"
+                                                style="padding:10px 0 0 0;"
+                                                align="justify"
+                                            ><p><br /></p><p
+                                                >Hola ${object.partner_name or object.partner_id.firstname or ''},</p><p
+                                                ><br /></p>
+
+                                                                  <p
+                                                > Tu reserva en <strong
+                                                    >${object.pms_property_id.name}</strong> queda confirmada. Te esperamos el día <strong
+                                                    >${object.first_checkin.day}-${object.first_checkin.month}-${object.first_checkin.year}</strong></p>
+
+                                                            </td></tr><tr><td
+                                                class="paragraph"
+                                                style="padding:0px 0 0 0;"
+                                                align="justify"
+                                            >
+
+                                                                <center>
+
+                                                                    <p
+                                                        style="font-size:2em;line_height=0px; color: #4BB1E0; margin-bottom:20px"
+                                                    >__</p></center>
+
+                                                                <center>
+
+                                                                  <strong
+                                                    > Realiza ahora tu check-in y ahorra tiempo </strong>
+
+                                                                </center>
+
+                                                                <br />
+
+                Accede a <strong
+                                                >nuestro sistema de registro de pre check-in</strong>. En pocos pasos conseguirás registrar tus datos de manera ágil, sencilla y segura, <strong
+                                                >evitando colas en recepción</strong>.
+
+                                                            </td>
+
+                                                            </tr>
+
+                                                            <tr>
+
+                                                                <td
+                                                style="padding:20px 0 0px 0;"
+                                                align="center"
+                                            >
+
+                                                                    <table
+                                                    cellspacing="0"
+                                                    cellpadding="0"
+                                                    border="0"
+                                                >
+
+                                                                        <tbody><tr>
+
+                                                                            <td
+                                                                align="center"
+                                                            >
+
+                                                                                    <a
+                                                                    href="/my/folios/${object.id}/precheckin?access_token=${object.access_token}"
+                                                                    target="_blank"
+                                                                    style="color:#FFFFFF;font-size: 2em; padding: 10px 20px 10px 20px;"
+                                                                >
+
+                                                                                        </a><p
+                                                                /><div
+                                                                    style="padding:0.5em;background-color: #4BB1E0; border-color: #4BB1E0; border-width: 2px;border-style:solid; border-bottom-style: solid;border-left-style: solid;border-right-style: solid;border-top-style: solid;-webkit-border-radius: 10; -moz-border-radius: 10; border-radius: 10px;font-size: 12px;"
+                                                                ><a
+                                                                        href="/my/folios/${object.id}/precheckin?access_token=${object.access_token}"
+                                                                        target="_blank"
+                                                                        style="color:#FFFFFF;font-size: 2em; padding: 10px 20px 10px 20px;"
+                                                                    >Hacer check-in
+
+                                                                                        </a></div><a
+                                                                    href="/my/folios/${object.id}/precheckin?access_token=${object.access_token}"
+                                                                    target="_blank"
+                                                                    style="color:#FFFFFF;font-size: 2em; padding: 10px 20px 10px 20px;"
+                                                                >
+
+                                                                                       </a>
+
+                                                                                <p />
+                                                                                % if (object.pending_amount != 0 and False):
+
+                                                                                    <center
+                                                                    class="paragraph"
+                                                                >
+
+                                                                                        <p
+                                                                        style="font-size:2em;line_height=0px; color: #4BB1E0;margin-bottom:30px;"
+                                                                    >__</p>
+
+                                                                                        <strong
+                                                                    >
+
+                                                                                            Si lo deseas puedes realizar ya el pago de tu reserva de forma online.
+
+                                                                                        </strong>
+
+
+
+                                                                                        <p
+                                                                    >
+
+                                                                                            <a
+                                                                            href="/my/folios/${object.id}?access_token=${object.access_token}"
+                                                                            target="_blank"
+                                                                            style="color:#FFFFFF;font-size: 2em; padding: 10px 20px 10px 20px;"
+                                                                        >
+
+                                                                                                </a></p><div
+                                                                        style="padding:0.5em;background-color: #4BB1E0; border-color: #4BB1E0; border-width: 2px;border-style:solid; border-bottom-style: solid;border-left-style: solid;border-right-style: solid;border-top-style: solid;-webkit-border-radius: 10; -moz-border-radius: 10; border-radius: 10px;font-size: 12px;"
+                                                                    ><a
+                                                                            href="/my/folios/${object.id}?access_token=${object.access_token}"
+                                                                            target="_blank"
+                                                                            style="color:#FFFFFF;font-size: 2em; padding: 10px 20px 10px 20px;"
+                                                                        >Realizar pago online
+
+                                                                                                </a></div><a
+                                                                        href="/my/folios/${object.id}?access_token=${object.access_token}"
+                                                                        target="_blank"
+                                                                        style="color:#FFFFFF;font-size: 2em; padding: 10px 20px 10px 20px;"
+                                                                    >
+
+                                                                                                <center
+                                                                        ><img
+                                                                                src="https://www.roomdoo.com/wp-content/uploads/2024/02/payment-method-e1707430753481.png"
+                                                                                alt="Pago online"
+                                                                                style="width:auto;"
+                                                                                href="/my/folios/${object.id}?access_token=${object.access_token}"
+                                                                            /></center></a>
+
+                                                                                        <p
+                                                                    />
+
+                                                                                    </center>
+
+                                                                                % endif
+
+                                                                                </td></tr>
+
+                </tbody></table>
+
+                                                                </td>
+
+                                                            </tr>
+
+                                                        </tbody></table>
+
+                                                    </td>
+
+                                                </tr>
+
+                                                <!--Section with sidebar info and services-->
+
+                                                <tr valign="top">
+
+                                                    <td
+                                class="columncontainer"
+                                width="50%"
+                            >
+
+                                                        <center>
+
+                                                                </center>
+
+                                                            % if not object.partner_id.invoice_to_agency
+
+
+
+                                                            % endif
+
+                                                            <table
+                                    width="100%"
+                                    cellspacing="0"
+                                    cellpadding="0"
+                                    border="0"
+                                >
+
+                                                            <tbody><tr>
+
+                                                                <td
+                                                style="padding:0px 30px 0px 30px;"
+                                                valign="top"
+                                            >
+
+                                                                    <table
+                                                    width="100%"
+                                                    cellspacing="0"
+                                                    cellpadding="0"
+                                                    border="0"
+                                                ><tbody><tr><td
+                                                                class="paragraph"
+                                                                style="padding:10px 0 0 0;marging:0; width: 100%"
+                                                            >Para cualquier duda, contacta con nosotros a través del correo electrónico <a
+                                                                    href="mailto:${object.pms_property_id.partner_id.email}"
+                                                                    style="color:#4BB1E0;"
+                                                                >${object.pms_property_id.partner_id.email}</a> o en el teléfono <strong
+                                                                >${object.pms_property_id.partner_id.phone}</strong><br
+                                                                /></td>
+
+                                                                        </tr>
+
+                                                                        <tr> </tr>
+
+                                                                    </tbody></table>
+
+                                                                </td>
+
+                                                            </tr>
+
+
+
+                                                            <!--Article with thumbnail reservation data-->
+
+                                                            <tr>
+
+                                                                    <td
+                                                class="borderbottom"
+                                                style="padding:30px 0px 0px 0px;"
+                                            >
+
+                                                                        <table
+                                                    class="columns"
+                                                    width="650"
+                                                    cellspacing="0"
+                                                    cellpadding="0"
+                                                    border="0"
+                                                >
+
+                                                                            <tbody><tr
+                                                            valign="top"
+                                                        >
+
+                                                                                <td
+                                                                class="columncontainer"
+                                                                width="10%"
+                                                            >
+
+                                                                                    <table
+                                                                    width="100%"
+                                                                    cellspacing="0"
+                                                                    cellpadding="0"
+                                                                    border="0"
+                                                                >
+
+                                                                                        <tbody
+                                                                    ><tr>
+
+                                                                                            <td
+                                                                                style="padding:20px 0px 0px 30px;"
+                                                                                height="115"
+                                                                            >
+
+                                                                                              <img
+                                                                                    src="https://www.roomdoo.com/wp-content/uploads/2024/02/appointment-e1707435217685.png"
+                                                                                    alt="Detalles de reserva"
+                                                                                    style="width:auto;"
+                                                                                    border="0"
+                                                                                />
+
+                                                                                            </td>
+
+                                                                                        </tr>
+
+                                                                                    </tbody></table>
+
+                                                                                </td>
+
+                                                                                <td
+                                                                class="columncontainer"
+                                                                width="90%"
+                                                            >
+
+                                                                                    <table
+                                                                    width="100%"
+                                                                    cellspacing="0"
+                                                                    cellpadding="0"
+                                                                    border="0"
+                                                                >
+
+                                                                                        <tbody
+                                                                    ><tr>
+
+                                                                                            <td
+                                                                                style="padding:20px 30px 20px 30px;"
+                                                                                valign="top"
+                                                                            >
+
+                                                                                                <table
+                                                                                    cellspacing="0"
+                                                                                    cellpadding="0"
+                                                                                    border="0"
+                                                                                >
+
+                                                                                                    <tbody
+                                                                                    ><tr
+                                                                                        >
+
+                                                                                                      <td
+                                                                                                class="h2"
+                                                                                                style="color:#4BB1E0;padding: 0 0 0 0; text-transform: uppercase; letter-spacing: 0.5px;"
+                                                                                            >Datos de tu
+
+                                                                                                            reserva</td>
+
+                                                                                                    </tr>
+
+                                                                                                    <tr
+                                                                                        >
+
+                                                                                                        <td
+                                                                                                class="subheading"
+                                                                                                style="color:#555555"
+                                                                                                align="justify"
+                                                                                            >
+
+                                                                                                            <strong
+                                                                                                >
+
+                                                                                                                % if object.partner_id:
+
+                                                                                                                ${object.partner_id.name}
+
+                                                                                                                % else:
+
+                                                                                                                ${object.partner_name}
+
+                                                                                                                % endif
+
+                                                                                                            </strong>
+
+                                                                                                        </td>
+
+                                                                                                    </tr>
+
+                                                                                                    <tr
+                                                                                        >
+
+                                                                                                        <td
+                                                                                                class="paragraph"
+                                                                                                style="padding:10px 0 0 0;"
+                                                                                                align="justify"
+                                                                                            >
+
+                                                                                                            % if object.partner_id.contact_address:
+
+                                                                                                            ${object.partner_id.contact_address}<br
+                                                                                                />
+
+                                                                                                            % endif
+
+                                                                                                            % if object.partner_id.phone:
+
+                                                                                                            Tel.: ${object.partner_id.phone}<br
+                                                                                                />
+
+                                                                                                            % endif
+
+                                                                                                            % if object.partner_id.mobile:
+
+                                                                                                            Mov.: ${object.partner_id.mobile}<br
+                                                                                                />
+
+                                                                                                            % endif
+
+                                                                                                            <br
+                                                                                                />
+
+                                                                                                            % for reservation in object.reservation_ids:
+
+                                                                                                            % if reservation.state != "cancel":
+
+                                                                                                            <strong
+                                                                                                >
+
+                                                                                                                ${reservation['room_type_id']['name']}
+
+                                                                                                                % if reservation['children'] == 0:
+
+                                                                                                                (${reservation['adults']} Adultos)
+
+                                                                                                                % else:
+
+                                                                                                                (${reservation['adults']} Adultos + ${reservation['children']} Niños)
+
+                                                                                                                % endif
+
+                                                                                                                <br
+                                                                                                    />
+
+                                                                                                            </strong>
+
+                                                                                                            <strong
+                                                                                                    style="margin-left:2em"
+                                                                                                >Entrada</strong>: ${reservation['checkin_datetime'].day}/${reservation['checkin_datetime'].month}/${reservation['checkin_datetime'].year}<br
+                                                                                                />
+
+                                                                                                            <strong
+                                                                                                    style="margin-left:2em"
+                                                                                                >Salida</strong>: ${reservation['checkout_datetime'].day}/${reservation['checkout_datetime'].month}/${reservation['checkout_datetime'].year}<br
+                                                                                                />
+
+                                                                                                            <strong
+                                                                                                    style="margin-left:2em"
+                                                                                                >Nº de noches</strong>: ${reservation['nights']}<br
+                                                                                                />
+
+                                                                                                            % endif
+
+                                                                                                            % endfor
+
+
+
+                                                                                                            <br
+                                                                                                />
+
+                                                                                                            % if object.pricelist_id.pricelist_email_text
+
+                                                                                                            <br
+                                                                                                /><p
+                                                                                                    style="color:#4BB1E0"
+                                                                                                ><strong
+                                                                                                    >Información importante</strong></p>
+
+                                                                                                            <br
+                                                                                                />
+
+                                                                                                            <p
+                                                                                                >Las condiciones de pago y cancelación variarán según la tipología de tarifa seleccionada:</p><br
+                                                                                                />
+
+
+
+                                                                                                            <ul
+                                                                                                >
+
+                                                                                                                <li
+                                                                                                    >${object.pricelist_id.pricelist_email_text | safe}</li>
+
+                                                                                                            </ul>
+
+                                                                                                            % endif
+
+                                                                                                        </td>
+
+                                                                                                    </tr>
+
+                                                                                                </tbody></table>
+
+                                                                                            </td>
+
+                                                                                        </tr>
+
+                                                                                    </tbody></table>
+
+                                                                                </td>
+
+                                                                            </tr>
+
+                                                                        </tbody></table>
+
+                                                                    </td>
+
+                                                            </tr>
+
+
+
+                                                            <!--2 Column maps-->
+
+                                                            <tr>
+
+                                                                <td
+                                                class="borderbottom"
+                                                style="padding:10px 0px 0px 30px;"
+                                            >
+
+                                                                    <table
+                                                    class="columns"
+                                                    width="620"
+                                                    cellspacing="0"
+                                                    cellpadding="0"
+                                                    border="0"
+                                                >
+
+                                                                        <tbody><tr
+                                                            valign="top"
+                                                        >
+
+                                                                            <td
+                                                                class="columncontainer"
+                                                                width="50%"
+                                                            >
+
+                                                                                <table
+                                                                    width="100%"
+                                                                    cellspacing="0"
+                                                                    cellpadding="0"
+                                                                    border="0"
+                                                                >
+
+                                                                                    <tbody
+                                                                    ><tr>
+
+                                                                                    </tr>
+
+                                                                                    <tr>
+
+                                                                                      <td
+                                                                                class="h2"
+                                                                                style="color:#4BB1E0;padding: 0 0 0 0; text-transform: uppercase; letter-spacing: 0.5px;"
+                                                                            > Mapa</td>
+
+                                                                                    </tr>
+
+                                                                                    <tr>
+
+                                                                                        <td
+                                                                                style="padding:20px 0px 0px 0px;"
+                                                                                valign="middle"
+                                                                                align="center"
+                                                                            >
+
+                                                                                          <a
+                                                                                    href="https://www.google.com/maps/search/?api=1&amp;query=${object.pms_property_id.name}+${object.pms_property_id.street}+${object.pms_property_id.city}"
+                                                                                    target="_blank"
+                                                                                    style="color:rgb(69, 194, 177);"
+                                                                                >
+
+                                                                                                        <br
+                                                                                    />
+
+                                                                                                      <img
+                                                                                        src="https://www.roomdoo.com/wp-content/uploads/2024/02/google-maps-e1707435259505.png"
+                                                                                        alt="Ver mapa"
+                                                                                        style="width:auto;"
+                                                                                        border="0"
+                                                                                    />
+
+                                                                                          </a><p
+                                                                                >
+
+                                                                                                    <br
+                                                                                    />
+
+                                                                                                        <a
+                                                                                        href="https://www.google.com/maps/search/?api=1&amp;query=${object.pms_property_id.name}+${object.pms_property_id.street}+${object.pms_property_id.city}"
+                                                                                        target="_blank"
+                                                                                        style="color:#FFFFFF;font-size: 20px; padding: 10px 20px 10px 20px;"
+                                                                                    >
+
+                                                                                                    </a></p><div
+                                                                                    style="padding:0.5em;background-color: #4BB1E0; border-color: #4BB1E0; border-width: 2px;border-style:solid; border-bottom-style: solid;border-left-style: solid;border-right-style: solid;border-top-style: solid;-webkit-border-radius: 10; -moz-border-radius: 10; border-radius: 10px;"
+                                                                                ><a
+                                                                                        href="https://www.google.com/maps/search/?api=1&amp;query=${object.pms_property_id.name}+${object.pms_property_id.street}+${object.pms_property_id.city}"
+                                                                                        target="_blank"
+                                                                                        style="color:#FFFFFF;font-size: 20px; padding: 10px 20px 10px 20px;"
+                                                                                    >¿Como
+
+                                                                                                                llegar desde tu ubicación actual?</a></div><p
+                                                                                /><table
+                                                                                    cellspacing="0"
+                                                                                    cellpadding="0"
+                                                                                    border="0"
+                                                                                >
+
+                                                                                                <tbody
+                                                                                    ><tr
+                                                                                        >
+
+                                                                                                </tr>
+
+                                                                                                <tr
+                                                                                        >
+
+
+
+
+
+
+
+
+
+                                                                                                </tr>
+
+                                                                                                <tr
+                                                                                        >
+
+                                                                                                    <td
+                                                                                                style="padding:20px 0 20px 0;"
+                                                                                            >
+
+                                                                                                        <table
+                                                                                                    cellspacing="0"
+                                                                                                    cellpadding="0"
+                                                                                                    border="0"
+                                                                                                >
+
+                                                                                                            <tbody
+                                                                                                    ><tr
+                                                                                                        >
+
+                                                                                                                <td
+                                                                                                                align="center"
+                                                                                                            >
+
+                                                                                                                    <!--[if gte mso 12>
+
+                                                                                                <div style="border: 2px solid #5e96ea;">
+
+                                                                                                  <![endif]-->
+
+                                                                                                                    <!--[if gte mso 12>
+
+                                                                                                </div>
+
+                                                                                                <![endif]-->
+
+                                                                                                                <br
+                                                                                                                /></td>
+
+                                                                                                            </tr>
+
+                                                                                                        </tbody></table>
+
+                                                                                                    </td>
+
+                                                                                                </tr>
+
+                                                                                            </tbody></table>
+
+                                                                                        </td>
+
+                                                                                    </tr>
+
+                                                                                </tbody></table>
+
+                                                                            </td>
+
+                                                                        </tr>
+
+                                                                    </tbody></table>
+
+                                                                </td>
+
+                                                            </tr>
+
+                                                            <!--Article with thumbnail amount--><tr
+                                        >
+
+                                                                <td
+                                                class="borderbottom"
+                                                style="padding:30px 0px 0px 0px;"
+                                            >
+
+                                                                    <table
+                                                    class="columns"
+                                                    width="650"
+                                                    cellspacing="0"
+                                                    cellpadding="0"
+                                                    border="0"
+                                                >
+
+                                                                        <tbody><tr
+                                                            valign="top"
+                                                        >
+
+                                                                            <td
+                                                                class="columncontainer"
+                                                                width="10%"
+                                                            >
+
+                                                                                <table
+                                                                    width="100%"
+                                                                    cellspacing="0"
+                                                                    cellpadding="0"
+                                                                    border="0"
+                                                                >
+
+                                                                                    <tbody
+                                                                    ><tr>
+
+                                                                                        <td
+                                                                                style="padding:20px 0px 0px 30px;"
+                                                                                height="115"
+                                                                            />
+
+                                                                                    </tr>
+
+                                                                                </tbody></table>
+
+                                                                            </td>
+
+                                                                            <td
+                                                                class="columncontainer"
+                                                                width="90%"
+                                                            >
+
+                                                                                <table
+                                                                    width="100%"
+                                                                    cellspacing="0"
+                                                                    cellpadding="0"
+                                                                    border="0"
+                                                                >
+
+                                                                                    <tbody
+                                                                    ><tr>
+
+                                                                                        <td
+                                                                                style="padding:20px 30px 20px 30px;"
+                                                                                valign="top"
+                                                                            >
+
+                                                                                            <table
+                                                                                    cellspacing="0"
+                                                                                    cellpadding="0"
+                                                                                    border="0"
+                                                                                >
+
+                                                                                                <tbody
+                                                                                    ><tr
+                                                                                        >
+
+                                                                                                  <td
+                                                                                                class="h2"
+                                                                                                style="color:#4BB1E0;padding: 0 0 0 0; text-transform: uppercase; letter-spacing: 0.5px;"
+                                                                                            >IMPORTES</td>
+
+                                                                                                </tr>
+
+                                                                                                <tr
+                                                                                        >
+
+                                                                                                    <td
+                                                                                                class="paragraph"
+                                                                                                style="padding:10px 0 0 0;"
+                                                                                                align="justify"
+                                                                                            >
+
+                                                                                                        <strong
+                                                                                                >Base imponible</strong>: ${object.amount_untaxed} €<br
+                                                                                                />
+
+                                                                                                        <strong
+                                                                                                >I.V.A (10%)</strong>: ${object.amount_tax} €<br
+                                                                                                />
+
+                                                                                                        <strong
+                                                                                                >Precio total</strong>: ${object.amount_total} €<br
+                                                                                                />
+
+                                                                                                        <br
+                                                                                                />
+
+                                                                                                    </td>
+
+                                                                                                </tr>
+
+                                                                                                <tr
+                                                                                        >
+
+                                                                                                </tr>
+
+                                                                                            </tbody></table>
+
+                                                                                        </td>
+
+                                                                                    </tr>
+
+                                                                                </tbody></table>
+
+                                                                            </td>
+
+                                                                        </tr>
+
+                                                                    </tbody></table>
+
+                                                                </td>
+
+                                                            </tr><!--Article with thumbnail rooms data-->
+
+                                                            <tr>
+
+                                                                <td
+                                                class="borderbottom"
+                                                style="padding:30px 0px 0px 0px;"
+                                            >
+
+                                                                    <table
+                                                    class="columns"
+                                                    width="650"
+                                                    cellspacing="0"
+                                                    cellpadding="0"
+                                                    border="0"
+                                                >
+
+                                                                        <tbody><tr
+                                                            valign="top"
+                                                        >
+
+                                                                            <td
+                                                                class="columncontainer"
+                                                                width="10%"
+                                                            >
+
+                                                                                <table
+                                                                    width="100%"
+                                                                    cellspacing="0"
+                                                                    cellpadding="0"
+                                                                    border="0"
+                                                                >
+
+                                                                                    <tbody
+                                                                    ><tr>
+
+                                                                                        <td
+                                                                                style="padding:20px 0px 0px 30px;"
+                                                                                height="115"
+                                                                            />
+
+                                                                                    </tr>
+
+                                                                                </tbody></table>
+
+                                                                            </td>
+
+                                                                            <td
+                                                                class="columncontainer"
+                                                                width="90%"
+                                                            >
+
+                                                                                <table
+                                                                    width="100%"
+                                                                    cellspacing="0"
+                                                                    cellpadding="0"
+                                                                    border="0"
+                                                                >
+
+                                                                                    <tbody
+                                                                    ><tr>
+
+                                                                                        <td
+                                                                                style="padding:20px 30px 20px 30px;"
+                                                                                valign="top"
+                                                                            >
+
+                                                                                            <div
+                                                                                >
+
+                                                                                              <div
+                                                                                        class="h2"
+                                                                                        style="font-family:sans-serif;font-size: 18px; font-weight: bold; color: #4BB1E0; padding: 0 0 0 0; text-transform: uppercase; letter-spacing: 0.5px;"
+                                                                                    >Información de la
+
+                                                                                                    habitación</div>
+
+                                                                                                % set room_type_ids = object.reservation_ids.mapped('room_type_id.id')
+
+                                                                                                % set room_types = object.reservation_ids['room_type_id']
+
+                                                                                                % for room_type in room_types:
+
+
+
+                                                                                                % if room_type.product_id.name:
+
+                                                                                                <div
+                                                                                        style="font-family:sans-serif;font-size: 12px; color: #555555; padding: 10px 0 0 0; text-transform: uppercase"
+                                                                                        class="subheading"
+                                                                                    >
+
+                                                                                                    <strong
+                                                                                        ><b
+                                                                                            >${room_type.product_id.name}</b></strong>
+
+                                                                                                </div>
+
+                                                                                                % endif
+
+                                                                                                % endfor
+
+                                                                                            </div>
+
+                                                                                        </td>
+
+                                                                                    </tr>
+
+                                                                                </tbody></table>
+
+                                                                            </td>
+
+                                                                        </tr>
+
+                                                                    </tbody></table>
+
+                                                                </td>
+
+                                                            </tr>
+
+
+
+
+
+
+
+                                                            <!--Article with thumbnail-->
+
+                                                            <tr> </tr>
+
+                                                            <!--Section with sidebar-->
+
+                                                            <tr> </tr>
+
+                                                            <!--Article with thumbnail-->
+
+                                                            <tr> </tr>
+
+                                                            <!--Article with thumbnail-->
+
+                                                            <tr> </tr>
+
+                                                            <!--Block Layout-->
+
+
+
+                                                            <!--2 Column-->
+
+                                                            <tr> </tr>
+
+                                                            <!--3 Column-->
+
+                                                            <tr> </tr>
+
+                                                            <!--2 Column-->
+
+                                                            <tr>
+
+                                                            </tr>
+
+                                                            <!--1 Column-->
+
+                                                            <tr>
+
+                                                              <td
+                                                style="padding:30px 30px 20px 30px;background-color: #4D4D4D"
+                                            >
+
+                                                                    <table
+                                                    width="100%"
+                                                    cellspacing="0"
+                                                    cellpadding="0"
+                                                    border="0"
+                                                >
+
+                                                                        <tbody><tr>
+
+                                                                            <td
+                                                                class="h2"
+                                                                style="color:#FFFFFF;padding: 0 0 0 0; text-transform: uppercase; letter-spacing: 0.5px;"
+                                                                align="center"
+                                                            > Muchas gracias por elegirnos para tu estancia</td>
+
+                                                                        </tr>
+
+                                                                        <tr>
+
+                                                                        </tr>
+
+                                                                    </tbody></table>
+
+                                                                </td>
+
+                                                            </tr>
+
+                                                            <tr>
+
+                                                              <td
+                                                class="borderbottom"
+                                                style="padding:45px 0px 30px 30px;"
+                                                valign="middle"
+                                                align="center"
+                                            >
+
+                                                                    <table
+                                                    class="columns"
+                                                    width="620"
+                                                    cellspacing="0"
+                                                    cellpadding="0"
+                                                    border="0"
+                                                >
+
+                                                                        <tbody><tr
+                                                            valign="top"
+                                                        >
+
+                                                                        </tr>
+
+                                                                    </tbody></table>
+
+                                                                    <img
+                                                    src="/web/image/res.company/${object.company_id.id}/logo"
+                                                    t-att-alt="${object.pms_property_id.name}"
+                                                    style="height: auto; vertical-align: middle; width: auto;"
+                                                />
+
+                                                                    <table
+                                                    class="columns"
+                                                    width="620"
+                                                    cellspacing="0"
+                                                    cellpadding="0"
+                                                    border="0"
+                                                >
+
+                                                                        <tbody><tr
+                                                            valign="top"
+                                                        >
+
+                                                                        </tr>
+
+                                                                    </tbody></table>
+
+                                                                </td>
+
+                                                            </tr>
+
+                                                            <!--Footer-->
+
+                                                            <tr>
+
+                                                                <td class="footer">
+
+                                                                    % if object.pms_property_id.privacy_policy
+
+                                                                    <table
+                                                    width="100%"
+                                                    cellspacing="0"
+                                                    cellpadding="0"
+                                                    border="0"
+                                                >
+
+                                                                        <tbody><tr>
+
+                                                                            <td
+                                                                class="smalltext"
+                                                                style="color:#828282;padding: 20px 20px 20px 20px;"
+                                                                align="justify"
+                                                            >${object.pms_property_id.privacy_policy | safe}</td>
+
+                                                                        </tr>
+
+                                                                        <tr>
+
+                                                                        </tr>
+
+                                                                    </tbody></table>
+
+                                                                    % endif
+
+                                                                    <table
+                                                    width="100%"
+                                                    cellspacing="0"
+                                                    cellpadding="0"
+                                                    border="0"
+                                                >
+
+                                                                        <tbody><tr
+                                                        > </tr>
+
+                                                                        <tr>
+
+                                                                        </tr>
+
+                                                                    </tbody></table>
+
+                                                                </td>
+
+                                                            </tr>
+
+                                                        </tbody></table>
+
+                                                    </td>
+
+                                                </tr>
+
+                                            </tbody></table>
+
+
+
+                                    </div>
+
+                                </div>
+        </template>
+
+        <record id="email_template_reservation" model="mail.template">
+            <field name="name">Roomdoo cancelation mail</field>
+            <field name="model_id" ref="pms.model_pms_reservation" />
+            <field
+            name="email_from"
+        >${('%s &lt;%s&gt;' % (object.pms_property_id.partner_id.name, object.pms_property_id.partner_id.email) or '')|safe}</field>
+            <field name="email_to">${(object.email or '')|safe}</field>
+            <field name="partner_to">${(object.partner_id.id or '')}</field>
+            <field name="lang">${object.lang}</field>
+            <field name="subject">
+                ✅ Su reserva en ${object.pms_property_id.name} ha sido confirmada
+            </field>
+
+
+            <field name="body_html" ref="template_reservation_confirmed" />
+            <field
+            name="reply_to"
+        >${('%s &lt;%s&gt;' % (object.pms_property_id.partner_id.name, object.pms_property_id.partner_id.email) or '')|safe}</field>
+        </record>
+</odoo>

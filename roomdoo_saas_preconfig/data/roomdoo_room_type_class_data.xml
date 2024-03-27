@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+    <!-- Clases de tipo de habitación -->
+    <record id="roomdoo_room_type_class_bedroom" model="pms.room.type.class">
+        <field name="name">Habitación</field>
+        <field name="default_code">HAB</field>
+    </record>
+    <record id="roomdoo_room_type_class_apartment" model="pms.room.type.class">
+        <field name="name">Apartamento</field>
+        <field name="default_code">APA</field>
+    </record>
+    <record id="roomdoo_room_type_class_studio" model="pms.room.type.class">
+        <field name="name">Estudio</field>
+        <field name="default_code">EST</field>
+    </record>
+    <record id="roomdoo_room_type_class_bed" model="pms.room.type.class">
+        <field name="name">Cama</field>
+        <field name="default_code">CAM</field>
+    </record>
+    <record id="roomdoo_room_type_class_parking" model="pms.room.type.class">
+        <field name="name">Parking</field>
+        <field name="default_code">PRK</field>
+    </record>
+    <record id="roomdoo_room_type_class_sala" model="pms.room.type.class">
+        <field name="name">Sala</field>
+        <field name="default_code">SAL</field>
+    </record>
+    <record id="roomdoo_room_type_class_lounge" model="pms.room.type.class">
+        <field name="name">Salón</field>
+        <field name="default_code">SLN</field>
+    </record>
+    <record id="roomdoo_room_type_class_bungalow" model="pms.room.type.class">
+        <field name="name">Bungalow</field>
+        <field name="default_code">BUN</field>
+    </record>
+    <record id="roomdoo_room_type_class_chalet" model="pms.room.type.class">
+        <field name="name">Chalet</field>
+        <field name="default_code">CHA</field>
+    </record>
+    <record id="roomdoo_room_type_class_village" model="pms.room.type.class">
+        <field name="name">Villa</field>
+        <field name="default_code">VIL</field>
+    </record>
+</odoo>

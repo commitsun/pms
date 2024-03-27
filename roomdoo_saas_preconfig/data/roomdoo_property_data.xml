@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+    <!-- Property -->
+    <record id="pms.main_pms_property" model="pms.property">
+        <field name="name">Roomdoo property</field>
+        <field
+            name="logo"
+            type="base64"
+            file="roomdoo_saas_preconfig/static/img/roomdoo-logo.svg"
+        />
+        <!-- <field name="property_confirmed_email"></field>
+        <field name="property_unconfirmed_email"></field> -->
+    </record>
+</odoo>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+    <!-- <record id="base.config_settings_0" model="res.config.settings">
+        <field name="sale_tax_id" ref="l10n_es.1_account_tax_template_s_iva10s" />
+        <field name="digest_emails">False</field>
+    </record> -->
+</odoo>

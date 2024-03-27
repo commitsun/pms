@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+    <record id="l10n_es.1_account_tax_template_s_iva10s" model="account.tax">
+        <field name="price_include">True</field>
+        <field name="include_base_amount">True</field>
+    </record>
+</odoo>

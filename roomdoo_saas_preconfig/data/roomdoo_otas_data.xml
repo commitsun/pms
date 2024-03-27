@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+    <!-- OTAs -->
+    <record id="agency_booking" model="res.partner">
+        <field name="is_agency">True</field>
+        <field
+            name="sale_channel_id"
+            ref="connector_pms_wubook.main_pms_sale_channel_wubook_ota"
+        />
+        <field name="name">Booking.com B.V.</field>
+        <field name="street">Herengracht 597</field>
+        <field name="city">Amsterdam</field>
+        <field name="phone">+31 20 712 5609</field>
+        <field name="country_id" ref="base.ne" />
+        <field name="email">info@booking.com</field>
+        <field name="website">http://www.booking.com</field>
+        <field
+            name="image_1920"
+            type="base64"
+            file="roomdoo_saas_preconfig/static/img/booking-logo.svg"
+        />
+        <field name="property_product_pricelist" ref="tarifa_estandar" />
+    </record>
+    <record id="agency_airbnb" model="res.partner">
+        <field name="is_agency">True</field>
+        <field
+            name="sale_channel_id"
+            ref="connector_pms_wubook.main_pms_sale_channel_wubook_ota"
+        />
+        <field name="name">Airbnb</field>
+        <field name="street">8 Hanover Quay</field>
+        <field name="city">Dublin</field>
+        <field name="phone">(+34) 91 123 45 67.</field>
+        <field name="country_id" ref="base.ir" />
+        <field name="email">info@airbnb.com</field>
+        <field name="website">http://www.airbnb.com</field>
+        <field
+            name="image_1920"
+            type="base64"
+            file="roomdoo_saas_preconfig/static/img/airbnb-logo.svg"
+        />
+        <field name="property_product_pricelist" ref="tarifa_estandar" />
+    </record>
+    <!-- <record id="agency_hotelbeds" model="res.partner">
+        <field name="is_agency">True</field>
+        <field name="sale_channel_id" ref="connector_pms_wubook.main_pms_sale_channel_wubook_ota" />
+        <field name="name">Hotelbeds</field>
+        <field name="city">Palma</field>
+        <field name="country_id" ref="base.es" />
+        <field name="email">administracion@hotelbeds.com</field>
+        <field name="website">http://www.hotelbeds.com</field>
+        <field name="image_1920" type="base64" file="roomdoo_saas_preconfig/static/img/hotelbeds-logo.svg" />
+        <field name="property_product_pricelist" ref="tarifa_estandar"/>
+    </record> -->
+    <record id="agency_hostelworld" model="res.partner">
+        <field name="is_agency">True</field>
+        <field
+            name="sale_channel_id"
+            ref="connector_pms_wubook.main_pms_sale_channel_wubook_ota"
+        />
+        <field name="name">Hostel World</field>
+        <field name="website">https://www.spanish.hostelworld.com/</field>
+        <field name="property_product_pricelist" ref="tarifa_estandar" />
+    </record>
+    <record id="agency_Expedia" model="res.partner">
+        <field name="is_agency">True</field>
+        <field
+            name="sale_channel_id"
+            ref="connector_pms_wubook.main_pms_sale_channel_wubook_ota"
+        />
+        <field name="name">Expedia</field>
+        <field name="website">http://www.Expedia.com</field>
+        <field name="property_product_pricelist" ref="tarifa_estandar" />
+    </record>
+    <record id="agency_keytel" model="res.partner">
+        <field name="is_agency">True</field>
+        <field
+            name="sale_channel_id"
+            ref="connector_pms_wubook.main_pms_sale_channel_wubook_ota"
+        />
+        <field name="name">Keytel</field>
+        <field name="website">https://www.keytel.com/</field>
+        <field name="property_product_pricelist" ref="tarifa_estandar" />
+    </record>
+</odoo>
