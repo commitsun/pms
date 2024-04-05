@@ -6,7 +6,7 @@ from odoo.addons.datamodel.core import Datamodel
 class PmsAgencySearchParam(Datamodel):
     _name = "pms.agency.search.param"
     name = fields.String(required=False, allow_none=True)
-    otas = fields.Boolean(required=False, allow_none=True)
+    otas = fields.Boolean(required=False, allow_none=False)
 
 
 class PmsAgencyInfo(Datamodel):

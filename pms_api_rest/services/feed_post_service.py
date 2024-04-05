@@ -1,6 +1,7 @@
 from odoo.addons.base_rest import restapi
 from odoo.addons.base_rest_datamodel.restapi import Datamodel
 from odoo.addons.component.core import Component
+from datetime import datetime
 
 
 class PmsFeedRss(Component):
@@ -31,7 +32,7 @@ class PmsFeedRss(Component):
                     title=rss.title,
                     link=rss.link,
                     description=rss.description,
-                    publishDate=str(rss.publish_date),
+                    publishDate=rss.publish_date.isoformat(),
                     author=rss.author if rss.author else "",
                     imageUrl=rss.image_url or "",
                 )

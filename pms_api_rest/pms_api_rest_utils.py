@@ -22,4 +22,4 @@ def url_image_pms_api_rest(model, record_id, field):
         if rt_image_attach
         else False
     )
-    return result if result else ""
+    return result if result else False

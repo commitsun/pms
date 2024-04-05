@@ -28,12 +28,6 @@ class PmsAvailService(Component):
         auth="jwt_api_pms",
     )
     def get_avails(self, avails_search_param):
-        if not (
-            avails_search_param.availabilityFrom
-            and avails_search_param.availabilityTo
-            and avails_search_param.pmsPropertyId
-        ):
-            raise MissingError(_("Missing required parameters"))
         pricelist_id = avails_search_param.pricelistId or False
         room_type_id = avails_search_param.roomTypeId or False
         pms_property = self.env["pms.property"].browse(
