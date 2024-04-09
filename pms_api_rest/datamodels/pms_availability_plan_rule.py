@@ -13,7 +13,7 @@ class PmsAvailabilityPlanRuleSearchParam(Datamodel):
 
 class PmsAvailabilityPlanRuleInfo(Datamodel):
     _name = "pms.availability.plan.rule.info"
-    id = fields.Integer(required=True, allow_none=True)
+    id = fields.Integer(required=False, allow_none=True)
     pmsPropertyId = fields.Integer(required=True, allow_none=False)
     availabilityPlanId = fields.Integer(required=True, allow_none=False)
     roomTypeId = fields.Integer(required=True, allow_none=False)

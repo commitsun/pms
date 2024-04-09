@@ -201,7 +201,7 @@ class PmsAvailabilityPlanService(Component):
     ):
         for avail_plan_rule in pms_avail_plan_rules_info.availabilityPlanRules:
             vals = dict()
-            date = datetime.strptime(avail_plan_rule.date, "%Y-%m-%d").date()
+            date = datetime.fromisoformat(avail_plan_rule.date).date()
             if avail_plan_rule.minStay is not None:
                 vals.update({"min_stay": avail_plan_rule.minStay})
             if avail_plan_rule.minStayArrival is not None:
@@ -231,20 +231,31 @@ class PmsAvailabilityPlanService(Component):
                     raise MissingError("Availability Plan Rule not found")
                 if (
                     avail_rule.date != date
-                    or avail_rule.room_type_id != avail_plan_rule.roomTypeId
-                    or avail_rule.pms_property_id != avail_plan_rule.pmsPropertyId
-                    or avail_rule.availability_plan_id != avail_plan_rule.availabilityPlanId
+                    or avail_rule.room_type_id.id != avail_plan_rule.roomTypeId
+                    or avail_rule.pms_property_id.id != avail_plan_rule.pmsPropertyId
+                    or avail_rule.availability_plan_id.id != avail_plan_rule.availabilityPlanId
                 ):
                     raise ValidationError("Cannot update the availability plan rule")
 
                 avail_rule.write(vals)
             else:
-                vals.update(
-                    {
-                        "room_type_id": avail_plan_rule.roomTypeId,
-                        "date": date,
-                        "pms_property_id": avail_plan_rule.pmsPropertyId,
-                        "availability_plan_id": avail_plan_rule.availabilityPlanId,
-                    }
+                avail_rule = self.env['pms.availability.plan.rule'].search(
+                    [
+                        ("availability_plan_id", "=", avail_plan_rule.availabilityPlanId),
+                        ("pms_property_id", "=", avail_plan_rule.pmsPropertyId),
+                        ("room_type_id", "=", avail_plan_rule.roomTypeId),
+                        ("date", "=", date),
+                    ]
                 )
-                self.env["pms.availability.plan.rule"].create(vals)
+                if avail_rule:
+                    avail_rule.write(vals)
+                else:
+                    vals.update(
+                        {
+                            "room_type_id": avail_plan_rule.roomTypeId,
+                            "date": date,
+                            "pms_property_id": avail_plan_rule.pmsPropertyId,
+                            "availability_plan_id": avail_plan_rule.availabilityPlanId,
+                        }
+                    )
+                    self.env["pms.availability.plan.rule"].create(vals)
