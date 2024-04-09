@@ -1,6 +1,7 @@
 from odoo.addons.base_rest import restapi
 from odoo.addons.base_rest_datamodel.restapi import Datamodel
 from odoo.addons.component.core import Component
+from odoo.exceptions import MissingError
 
 
 class PmsAccountJournalService(Component):
@@ -13,23 +14,22 @@ class PmsAccountJournalService(Component):
         [
             (
                 [
-                    "/",
+                    "/<int:pms_property_id>",
                 ],
                 "GET",
             )
         ],
-        input_param=Datamodel("pms.account.journal.search.param"),
         output_param=Datamodel("pms.account.journal.info", is_list=True),
         auth="jwt_api_pms",
     )
-    def get_method_payments(self, account_journal_search_param):
+    def get_method_payments(self, pms_property_id):
         pms_property = self.env["pms.property"].search(
-            [("id", "=", account_journal_search_param.pmsPropertyId)]
+            [("id", "=", pms_property_id)],
         )
         PmsAccountJournalInfo = self.env.datamodels["pms.account.journal.info"]
         result_account_journals = []
         if not pms_property:
-            pass
+            raise MissingError("Property not found")
         else:
             for payment_method in pms_property._get_payment_methods(
                 automatic_included=True

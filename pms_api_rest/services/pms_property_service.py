@@ -61,6 +61,7 @@ class PmsPropertyService(Component):
                     hotelImageUrl=url_image_pms_api_rest(
                         "pms.property", prop.id, "hotel_image_pms_api_rest"
                     ),
+                    timezone=prop.tz,
                 )
             )
         return result_properties
@@ -100,6 +101,7 @@ class PmsPropertyService(Component):
                 toAssignReservationColor=pms_property.to_assign_reservation_color,
                 pendingPaymentReservationColor=pms_property.pending_payment_reservation_color,
                 language=pms_property.lang,
+                timezone=pms_property.tz,
             )
 
         return res

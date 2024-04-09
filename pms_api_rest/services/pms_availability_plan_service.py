@@ -168,7 +168,7 @@ class PmsAvailabilityPlanService(Component):
                     availability_plan_rule_info = PmsAvailabilityPlanRuleInfo(
                         roomTypeId=rule["room_type_id"],
                         date=datetime.combine(date, datetime.min.time()).isoformat(),
-                        availabilityRuleId=rule["id"],
+                        id=rule["id"],
                         minStay=rule["min_stay"],
                         minStayArrival=rule["min_stay_arrival"],
                         maxStay=rule["max_stay"],
@@ -184,10 +184,24 @@ class PmsAvailabilityPlanService(Component):
 
         return result
 
-    def _create_or_update_avail_plan_rules(self, pms_avail_plan_rules_info):
+    @restapi.method(
+        [
+            (
+                [
+                    "/p/availability-plan-rules",
+                ],
+                "PATCH",
+            )
+        ],
+        input_param=Datamodel("pms.availability.plan.rules.info", is_list=False),
+        auth="jwt_api_pms",
+    )
+    def create_availability_plan_rule(
+        self, pms_avail_plan_rules_info
+    ):
         for avail_plan_rule in pms_avail_plan_rules_info.availabilityPlanRules:
             vals = dict()
-            date = datetime.strptime(avail_plan_rule.date, "%Y-%m-%d").date()
+            date = datetime.fromisoformat(avail_plan_rule.date).date()
             if avail_plan_rule.minStay is not None:
                 vals.update({"min_stay": avail_plan_rule.minStay})
             if avail_plan_rule.minStayArrival is not None:
@@ -206,71 +220,42 @@ class PmsAvailabilityPlanService(Component):
                 vals.update({"quota": avail_plan_rule.quota})
             if avail_plan_rule.maxAvailability is not None:
                 vals.update({"max_avail": avail_plan_rule.maxAvailability})
-            avail_rule = self.env["pms.availability.plan.rule"].search(
-                [
-                    ("availability_plan_id", "=", avail_plan_rule.availabilityPlanId),
-                    ("pms_property_id", "=", avail_plan_rule.pmsPropertyId),
-                    ("room_type_id", "=", avail_plan_rule.roomTypeId),
-                    ("date", "=", date),
-                ]
-            )
-            if avail_rule:
+            if not vals:
+                raise ValidationError("No data to update or create")
+
+            if avail_plan_rule.id is not None:
+                avail_rule = self.env['pms.availability.plan.rule'].browse(
+                    avail_plan_rule.id
+                )
+                if not avail_rule.exists():
+                    raise MissingError("Availability Plan Rule not found")
+                if (
+                    avail_rule.date != date
+                    or avail_rule.room_type_id.id != avail_plan_rule.roomTypeId
+                    or avail_rule.pms_property_id.id != avail_plan_rule.pmsPropertyId
+                    or avail_rule.availability_plan_id.id != avail_plan_rule.availabilityPlanId
+                ):
+                    raise ValidationError("Cannot update the availability plan rule")
+
                 avail_rule.write(vals)
             else:
-                vals.update(
-                    {
-                        "room_type_id": avail_plan_rule.roomTypeId,
-                        "date": date,
-                        "pms_property_id": avail_plan_rule.pmsPropertyId,
-                        "availability_plan_id": avail_plan_rule.availabilityPlanId,
-                    }
+                avail_rule = self.env['pms.availability.plan.rule'].search(
+                    [
+                        ("availability_plan_id", "=", avail_plan_rule.availabilityPlanId),
+                        ("pms_property_id", "=", avail_plan_rule.pmsPropertyId),
+                        ("room_type_id", "=", avail_plan_rule.roomTypeId),
+                        ("date", "=", date),
+                    ]
                 )
-                self.env["pms.availability.plan.rule"].create(vals)
-
-    @restapi.method(
-        [
-            (
-                [
-                    "/p/<int:availability_plan_id>/availability-plan-rules",
-                ],
-                "PATCH",
-            )
-        ],
-        input_param=Datamodel("pms.availability.plan.rules.info", is_list=False),
-        auth="jwt_api_pms",
-    )
-    def create_availability_plan_rule(
-        self, availability_plan_id, pms_avail_plan_rules_info
-    ):
-        availability_plan_ids = list(
-            {
-                item.availabilityPlanId
-                for item in pms_avail_plan_rules_info.availabilityPlanRules
-            }
-        )
-        if (
-            len(availability_plan_ids) > 1
-            or availability_plan_ids[0] != availability_plan_id
-        ):
-            raise ValidationError(
-                _(
-                    "You cannot create availability plan rules for different availability plans"
-                )
-            )
-        else:
-            self._create_or_update_avail_plan_rules(pms_avail_plan_rules_info)
-
-    @restapi.method(
-        [
-            (
-                [
-                    "/batch-changes",
-                ],
-                "POST",
-            )
-        ],
-        input_param=Datamodel("pms.availability.plan.rules.info", is_list=False),
-        auth="jwt_api_pms",
-    )
-    def update_availability_plan_rules(self, pms_avail_plan_rules_info):
-        self._create_or_update_avail_plan_rules(pms_avail_plan_rules_info)
+                if avail_rule:
+                    avail_rule.write(vals)
+                else:
+                    vals.update(
+                        {
+                            "room_type_id": avail_plan_rule.roomTypeId,
+                            "date": date,
+                            "pms_property_id": avail_plan_rule.pmsPropertyId,
+                            "availability_plan_id": avail_plan_rule.availabilityPlanId,
+                        }
+                    )
+                    self.env["pms.availability.plan.rule"].create(vals)

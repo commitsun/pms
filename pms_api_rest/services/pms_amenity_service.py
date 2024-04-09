@@ -26,17 +26,15 @@ class PmsAmenityService(Component):
         auth="jwt_api_pms",
     )
     def get_amenities(self, amenities_search_param):
-        domain = [("pms_amenity_type_id", "!=", False)]
+        domain = [
+            "|",
+            ("pms_property_ids", "in", amenities_search_param.pmsPropertyId),
+            ("pms_property_ids", "=", False),
+        ]
+
         if amenities_search_param.name:
             domain.append(("name", "like", amenities_search_param.name))
-        if amenities_search_param.pmsPropertyId:
-            domain.extend(
-                [
-                    "|",
-                    ("pms_property_ids", "in", amenities_search_param.pmsPropertyId),
-                    ("pms_property_ids", "=", False),
-                ]
-            )
+
 
         result_amenities = []
         PmsAmenityInfo = self.env.datamodels["pms.amenity.info"]
