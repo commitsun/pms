@@ -1,7 +1,6 @@
 from . import pms_folio_service
 from . import pms_room_service
 from . import pms_room_type_service
-from . import pms_calendar_service
 from . import pms_partner_service
 
 from . import pms_reservation_service
@@ -39,8 +38,5 @@ from . import pms_transaction_service
 from . import pms_account_payment_terms_service
 from . import pms_account_journal_service
 from . import pms_invoice_service
-from . import pms_notification_service
 from . import pms_avail_service
 from . import pms_user_service
-from . import pms_dashboard_service
-from . import feed_post_service
