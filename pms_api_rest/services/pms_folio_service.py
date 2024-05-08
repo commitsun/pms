@@ -12,9 +12,8 @@ from odoo.tools import get_lang
 from odoo.addons.base_rest import restapi
 from odoo.addons.base_rest_datamodel.restapi import Datamodel
 from odoo.addons.component.core import Component
-from pms_board_service_service import BOARD_SERVICE_ACCOMODATION_ONLY
 
-from ..pms_api_rest_utils import url_image_pms_api_rest
+from ..pms_api_rest_utils import BOARD_SERVICE_ACCOMODATION_ONLY, url_image_pms_api_rest
 
 _logger = logging.getLogger(__name__)
 
@@ -213,7 +212,9 @@ class PmsFolioService(Component):
             elif folio_search_param.filterByState == "byCheckin":
                 subdomains = [
                     [("state", "in", ("confirm", "arrival_delayed"))],
-                    [("checkin", "<=", fields.Date.today())]                    [("reservation_type", "!=", "out")],
+                    [("checkin", "<=", fields.Date.today())][
+                        ("reservation_type", "!=", "out")
+                    ],
                 ]
                 domain_filter.append(expression.AND(subdomains))
             elif folio_search_param.filterByState == "byCheckout":
@@ -600,8 +601,8 @@ class PmsFolioService(Component):
                             board.board_service_line_ids.with_context(
                                 property=folio.pms_property_id.id
                             )
-                                .filtered(lambda l: l.adults)
-                                .mapped("amount")
+                            .filtered(lambda l: l.adults)
+                            .mapped("amount")
                         )
                         * reservation.adults
                     )
@@ -611,8 +612,8 @@ class PmsFolioService(Component):
                             board.board_service_line_ids.with_context(
                                 property=folio.pms_property_id.id
                             )
-                                .filtered(lambda l: l.children)
-                                .mapped("amount")
+                            .filtered(lambda l: l.children)
+                            .mapped("amount")
                         )
                         * reservation.children
                     )
@@ -637,9 +638,9 @@ class PmsFolioService(Component):
 
     def _create_reservation_record(self, vals):
         self.env["pms.reservation"].with_context(
-            skip_compute_service_ids=False ,
-            force_overbooking=True ,
-            force_write_blocked=True
+            skip_compute_service_ids=False,
+            force_overbooking=True,
+            force_write_blocked=True,
         ).create(vals)
 
     def _force_compute_board_service_default(self, reservation_record):
@@ -674,6 +675,7 @@ class PmsFolioService(Component):
                 "request_type": "folios",
             }
         )
+
     @restapi.method(
         [
             (
@@ -747,7 +749,9 @@ class PmsFolioService(Component):
                         )
             folio = self.env["pms.folio"].create(vals)
             for reservation in pms_folio_info.reservations:
-                vals = self._get_reservation_vals(folio, reservation, pms_folio_info.preconfirm)
+                vals = self._get_reservation_vals(
+                    folio, reservation, pms_folio_info.preconfirm
+                )
                 reservation_record = self._create_reservation_record(vals)
                 if reservation.services:
                     for service in reservation.services:
@@ -1839,7 +1843,7 @@ class PmsFolioService(Component):
                 folio_vals.update({"reservation_ids": reservations_vals})
         if folio_vals:
             folio.with_context(
-                skip_compute_service_ids=False ,
+                skip_compute_service_ids=False,
                 force_overbooking=True,
                 force_write_blocked=True,
             ).write(folio_vals)
@@ -2013,7 +2017,10 @@ class PmsFolioService(Component):
             if info_reservation.reservationLines:
                 # The service price is included in day price when it is a board service (external api)
                 board_day_price = 0
-                if vals.get("board_service_room_id") != BOARD_SERVICE_ACCOMODATION_ONLY.id:
+                if (
+                    vals.get("board_service_room_id")
+                    != BOARD_SERVICE_ACCOMODATION_ONLY.id
+                ):
                     board = self.env["pms.board.service.room.type"].browse(
                         vals["board_service_room_id"]
                     )

@@ -1,4 +1,3 @@
-import base64
 from datetime import datetime, timedelta
 
 from odoo import _, fields

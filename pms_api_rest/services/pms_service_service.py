@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 
-from odoo import _, fields
+from odoo import _
 from odoo.exceptions import MissingError
 
 from odoo.addons.base_rest import restapi
@@ -171,4 +171,3 @@ class PmsServiceService(Component):
                 )
             )
         return result_service_lines
-

@@ -11,6 +11,9 @@
         "sql_export_excel",
         "feed_rss",
     ],
+    "external_dependencies": {
+        "python": ["marshmallow"],
+    },
     "data": [
         "data/sql_reports.xml",
         "data/pms_app_reset_password_template.xml",
