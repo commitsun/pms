@@ -196,7 +196,6 @@ class PmsPartnerService(Component):
                 .filtered(lambda x: x.checkout)
                 .mapped("checkout")
             )
-            doc_record = False
             document_number = False
             document_type = False
             document_support_number = False
@@ -204,19 +203,23 @@ class PmsPartnerService(Component):
             document_expedition_date = False
             if partner.id_numbers:
                 doc_record = partner.id_numbers[0]
-            if doc_record:
-                if doc_record.name:
-                    document_number = doc_record.name
-                if doc_record.category_id:
-                    document_type = doc_record.category_id.id
-                if doc_record.support_number:
-                    document_support_number = doc_record.support_number
-                if doc_record.country_id:
-                    document_country_id = doc_record.country_id.id
-                if doc_record.valid_from:
-                    document_expedition_date = datetime.combine(
+                document_number = doc_record.name if doc_record.name else False
+                document_type = (
+                    doc_record.category_id.id if doc_record.category_id else False
+                )
+                document_support_number = (
+                    doc_record.support_number if doc_record.support_number else False
+                )
+                document_country_id = (
+                    doc_record.country_id.id if doc_record.country_id else False
+                )
+                document_expedition_date = (
+                    datetime.combine(
                         doc_record.valid_from, datetime.min.time()
                     ).isoformat()
+                    if doc_record.valid_from
+                    else False
+                )
             result_partners.append(
                 PmsPartnerInfo(
                     id=partner.id,

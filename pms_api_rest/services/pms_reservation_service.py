@@ -1,4 +1,3 @@
-import base64
 from datetime import datetime, timedelta
 
 from odoo import _, fields
@@ -932,167 +931,6 @@ class PmsReservationService(Component):
         [
             (
                 [
-                    "/<int:reservation_id>/checkin-report",
-                ],
-                "GET",
-            )
-        ],
-        auth="jwt_api_pms",
-        output_param=Datamodel("pms.report", is_list=False),
-    )
-    def print_all_checkins(self, reservation_id):
-        reservations = False
-        if reservation_id:
-            reservations = self.env["pms.reservation"].sudo().browse(reservation_id)
-        checkins = reservations.checkin_partner_ids.filtered(
-            lambda x: x.state in ["precheckin", "onboard", "done"]
-        )
-        pdf = (
-            self.env.ref("pms.action_traveller_report")
-            .sudo()
-            ._render_qweb_pdf(checkins.ids)[0]
-        )
-        base64EncodedStr = base64.b64encode(pdf)
-        PmsResponse = self.env.datamodels["pms.report"]
-        return PmsResponse(binary=base64EncodedStr)
-
-    @restapi.method(
-        [
-            (
-                [
-                    "/<int:reservation_id>/checkin-partners/"
-                    "<int:checkin_partner_id>/checkin-report",
-                ],
-                "GET",
-            )
-        ],
-        auth="jwt_api_pms",
-        output_param=Datamodel("pms.report", is_list=False),
-    )
-    def print_checkin(self, reservation_id, checkin_partner_id):
-        reservations = False
-        if reservation_id:
-            reservations = self.env["pms.reservation"].sudo().browse(reservation_id)
-        checkin_partner = reservations.checkin_partner_ids.filtered(
-            lambda x: x.id == checkin_partner_id
-        )
-        pdf = (
-            self.env.ref("pms.action_traveller_report")
-            .sudo()
-            ._render_qweb_pdf(checkin_partner.id)[0]
-        )
-        base64EncodedStr = base64.b64encode(pdf)
-        PmsResponse = self.env.datamodels["pms.report"]
-        return PmsResponse(binary=base64EncodedStr)
-
-    @restapi.method(
-        [
-            (
-                [
-                    "/kelly-report",
-                ],
-                "GET",
-            )
-        ],
-        input_param=Datamodel("pms.report.search.param", is_list=False),
-        output_param=Datamodel("pms.report", is_list=False),
-        auth="jwt_api_pms",
-    )
-    def kelly_report(self, pms_report_search_param):
-        pms_property_id = pms_report_search_param.pmsPropertyId
-        date_from = fields.Date.from_string(pms_report_search_param.dateFrom)
-
-        report_wizard = self.env["kellysreport"].create(
-            {
-                "date_start": date_from,
-                "pms_property_id": pms_property_id,
-            }
-        )
-        report_wizard.calculate_report()
-        result = report_wizard._excel_export()
-        file_name = result["xls_filename"]
-        base64EncodedStr = result["xls_binary"]
-        PmsResponse = self.env.datamodels["pms.report"]
-        return PmsResponse(fileName=file_name, binary=base64EncodedStr)
-
-    @restapi.method(
-        [
-            (
-                [
-                    "/arrivals-report",
-                ],
-                "GET",
-            )
-        ],
-        input_param=Datamodel("pms.report.search.param", is_list=False),
-        output_param=Datamodel("pms.report", is_list=False),
-        auth="jwt_api_pms",
-    )
-    def arrivals_report(self, pms_report_search_param):
-        pms_property_id = pms_report_search_param.pmsPropertyId
-        date_from = fields.Date.from_string(pms_report_search_param.dateFrom)
-
-        query = self.env.ref("pms_api_rest.sql_export_arrivals")
-        if not query:
-            raise MissingError(_("SQL query not found"))
-        report_wizard = self.env["sql.file.wizard"].create({"sql_export_id": query.id})
-        if not report_wizard._fields.get(
-            "x_date_from"
-        ) or not report_wizard._fields.get("x_pms_property_id"):
-            raise MissingError(
-                _("The Query params was modifieds, please contact the administrator")
-            )
-        report_wizard.x_date_from = date_from
-        report_wizard.x_pms_property_id = pms_property_id
-
-        report_wizard.export_sql()
-        file_name = report_wizard.file_name
-        base64EncodedStr = report_wizard.binary_file
-        PmsResponse = self.env.datamodels["pms.report"]
-        return PmsResponse(fileName=file_name, binary=base64EncodedStr)
-
-    @restapi.method(
-        [
-            (
-                [
-                    "/departures-report",
-                ],
-                "GET",
-            )
-        ],
-        input_param=Datamodel("pms.report.search.param", is_list=False),
-        output_param=Datamodel("pms.report", is_list=False),
-        auth="jwt_api_pms",
-    )
-    def departures_report(self, pms_report_search_param):
-        pms_property_id = pms_report_search_param.pmsPropertyId
-        date_from = fields.Date.from_string(pms_report_search_param.dateFrom)
-
-        query = self.env.ref("pms_api_rest.sql_export_departures")
-        if not query:
-            raise MissingError(_("SQL query not found"))
-        if query.state == "draft":
-            query.button_validate_sql_expression()
-        report_wizard = self.env["sql.file.wizard"].create({"sql_export_id": query.id})
-        if not report_wizard._fields.get(
-            "x_date_from"
-        ) or not report_wizard._fields.get("x_pms_property_id"):
-            raise MissingError(
-                _("The Query params was modifieds, please contact the administrator")
-            )
-        report_wizard.x_date_from = date_from
-        report_wizard.x_pms_property_id = pms_property_id
-
-        report_wizard.export_sql()
-        file_name = report_wizard.file_name
-        base64EncodedStr = report_wizard.binary_file
-        PmsResponse = self.env.datamodels["pms.report"]
-        return PmsResponse(fileName=file_name, binary=base64EncodedStr)
-
-    @restapi.method(
-        [
-            (
-                [
                     "/<int:reservation_id>/wizard-states",
                 ],
                 "GET",
@@ -1104,6 +942,10 @@ class PmsReservationService(Component):
     def wizard_states(self, reservation_id):
         reservation = self.env["pms.reservation"].search([("id", "=", reservation_id)])
         today = datetime.now().strftime("%Y-%m-%d")
+        is_one_room = reservation.count_alternative_free_rooms == 1
+        penalty_price = reservation.service_ids.filtered(
+            lambda s: s.is_cancel_penalty
+        ).price_total
         wizard_states = [
             {
                 "code": "overbooking_with_availability",
@@ -1115,7 +957,8 @@ class PmsReservationService(Component):
                 "('reservation_type', 'in', ['normal', 'staff'])"
                 "]",
                 "filtered": "lambda r: r.count_alternative_free_rooms",
-                "text": f"Parece que ha entrado una reserva sin haber disponibilidad para {reservation.room_type_id.name}.",
+                "text": f"Parece que ha entrado una reserva sin haber disponibilidad "
+                f"para {reservation.room_type_id.name}.",
                 "priority": 100,
             },
             {
@@ -1128,7 +971,8 @@ class PmsReservationService(Component):
                 "('reservation_type', 'in', ['normal', 'staff'])"
                 "]",
                 "filtered": "lambda r: r.count_alternative_free_rooms <= 0",
-                "text": f"Parece que ha entrado una reserva sin haber disponibilidad para {reservation.room_type_id.name}."
+                "text": f"Parece que ha entrado una reserva sin haber disponibilidad "
+                f"para {reservation.room_type_id.name}."
                 f"Por desgracia no parece que hay ninguna "
                 f"habitación disponible con la capacidad suficiente para esta reserva",
                 "priority": 150,
@@ -1142,8 +986,10 @@ class PmsReservationService(Component):
                 "('reservation_type', 'in', ['normal', 'staff'])"
                 "]",
                 "filtered": "lambda r: r.count_alternative_free_rooms <= 0",
-                "text": f"Parece que a {reservation.partner_name} le ha tocado dormir en habitaciones diferentes "
-                f" pero no hay ninguna habitación disponible para asignarle, puedes probar a mover otras reservas "
+                "text": f"Parece que a {reservation.partner_name} le ha tocado "
+                f"dormir en habitaciones diferentes "
+                f" pero no hay ninguna habitación disponible para asignarle, puedes"
+                f" probar a mover otras reservas "
                 f" para poder establecerle una única habitación.  ",
                 "priority": 200,
             },
@@ -1156,9 +1002,11 @@ class PmsReservationService(Component):
                 "('reservation_type', 'in', ['normal', 'staff'])"
                 "]",
                 "filtered": "lambda r: r.count_alternative_free_rooms",
-                "text": f"Parece que a {reservation.partner_name} le ha tocado dormir en habitaciones diferentes"
-                f" pero tienes la posibilidad de moverlo a {reservation.count_alternative_free_rooms} "
-                f" {' habitación' if reservation.count_alternative_free_rooms == 1 else ' habitaciones'}.",
+                "text": f"Parece que a {reservation.partner_name} le ha tocado dormir"
+                f" en habitaciones diferentes"
+                f" pero tienes la posibilidad de moverlo a"
+                f" {reservation.count_alternative_free_rooms} "
+                f" {' habitación' if is_one_room else ' habitaciones'}.",
                 "priority": 220,
             },
             {
@@ -1169,7 +1017,8 @@ class PmsReservationService(Component):
                 "('reservation_type', 'in', ['normal', 'staff']),"
                 f"('checkin', '>=', '{today}'),"
                 "]",
-                "text": f"La reserva de {reservation.partner_name} ha sido asignada a la habitación {reservation.preferred_room_id.name},"
+                "text": f"La reserva de {reservation.partner_name} ha sido asignada a "
+                f"la habitación {reservation.preferred_room_id.name},"
                 " puedes confirmar la habitación o cambiar a otra desde aquí.",
                 "priority": 300,
             },
@@ -1180,7 +1029,8 @@ class PmsReservationService(Component):
                 f"('checkin', '>=', '{today}'),"
                 "('reservation_type', 'in', ['normal', 'staff']),"
                 "]",
-                "text": f"La reserva de {reservation.partner_name} está pendiente de confirmar, puedes confirmarla desde aquí.",
+                "text": f"La reserva de {reservation.partner_name} está pendiente de"
+                f" confirmar, puedes confirmarla desde aquí.",
                 "priority": 400,
             },
             {
@@ -1191,7 +1041,8 @@ class PmsReservationService(Component):
                 "('pending_checkin_data', '=', 0),"
                 "('reservation_type', 'in', ['normal', 'staff'])"
                 "]",
-                "text": "Todos los huéspedes de esta reserva tienen los datos registrados, "
+                "text": "Todos los huéspedes de esta reserva tienen los datos "
+                "registrados, "
                 " puedes marcar la entrada directamente desde aquí",
                 "priority": 500,
             },
@@ -1204,7 +1055,8 @@ class PmsReservationService(Component):
                 "('checkin_partner_ids.state','=', 'precheckin'),"
                 "('reservation_type', 'in', ['normal', 'staff'])"
                 "]",
-                "text": f"Faltan {reservation.pending_checkin_data} {' huésped ' if reservation.pending_checkin_data == 1 else ' huéspedes '} "
+                "text": f"Faltan {reservation.pending_checkin_data} "
+                f"{' huésped ' if reservation.pending_checkin_data == 1 else ' huéspedes '} "
                 f"por registrar sus datos.Puedes abrir el asistente de checkin "
                 f" para completar los datos.",
                 "priority": 530,
@@ -1217,8 +1069,10 @@ class PmsReservationService(Component):
                 "('pending_checkin_data', '>', 0),"
                 "('reservation_type', 'in', ['normal', 'staff'])"
                 "]",
-                "filtered": "lambda r: all([c.state in ('draft','dummy') for c in r.checkin_partner_ids]) ",
-                "text": "Registra los datos de los huéspedes desde el asistente del checkin.",
+                "filtered": "lambda r: all([c.state in ('draft','dummy') for c in "
+                "r.checkin_partner_ids]) ",
+                "text": "Registra los datos de los huéspedes desde el asistente del "
+                "checkin.",
                 "priority": 580,
             },
             {
@@ -1243,7 +1097,8 @@ class PmsReservationService(Component):
                 "('pending_checkin_data', '=', 0),"
                 "('folio_payment_state', 'in', ['not_paid', 'partial'])"
                 "]",
-                "text": "Esta reserva está pendiente de cobro, puedes enviarle sun recordatorio desde aquí",
+                "text": "Esta reserva está pendiente de cobro, puedes enviarles un"
+                " recordatorio desde aquí",
                 "priority": 630,
             },
             {
@@ -1255,7 +1110,8 @@ class PmsReservationService(Component):
                 "('pending_checkin_data', '>', 0),"
                 "('folio_payment_state', 'in', ['paid', 'overpayment','nothing_to_pay'])"
                 "]",
-                "text": "Esta reserva no tiene los datos de los huéspedes registrados, puedes enviarles un recordatorio desde aquí",
+                "text": "Esta reserva no tiene los datos de los huéspedes registrados,"
+                " puedes enviarles un recordatorio desde aquí",
                 "priority": 660,
             },
             {
@@ -1265,8 +1121,10 @@ class PmsReservationService(Component):
                 "('cancelled_reason', 'in',['late','noshow']),"
                 "('folio_payment_state', 'in', ['not_paid', 'partial']),"
                 "]",
-                "filtered": "lambda r: r.service_ids.filtered(lambda s: s.is_cancel_penalty and s.price_total > 0)",
-                "text": f"La reserva de {reservation.partner_name} ha sido cancelada con una penalización de {reservation.service_ids.filtered(lambda s: s.is_cancel_penalty).price_total}€,"
+                "filtered": "lambda r: r.service_ids.filtered(lambda s: "
+                "s.is_cancel_penalty and s.price_total > 0)",
+                "text": f"La reserva de {reservation.partner_name} ha sido cancelada "
+                f"con una penalización de {penalty_price}€,"
                 " puedes eliminar la penalización en caso de que no se vaya a cobrar.",
                 "priority": 700,
             },
@@ -1276,7 +1134,9 @@ class PmsReservationService(Component):
                 "domain": "[('state', 'in', ['onboard', 'departure_delayed']),"
                 "('folio_payment_state', 'in', ['not_paid', 'partial'])"
                 "]",
-                "text": f"En esta reserva tenemos un pago pendiente de {reservation.folio_pending_amount}. Puedes registrar el pago desde aquí.",
+                "text": f"En esta reserva tenemos un pago pendiente de "
+                f"{reservation.folio_pending_amount}. "
+                f"Puedes registrar el pago desde aquí.",
                 "priority": 800,
             },
             {
@@ -1285,7 +1145,8 @@ class PmsReservationService(Component):
                 "domain": "[('state', '=', 'done'),"
                 "('folio_payment_state', 'in', ['not_paid', 'partial'])"
                 "]",
-                "text": f"Esta reserva ha quedado con un cargo pendiente de {reservation.folio_pending_amount}€."
+                "text": f"Esta reserva ha quedado con un cargo pendiente"
+                f" de {reservation.folio_pending_amount}€."
                 " Cuando gestiones el cobro puedes registrarlo desde aquí.",
                 "priority": 900,
             },
@@ -1295,7 +1156,8 @@ class PmsReservationService(Component):
                 "domain": "[('state', 'in', ['onboard', 'departure_delayed']),"
                 f"('checkout', '=', '{today}'),"
                 "]",
-                "text": "Reserva lista para el checkout, marca la salida directamente desde aquí.",
+                "text": "Reserva lista para el checkout, marca la salida directamente "
+                "desde aquí.",
                 "priority": 1000,
             },
         ]

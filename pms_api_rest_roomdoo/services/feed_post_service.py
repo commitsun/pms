@@ -24,7 +24,9 @@ class PmsFeedRss(Component):
     def get_feed_posts(self):
         result_rss = []
         PmsFeedRss = self.env.datamodels["feed.post.info"]
-        for rss in self.env["rss.post"].search([], limit=5, order="publish_date desc"):
+        for rss in (
+            self.env["rss.post"].sudo().search([], limit=5, order="publish_date desc")
+        ):
             result_rss.append(
                 PmsFeedRss(
                     postId=rss.post_id,

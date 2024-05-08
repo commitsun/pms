@@ -34,7 +34,6 @@ class PmsReservationShortInfo(Datamodel):
     reservationType = fields.String(required=False, allow_none=True)
 
 
-
 class PmsReservationInfo(Datamodel):
     _name = "pms.reservation.info"
     id = fields.Integer(required=False, allow_none=True)

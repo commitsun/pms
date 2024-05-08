@@ -59,7 +59,7 @@
     <function
         model="sql.export"
         name="button_validate_sql_expression"
-        eval="([ref('pms_api_rest.sql_export_departures')])"
+        eval="([ref('pms_api_rest_roomdoo.sql_export_departures')])"
     />
 
     <!-- ARRIVALS REPORT -->
@@ -94,7 +94,7 @@
     <function
         model="sql.export"
         name="button_validate_sql_expression"
-        eval="([ref('pms_api_rest.sql_export_arrivals')])"
+        eval="([ref('pms_api_rest_roomdoo.sql_export_arrivals')])"
     />
 
     <!-- SERVICES REPORT -->
@@ -138,6 +138,6 @@
     <function
         model="sql.export"
         name="button_validate_sql_expression"
-        eval="([ref('pms_api_rest.sql_export_services')])"
+        eval="([ref('pms_api_rest_roomdoo.sql_export_services')])"
     />
 </odoo>

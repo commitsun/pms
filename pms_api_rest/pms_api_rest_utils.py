@@ -1,4 +1,13 @@
+from odoo import _
 from odoo.http import request
+
+BOARD_SERVICE_ACCOMODATION_ONLY = {
+    "id": 0,
+    "name": _("Solo Alojamiento"),
+    "amount": 0,
+    "boardServiceId": 0,
+    "productIds": [],
+}
 
 
 def url_image_pms_api_rest(model, record_id, field):
