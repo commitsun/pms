@@ -6,6 +6,15 @@ from odoo.addons.base_rest_datamodel.restapi import Datamodel
 from odoo.addons.component.core import Component
 
 
+BOARD_SERVICE_ACCOMODATION_ONLY = {
+    "id": 0,
+    "name": _("Solo Alojamiento"),
+    "amount": 0,
+    "boardServiceId": 0,
+    "productIds": []
+}
+
+
 class PmsBoardServiceService(Component):
     _inherit = "base.rest.service"
     _name = "pms.board.service.service"
@@ -26,7 +35,6 @@ class PmsBoardServiceService(Component):
         auth="jwt_api_pms",
     )
     def get_board_services(self, board_services_search_param):
-        external_app = self.env.user.pms_api_client
         domain = []
         if board_services_search_param.name:
             domain.append(("name", "like", board_services_search_param.name))
@@ -58,25 +66,24 @@ class PmsBoardServiceService(Component):
                     ),
                 )
             )
-        if external_app:
-            room_type_ids = board_services_search_param.roomTypeId or self.env[
-                "pms.room"
-            ].search(
-                [("pms_property_id", "=", board_services_search_param.pmsPropertyId)]
-            ).mapped(
-                "room_type_id.id"
-            )
-            for room_type_id in room_type_ids:
-                result_board_services.append(
-                    PmsBoardServiceInfo(
-                        id=0,
-                        name="Solo Alojamiento",
-                        roomTypeId=room_type_id,
-                        amount=0,
-                        boardServiceId=0,
-                        productIds=[],
-                    )
+        room_type_ids = list(board_services_search_param.roomTypeId) or self.env[
+            "pms.room"
+        ].search(
+            [("pms_property_id", "=", board_services_search_param.pmsPropertyId)]
+        ).mapped(
+            "room_type_id.id"
+        )
+        for room_type_id in room_type_ids:
+            result_board_services.append(
+                PmsBoardServiceInfo(
+                    id=BOARD_SERVICE_ACCOMODATION_ONLY['id'],
+                    name=BOARD_SERVICE_ACCOMODATION_ONLY['name'],
+                    roomTypeId=room_type_id,
+                    amount=BOARD_SERVICE_ACCOMODATION_ONLY['amount'],
+                    boardServiceId=BOARD_SERVICE_ACCOMODATION_ONLY['board'],
+                    productIds=[],
                 )
+            )
         return result_board_services
 
     @restapi.method(
