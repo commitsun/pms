@@ -301,6 +301,7 @@ class PmsCalendarService(Component):
                                 FROM pms_reservation_line
                                 WHERE pms_property_id = %s AND state != 'cancel'
                                 AND occupies_availability = true AND date <= %s
+                                AND overbooking = false
                     ) l ON l.room_id = dr.room_id AND l.date = dr.date
                     LEFT OUTER JOIN (SELECT date, room_type_id, min_stay, min_stay_arrival,
                             max_stay, max_stay_arrival, closed, closed_departure, closed_arrival
@@ -446,6 +447,7 @@ class PmsCalendarService(Component):
                                     FROM pms_reservation_line
                                     WHERE date = dr.date
                                     AND occupies_availability = true
+                                    AND overbooking = false
                                     AND room_id = r.id
                                     AND r.is_shared_room = false)
                  ) free_rooms
