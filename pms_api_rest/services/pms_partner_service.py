@@ -184,11 +184,21 @@ class PmsPartnerService(Component):
         PmsPartnerResults = self.env.datamodels["pms.partner.results"]
         PmsPartnerInfo = self.env.datamodels["pms.partner.info"]
         total_partners = self.env["res.partner"].search_count(domain)
+        if pms_partner_search_params.orderBy == "type desc":
+            pms_partner_search_params.orderBy = "is_agency desc, is_company desc"
+        elif pms_partner_search_params.orderBy == "type":
+            pms_partner_search_params.orderBy = "is_agency, is_company"
+        elif (
+            pms_partner_search_params.orderBy == "last_stay desc"
+            or pms_partner_search_params.orderBy == "last_stay"
+        ):
+            pms_partner_search_params.orderBy = ""
 
         for partner in self.env["res.partner"].search(
             domain,
             limit=pms_partner_search_params.limit,
             offset=pms_partner_search_params.offset,
+            order=pms_partner_search_params.orderBy,
         ):
             checkouts = (
                 self.env["pms.checkin.partner"]
