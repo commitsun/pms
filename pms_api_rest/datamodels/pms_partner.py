@@ -11,11 +11,12 @@ class PmsPartnerSearchParam(Datamodel):
     documentType = fields.Integer(required=False, allow_none=True)
     documentNumber = fields.String(required=False, allow_none=True)
     name = fields.String(required=False, allow_none=True)
-    housedNow = fields.Boolean(required=False, allow_none=True)
-    housedLastWeek = fields.Boolean(required=False, allow_none=True)
-    housedLastMonth = fields.Boolean(required=False, allow_none=True)
-    filter = fields.String(required=False, allow_none=True)
-    filterByType = fields.String(required=False, allow_none=True)
+    inHouse = fields.Boolean(required=False, allow_none=True)
+    housedFrom = fields.String(required=False, allow_none=True)
+    housedTo = fields.String(required=False, allow_none=True)
+    multiFieldSearch = fields.String(required=False, allow_none=True)
+    isCompany = fields.Boolean(required=False, allow_none=False)
+    isAgency = fields.Boolean(required=False, allow_none=False)
 
 
 class PmsPartnerInfo(Datamodel):

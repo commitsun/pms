@@ -1,9 +1,10 @@
 import re
-from datetime import date, datetime, timedelta
+from datetime import datetime
+
+import werkzeug.exceptions
 
 from odoo import _
 from odoo.exceptions import ValidationError
-from odoo.osv import expression
 
 from odoo.addons.base_rest import restapi
 from odoo.addons.base_rest_datamodel.restapi import Datamodel
@@ -86,101 +87,72 @@ class PmsPartnerService(Component):
         result_partners = []
         domain = []
 
-        if pms_partner_search_params.housedNow:
-            partners_housed_now = (
+        if pms_partner_search_params.inHouse:
+            partners_in_house = (
                 self.env["pms.checkin.partner"]
                 .search([("state", "=", "onboard")])
                 .mapped("partner_id")
             )
-            domain.append(("id", "in", partners_housed_now.ids))
-        if pms_partner_search_params.housedLastWeek:
-            today = date.today()
-            last_week_day = today - timedelta(days=7)
-            partners_housed_last_week = (
-                self.env["pms.checkin.partner"]
-                .search(
-                    [
-                        "|",
-                        "&",
-                        ("checkin", ">=", last_week_day),
-                        ("checkin", "<=", today),
-                        "|",
-                        ("checkout", ">=", last_week_day),
-                        ("checkout", "<=", today),
-                        "|",
-                        "&",
-                        ("checkin", "<=", last_week_day),
-                        ("checkout", "<", today),
-                        "&",
-                        ("checkin", ">=", last_week_day),
-                        ("checkout", ">", today),
-                        "|",
-                        ("checkin", "<", last_week_day),
-                        ("checkout", ">", today),
-                    ]
-                )
-                .mapped("partner_id")
-            )
-            domain.append(("id", "in", partners_housed_last_week.ids))
-        if pms_partner_search_params.housedLastMonth:
-            today = date.today()
-            last_month_day = today - timedelta(days=30)
-            partners_housed_last_month = (
-                self.env["pms.checkin.partner"]
-                .search(
-                    [
-                        "|",
-                        "&",
-                        ("checkin", ">=", last_month_day),
-                        ("checkin", "<=", today),
-                        "|",
-                        ("checkout", ">=", last_month_day),
-                        ("checkout", "<=", today),
-                        "|",
-                        "&",
-                        ("checkin", "<=", last_month_day),
-                        ("checkout", "<", today),
-                        "&",
-                        ("checkin", ">=", last_month_day),
-                        ("checkout", ">", today),
-                        "|",
-                        ("checkin", "<", last_month_day),
-                        ("checkout", ">", today),
-                    ]
-                )
-                .mapped("partner_id")
-            )
-            domain.append(("id", "in", partners_housed_last_month.ids))
-        if (
-            pms_partner_search_params.filterByType
-            and pms_partner_search_params.filterByType != "all"
+            domain.append(("id", "in", partners_in_house.ids))
+        elif (
+            pms_partner_search_params.housedFrom and pms_partner_search_params.housedTo
         ):
-            if pms_partner_search_params.filterByType == "company":
-                domain.append(("is_company", "=", True))
-            elif pms_partner_search_params.filterByType == "agency":
-                domain.append(("is_agency", "=", True))
-            elif pms_partner_search_params.filterByType == "individual":
-                domain.append(("is_company", "=", False))
-                domain.append(("is_agency", "=", False))
-
-        if pms_partner_search_params.filter:
-            subdomains = [
-                [("vat", "ilike", pms_partner_search_params.filter)],
-                [
-                    (
-                        "aeat_identification",
-                        "ilike",
-                        pms_partner_search_params.filter,
-                    )
-                ],
-                [("display_name", "ilike", pms_partner_search_params.filter)],
-            ]
-            if "@" in pms_partner_search_params.filter:
-                subdomains.append(
-                    [("email", "ilike", pms_partner_search_params.filter)]
+            partners_housed_past = (
+                self.env["pms.checkin.partner"]
+                .search(
+                    [
+                        ("state", "in", ["onboard", "done", "departure_delayed"]),
+                        "|",
+                        "&",
+                        ("checkin", ">=", pms_partner_search_params.housedFrom),
+                        ("checkin", "<=", pms_partner_search_params.housedTo),
+                        "|",
+                        "&",
+                        ("checkout", ">", pms_partner_search_params.housedFrom),
+                        ("checkout", "<", pms_partner_search_params.housedTo),
+                        "&",
+                        ("checkin", "<=", pms_partner_search_params.housedFrom),
+                        ("checkout", ">", pms_partner_search_params.housedTo),
+                    ]
                 )
-            domain_partner_search_field = expression.OR(subdomains)
-            domain = expression.AND([domain, domain_partner_search_field])
+                .mapped("partner_id")
+            )
+            domain.append(("id", "in", partners_housed_past.ids))
+        if pms_partner_search_params.isAgency is not None:
+            domain.append(("is_agency", "=", pms_partner_search_params.isAgency))
+        if pms_partner_search_params.isCompany is not None:
+            domain.append(("is_company", "=", pms_partner_search_params.isCompany))
+
+        if pms_partner_search_params.multiFieldSearch:
+            pms_partner_search_params.multiFieldSearch = (
+                "%" + pms_partner_search_params.multiFieldSearch + "%"
+            )
+            self.env.cr.execute(
+                """
+               SELECT cp.id
+                FROM (
+                    SELECT rp.id,
+                            STRING_AGG(rpin.name,'#') document_number,
+                            rp.vat,
+                            rp.display_name,
+                            rp.aeat_identification
+                    FROM res_partner rp LEFT OUTER JOIN res_partner_id_number rpin ON rpin.partner_id = rp.id
+                    GROUP BY rp.id, rp.vat, rp.display_name, rp.aeat_identification
+                    ) cp
+                WHERE cp.document_number LIKE %s
+                    OR cp.vat like %s
+                    OR cp.display_name LIKE %s
+                    OR cp.aeat_identification LIKE %s""",
+                (
+                    pms_partner_search_params.multiFieldSearch,
+                    pms_partner_search_params.multiFieldSearch,
+                    pms_partner_search_params.multiFieldSearch,
+                    pms_partner_search_params.multiFieldSearch,
+                ),
+            )
+            result = self.env.cr.dictfetchall()
+            list_ids = [x["id"] for x in result]
+            domain.append(("id", "in", list_ids))
         PmsPartnerResults = self.env.datamodels["pms.partner.results"]
         PmsPartnerInfo = self.env.datamodels["pms.partner.info"]
         total_partners = self.env["res.partner"].search_count(domain)
@@ -189,6 +161,10 @@ class PmsPartnerService(Component):
             domain,
             limit=pms_partner_search_params.limit,
             offset=pms_partner_search_params.offset,
+            order=self._get_mapped_order_by_field(pms_partner_search_params.orderBy)
+            + (" desc" if pms_partner_search_params.orderDesc else " asc")
+            if pms_partner_search_params.orderBy
+            else False,
         ):
             checkouts = (
                 self.env["pms.checkin.partner"]
@@ -226,6 +202,7 @@ class PmsPartnerService(Component):
                     lastname2=partner.lastname2 if partner.lastname2 else None,
                     email=partner.email if partner.email else None,
                     phone=partner.phone if partner.phone else None,
+                    mobile=partner.mobile if partner.mobile else None,
                     gender=partner.gender if partner.gender else None,
                     birthdate=datetime.combine(
                         partner.birthdate_date, datetime.min.time()
@@ -233,7 +210,6 @@ class PmsPartnerService(Component):
                     if partner.birthdate_date
                     else None,
                     age=partner.age if partner.age else None,
-                    mobile=partner.mobile if partner.mobile else None,
                     residenceStreet=partner.residence_street
                     if partner.residence_street
                     else None,
@@ -246,23 +222,23 @@ class PmsPartnerService(Component):
                     residenceCity=partner.residence_city
                     if partner.residence_city
                     else None,
-                    nationality=partner.nationality_id.id
-                    if partner.nationality_id
-                    else None,
                     residenceStateId=partner.residence_state_id.id
                     if partner.residence_state_id
+                    else None,
+                    residenceCountryId=partner.residence_country_id.id
+                    if partner.residence_country_id
+                    else None,
+                    nationality=partner.nationality_id.id
+                    if partner.nationality_id
                     else None,
                     street=partner.street if partner.street else None,
                     street2=partner.street2 if partner.street2 else None,
                     zip=partner.zip if partner.zip else None,
-                    countryId=partner.country_id.id if partner.country_id else None,
-                    stateId=partner.state_id.id if partner.state_id else None,
                     city=partner.city if partner.city else None,
+                    stateId=partner.state_id.id if partner.state_id else None,
+                    countryId=partner.country_id.id if partner.country_id else None,
                     isAgency=partner.is_agency,
                     isCompany=partner.is_company,
-                    residenceCountryId=partner.residence_country_id.id
-                    if partner.residence_country_id
-                    else None,
                     documentNumber=document_number if document_number else None,
                     documentType=document_type if document_type else None,
                     documentSupportNumber=document_support_number
@@ -901,3 +877,18 @@ class PmsPartnerService(Component):
             vat=vat_number,
             format=vat_no,
         )
+
+    def _get_mapped_order_by_field(self, field):
+        if field == "name":
+            result = "name"
+        elif field == "email":
+            result = "email"
+        elif field == "phone":
+            result = "phone"
+        elif field == "mobile":
+            result = "mobile"
+        elif field == "vatNumber":
+            result = "vat"
+        else:
+            raise werkzeug.exceptions.MethodNotAllowed()
+        return result
