@@ -45,7 +45,6 @@ class PmsReservationShortInfo(Datamodel):
     segmentationId = fields.Integer(required=False, allow_none=True)
     createDate = fields.String(required=False, allow_none=True)
 
-
 class PmsReservationInfo(Datamodel):
     _name = "pms.reservation.info"
     id = fields.Integer(required=False, allow_none=True)
