@@ -84,87 +84,116 @@ class PmsPartnerService(Component):
         auth="jwt_api_pms",
     )
     def get_partners(self, pms_partner_search_params):
+        order_by_param = False
+        PmsPartnerResults = self.env.datamodels["pms.partner.results"]
+        PmsPartnerInfo = self.env.datamodels["pms.partner.info"]
         result_partners = []
-        domain = []
 
-        if pms_partner_search_params.inHouse:
-            partners_in_house = (
-                self.env["pms.checkin.partner"]
-                .search([("state", "=", "onboard")])
-                .mapped("partner_id")
+        if (
+            pms_partner_search_params.housedFrom
+            and not pms_partner_search_params.housedTo
+        ) or (
+            not pms_partner_search_params.housedFrom
+            and pms_partner_search_params.housedTo
+        ):
+            raise werkzeug.exceptions.MethodNotAllowed(
+                description=_("Both housedFrom and housedTo must be set or unset")
             )
-            domain.append(("id", "in", partners_in_house.ids))
         elif (
             pms_partner_search_params.housedFrom and pms_partner_search_params.housedTo
         ):
-            partners_housed_past = (
-                self.env["pms.checkin.partner"]
-                .search(
-                    [
-                        ("state", "in", ["onboard", "done", "departure_delayed"]),
-                        "|",
-                        "&",
-                        ("checkin", ">=", pms_partner_search_params.housedFrom),
-                        ("checkin", "<=", pms_partner_search_params.housedTo),
-                        "|",
-                        "&",
-                        ("checkout", ">", pms_partner_search_params.housedFrom),
-                        ("checkout", "<", pms_partner_search_params.housedTo),
-                        "&",
-                        ("checkin", "<=", pms_partner_search_params.housedFrom),
-                        ("checkout", ">", pms_partner_search_params.housedTo),
-                    ]
-                )
-                .mapped("partner_id")
+            pms_partner_search_params.housedFrom = (
+                pms_partner_search_params.housedFrom.split("T")[0]
             )
-            domain.append(("id", "in", partners_housed_past.ids))
-        if pms_partner_search_params.isAgency is not None:
-            domain.append(("is_agency", "=", pms_partner_search_params.isAgency))
-        if pms_partner_search_params.isCompany is not None:
-            domain.append(("is_company", "=", pms_partner_search_params.isCompany))
+            pms_partner_search_params.housedTo = (
+                pms_partner_search_params.housedTo.split("T")[0]
+            )
 
-        if pms_partner_search_params.multiFieldSearch:
-            pms_partner_search_params.multiFieldSearch = (
-                "%" + pms_partner_search_params.multiFieldSearch + "%"
-            )
-            self.env.cr.execute(
-                """
-               SELECT cp.id
-                FROM (
-                    SELECT rp.id,
-                            STRING_AGG(rpin.name,'#') document_number,
-                            rp.vat,
-                            rp.display_name,
-                            rp.aeat_identification
-                    FROM res_partner rp LEFT OUTER JOIN res_partner_id_number rpin ON rpin.partner_id = rp.id
-                    GROUP BY rp.id, rp.vat, rp.display_name, rp.aeat_identification
-                    ) cp
-                WHERE cp.document_number LIKE %s
-                    OR cp.vat like %s
-                    OR cp.display_name LIKE %s
-                    OR cp.aeat_identification LIKE %s""",
+        if pms_partner_search_params.orderBy and pms_partner_search_params.orderByDesc:
+            order_by_param = self._get_mapped_order_by_field(
+                pms_partner_search_params.orderBy
+            ) + (" desc" if pms_partner_search_params.orderDesc else " asc")
+
+        self.env.cr.execute(
+            """
+            SELECT rp.id
+            FROM res_partner rp
+            LEFT OUTER JOIN res_partner_id_number rpin ON rpin.partner_id = rp.id
+            LEFT OUTER JOIN pms_checkin_partner pcp ON pcp.partner_id = rp.id
+            WHERE (%s IS NULL OR is_agency = %s)
+            AND (%s IS NULL OR is_company = %s)
+            AND (%s IS NULL OR %s IS FALSE OR (%s IS TRUE AND pcp.state IN ('onboard', 'departure_delayed')))
+            AND (
+                (%s IS NULL AND %s IS NULL)
+                OR
                 (
-                    pms_partner_search_params.multiFieldSearch,
-                    pms_partner_search_params.multiFieldSearch,
-                    pms_partner_search_params.multiFieldSearch,
-                    pms_partner_search_params.multiFieldSearch,
-                ),
+                    pcp.state IN ('onboard', 'done', 'departure_delayed')
+                    AND
+                    (
+                        (pcp.checkin >= %s /* FROM */ AND pcp.checkin <= %s /* TO */)
+                        OR
+                        (pcp.checkout > %s /* FROM */ AND pcp.checkout <= %s /* TO */)
+                        OR
+                        (pcp.checkin <= %s /* FROM */ AND pcp.checkout >= %s /* TO */)
+                    )
+                )
             )
-            result = self.env.cr.dictfetchall()
-            list_ids = [x["id"] for x in result]
-            domain.append(("id", "in", list_ids))
-        PmsPartnerResults = self.env.datamodels["pms.partner.results"]
-        PmsPartnerInfo = self.env.datamodels["pms.partner.info"]
+            GROUP BY rp.id, pcp.id
+            HAVING (
+                (
+                    %s IS NULL OR STRING_AGG(rpin.name, '#') LIKE %s
+                )
+            OR
+                (
+                    %s IS NULL OR rp.display_name LIKE %s
+                )
+            OR
+                (
+                    %s IS NULL OR rp.vat LIKE %s
+                )
+            OR
+                (
+                    %s IS NULL OR rp.aeat_identification LIKE %s
+                )
+            )
+           """,
+            (
+                pms_partner_search_params.isAgency,
+                pms_partner_search_params.isAgency,
+                pms_partner_search_params.isCompany,
+                pms_partner_search_params.isCompany,
+                pms_partner_search_params.inHouse,
+                pms_partner_search_params.inHouse,
+                pms_partner_search_params.inHouse,
+                pms_partner_search_params.housedFrom,
+                pms_partner_search_params.housedTo,
+                pms_partner_search_params.housedFrom,
+                pms_partner_search_params.housedTo,
+                pms_partner_search_params.housedFrom,
+                pms_partner_search_params.housedTo,
+                pms_partner_search_params.housedFrom,
+                pms_partner_search_params.housedTo,
+                pms_partner_search_params.multiFieldSearch,
+                "%" + str(pms_partner_search_params.multiFieldSearch) + "%",
+                pms_partner_search_params.multiFieldSearch,
+                "%" + str(pms_partner_search_params.multiFieldSearch) + "%",
+                pms_partner_search_params.multiFieldSearch,
+                "%" + str(pms_partner_search_params.multiFieldSearch) + "%",
+                pms_partner_search_params.multiFieldSearch,
+                "%" + str(pms_partner_search_params.multiFieldSearch) + "%",
+            ),
+        )
+        result = self.env.cr.dictfetchall()
+        list_ids = list(set({x["id"] for x in result}))
+        domain = [("id", "in", list_ids)]
+
         total_partners = self.env["res.partner"].search_count(domain)
 
         for partner in self.env["res.partner"].search(
             domain,
             limit=pms_partner_search_params.limit,
             offset=pms_partner_search_params.offset,
-            order=self._get_mapped_order_by_field(pms_partner_search_params.orderBy)
-            + (" desc" if pms_partner_search_params.orderDesc else " asc")
-            if pms_partner_search_params.orderBy
-            else False,
+            order=order_by_param if order_by_param else False,
         ):
             checkouts = (
                 self.env["pms.checkin.partner"]
@@ -180,19 +209,19 @@ class PmsPartnerService(Component):
             document_expedition_date = False
             if partner.id_numbers:
                 doc_record = partner.id_numbers[0]
-            if doc_record:
-                if doc_record.name:
-                    document_number = doc_record.name
-                if doc_record.category_id:
-                    document_type = doc_record.category_id.id
-                if doc_record.support_number:
-                    document_support_number = doc_record.support_number
-                if doc_record.country_id:
-                    document_country_id = doc_record.country_id.id
-                if doc_record.valid_from:
-                    document_expedition_date = datetime.combine(
-                        doc_record.valid_from, datetime.min.time()
-                    ).isoformat()
+                if doc_record:
+                    if doc_record.name:
+                        document_number = doc_record.name
+                    if doc_record.category_id:
+                        document_type = doc_record.category_id.id
+                    if doc_record.support_number:
+                        document_support_number = doc_record.support_number
+                    if doc_record.country_id:
+                        document_country_id = doc_record.country_id.id
+                    if doc_record.valid_from:
+                        document_expedition_date = datetime.combine(
+                            doc_record.valid_from, datetime.min.time()
+                        ).isoformat()
             result_partners.append(
                 PmsPartnerInfo(
                     id=partner.id,
@@ -890,5 +919,5 @@ class PmsPartnerService(Component):
         elif field == "vatNumber":
             result = "vat"
         else:
-            raise werkzeug.exceptions.MethodNotAllowed()
+            raise werkzeug.exceptions.MethodNotAllowed(description="Field not allowed")
         return result
