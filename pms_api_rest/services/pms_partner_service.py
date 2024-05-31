@@ -109,7 +109,7 @@ class PmsPartnerService(Component):
                 pms_partner_search_params.housedTo.split("T")[0]
             )
 
-        if pms_partner_search_params.orderBy and pms_partner_search_params.orderByDesc:
+        if pms_partner_search_params.orderBy and pms_partner_search_params.orderDesc:
             order_by_param = self._get_mapped_order_by_field(
                 pms_partner_search_params.orderBy
             ) + (" desc" if pms_partner_search_params.orderDesc else " asc")
@@ -141,19 +141,19 @@ class PmsPartnerService(Component):
             GROUP BY rp.id, pcp.id
             HAVING (
                 (
-                    %s IS NULL OR STRING_AGG(rpin.name, '#') LIKE %s
+                    %s IS NULL OR TRANSLATE(LOWER(STRING_AGG(rpin.name, '#')), 'áéíóúñ', 'aeioun') LIKE TRANSLATE(LOWER(%s), 'áéíóúñ', 'aeioun')
                 )
             OR
                 (
-                    %s IS NULL OR rp.display_name LIKE %s
+                    %s IS NULL OR TRANSLATE(LOWER(rp.display_name), 'áéíóúñ', 'aeioun') LIKE TRANSLATE(LOWER(%s), 'áéíóúñ', 'aeioun')
                 )
             OR
                 (
-                    %s IS NULL OR rp.vat LIKE %s
+                    %s IS NULL OR TRANSLATE(LOWER(rp.vat), 'áéíóúñ', 'aeioun') LIKE TRANSLATE(LOWER(%s), 'áéíóúñ', 'aeioun')
                 )
             OR
                 (
-                    %s IS NULL OR rp.aeat_identification LIKE %s
+                    %s IS NULL OR TRANSLATE(LOWER(rp.aeat_identification), 'áéíóúñ', 'aeioun') LIKE TRANSLATE(LOWER(%s), 'áéíóúñ', 'aeioun')
                 )
             )
            """,
