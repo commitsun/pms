@@ -14,6 +14,8 @@
                         widget="image"
                         class="oe_avatar"
                     />
+                    <field name="latitude" />
+                    <field name="longitude" />
                 </group>
             </xpath>
             <xpath expr="//field[@name='default_departure_hour']" position="after">

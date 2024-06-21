@@ -818,7 +818,6 @@ class PmsCheckinPartner(models.Model):
         # api.depends need "reservation_id.state" in the lambda function
         if depends:
             mandatory_fields.extend(["reservation_id.state", "name"])
-
         return mandatory_fields
 
     @api.model
