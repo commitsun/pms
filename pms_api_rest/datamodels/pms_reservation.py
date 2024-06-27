@@ -34,7 +34,6 @@ class PmsReservationShortInfo(Datamodel):
     reservationType = fields.String(required=False, allow_none=True)
 
 
-
 class PmsReservationInfo(Datamodel):
     _name = "pms.reservation.info"
     id = fields.Integer(required=False, allow_none=True)
@@ -111,4 +110,3 @@ class PmsReservationPublicInfo(Datamodel):
     adults = fields.Integer(required=False, allow_none=True)
     children = fields.Integer(required=False, allow_none=True)
     checkinNamesCompleted = fields.List(fields.String(required=False, allow_none=True))
-

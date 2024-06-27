@@ -100,4 +100,6 @@ class PmsFolioPublicInfo(Datamodel):
     folioPortalLink = fields.String(required=False, allow_none=True)
     folioPendingAmount = fields.Float(required=False, allow_none=True)
     folioNumCheckins = fields.Integer(required=False, allow_none=True)
-    folioCheckinNamesCompleted = fields.List(fields.String(required=False, allow_none=True))
+    folioCheckinNamesCompleted = fields.List(
+        fields.String(required=False, allow_none=True)
+    )

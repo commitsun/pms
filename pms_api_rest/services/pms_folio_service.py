@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import pytz
 
 from odoo import _, fields
-from odoo.exceptions import MissingError, ValidationError, AccessError
+from odoo.exceptions import AccessError, MissingError, ValidationError
 from odoo.osv import expression
 from odoo.tools import get_lang
 
@@ -48,7 +48,6 @@ class PmsFolioService(Component):
             )
         )
         if not folio_record:
-            print('no se encuentra')
             raise MissingError(_("Folio not found"))
         folio_room_types_description_list = list()
         pms_property_location = False
@@ -81,7 +80,9 @@ class PmsFolioService(Component):
             reservation_checkin_partner_names = []
             for checkin_partner in reservation.checkin_partner_ids:
                 is_mandatory_fields = True
-                for field in self.env["pms.checkin.partner"]._checkin_mandatory_fields():
+                for field in self.env[
+                    "pms.checkin.partner"
+                ]._checkin_mandatory_fields():
                     if not getattr(checkin_partner, field):
                         is_mandatory_fields = False
                         break
@@ -102,7 +103,6 @@ class PmsFolioService(Component):
                     adults=reservation.adults,
                     children=reservation.children,
                     checkinNamesCompleted=reservation_checkin_partner_names,
-
                 )
             )
         for name in record_folio.reservation_ids.mapped("room_type_id.name"):
