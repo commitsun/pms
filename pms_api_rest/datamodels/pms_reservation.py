@@ -102,11 +102,13 @@ class PmsReservationInfo(Datamodel):
 
 class PmsReservationPublicInfo(Datamodel):
     _name = "pms.reservation.public.info"
-    publicUrl = fields.String(required=False, allow_none=True)
+    roomTypeName = fields.String(required=False, allow_none=True)
+    reservationReference = fields.String(required=False, allow_none=True)
+    checkinNamesCompleted = fields.List(fields.String(required=False, allow_none=True))
+    accessToken = fields.String(required=False, allow_none=True)
+    apiRestId = fields.String(required=False, allow_none=True)
+    nights = fields.Integer(required=False, allow_none=True)
     checkin = fields.String(required=False, allow_none=True)
     checkout = fields.String(required=False, allow_none=True)
-    roomTypeName = fields.String(required=False, allow_none=True)
-    nights = fields.Integer(required=False, allow_none=True)
     adults = fields.Integer(required=False, allow_none=True)
     children = fields.Integer(required=False, allow_none=True)
-    checkinNamesCompleted = fields.List(fields.String(required=False, allow_none=True))

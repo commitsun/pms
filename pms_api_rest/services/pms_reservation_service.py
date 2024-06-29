@@ -4,13 +4,15 @@ import tempfile
 from datetime import datetime, timedelta
 
 from odoo import _, fields
-from odoo.exceptions import MissingError
+from odoo.exceptions import AccessError, MissingError
 from odoo.osv import expression
 from odoo.tools.safe_eval import safe_eval
 
 from odoo.addons.base_rest import restapi
 from odoo.addons.base_rest_datamodel.restapi import Datamodel
 from odoo.addons.component.core import Component
+from odoo.addons.pms_api_rest.pms_api_rest_utils import url_image_pms_api_rest
+from odoo.addons.portal.controllers.portal import CustomerPortal
 
 
 class PmsReservationService(Component):
@@ -19,9 +21,105 @@ class PmsReservationService(Component):
     _usage = "reservations"
     _collection = "pms.services"
 
-    # ------------------------------------------------------------------------------------
-    # HEAD RESERVATION--------------------------------------------------------------------
-    # ------------------------------------------------------------------------------------
+    @restapi.method(
+        [
+            (
+                [
+                    "/<string:api_rest_id>/precheckin/<string:token>",
+                ],
+                "GET",
+            )
+        ],
+        output_param=Datamodel("pms.folio.public.info", is_list=False),
+        auth="public",
+    )
+    def get_reservation_public_info(self, api_rest_id, token):
+        # variable initialization
+        folio_room_types_description_list = list()
+        folio_room_types_description_result = ""
+        folio_checkin_partner_names = list()
+        num_checkins = 0
+
+        # check if the folio exists
+        reservation_record = (
+            self.env["pms.reservation"]
+            .sudo()
+            .search(
+                [
+                    ("api_rest_id", "=", api_rest_id),
+                ],
+            )
+        )
+        if not reservation_record:
+            raise MissingError(_("Folio not found"))
+
+        # check if the reservation is accessible
+        try:
+            reservation_record = CustomerPortal._document_check_access(
+                self,
+                "pms.reservation",
+                reservation_record.id,
+                access_token=token,
+            )
+        except AccessError:
+            raise MissingError(_("Folio not found"))
+
+
+        reservation_checkin_partner_names = []
+
+        num_checkins += len(reservation_record.checkin_partner_ids)
+        folio_room_types_description_list.append(reservation_record.room_type_id.name)
+
+        # iterate checkin partner names completed
+        for checkin_partner in reservation_record.checkin_partner_ids:
+            is_mandatory_fields = True
+            for field in self.env[
+                "pms.checkin.partner"
+            ]._checkin_mandatory_fields():
+                if not getattr(checkin_partner, field):
+                    is_mandatory_fields = False
+                    break
+            if is_mandatory_fields:
+                reservation_checkin_partner_names.append(checkin_partner.firstname)
+                folio_checkin_partner_names.append(checkin_partner.firstname)
+
+        # append reservation public info
+        reservations = [
+            self.env.datamodels["pms.reservation.public.info"](
+                roomTypeName=reservation_record.room_type_id.name,
+                checkinNamesCompleted=reservation_checkin_partner_names,
+                nights=reservation_record.nights,
+                checkin=datetime.combine(
+                    reservation_record.checkin, datetime.min.time()
+                ).isoformat(),
+                checkout=datetime.combine(
+                    reservation_record.checkout, datetime.min.time()
+                ).isoformat(),
+                adults=reservation_record.adults,
+                children=reservation_record.children,
+                reservationReference=reservation_record.name,
+            )
+        ]
+
+        return self.env.datamodels["pms.folio.public.info"](
+            pmsPropertyName=reservation_record.pms_property_id.name,
+            pmsPropertyStreet=reservation_record.pms_property_id.street,
+            pmsPropertyCity=reservation_record.pms_property_id.city,
+            pmsPropertyState=reservation_record.pms_property_id.state_id.name,
+            pmsPropertyPhoneNumber=reservation_record.pms_property_id.phone,
+            pmsPropertyLogo=url_image_pms_api_rest(
+                "pms.property",
+                reservation_record.pms_property_id.id,
+                "logo",
+            ),
+            pmsPropertyImage=url_image_pms_api_rest(
+                "pms.property",
+                reservation_record.pms_property_id.id,
+                "hotel_image_pms_api_rest",
+            ),
+            folioPartnerName=reservation_record.folio_id.partner_name,
+            reservations=reservations,
+        )
 
     @restapi.method(
         [
