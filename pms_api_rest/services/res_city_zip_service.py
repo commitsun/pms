@@ -20,7 +20,7 @@ class ResCityZipService(Component):
         ],
         input_param=Datamodel("res.city.zip.search.param", is_list=False),
         output_param=Datamodel("res.city.zip.info", is_list=True),
-        auth="jwt_api_pms",
+        auth="public",
     )
     def get_address_data(self, zip_search_param):
         result_res_zip = []

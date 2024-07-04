@@ -92,7 +92,7 @@ class PmsFolioPublicInfo(Datamodel):
     pmsPropertyPhoneNumber = fields.String(required=False, allow_none=True)
     pmsPropertyLogo = fields.String(required=False, allow_none=True)
     pmsPropertyImage = fields.String(required=False, allow_none=True)
-
+    pmsPropertyIsOcr = fields.Boolean(required=False, allow_none=True)
     folioPartnerName = fields.String(required=False, allow_none=True)
     folioRoomTypesDescription = fields.String(required=False, allow_none=True)
     folioReference = fields.String(required=False, allow_none=True)

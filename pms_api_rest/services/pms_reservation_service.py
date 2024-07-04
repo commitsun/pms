@@ -63,15 +63,19 @@ class PmsReservationService(Component):
             )
         except AccessError:
             raise MissingError(_("Folio not found"))
-
-
         reservation_checkin_partner_names = []
-
+        reservation_checkin_partners = []
         num_checkins += len(reservation_record.checkin_partner_ids)
         folio_room_types_description_list.append(reservation_record.room_type_id.name)
 
         # iterate checkin partner names completed
         for checkin_partner in reservation_record.checkin_partner_ids:
+            reservation_checkin_partners.append(
+                self.env.datamodels["pms.checkin.partner.info"](
+                    id=checkin_partner.id,
+                    checkinPartnerState = checkin_partner.state,
+                )
+            )
             is_mandatory_fields = True
             for field in self.env[
                 "pms.checkin.partner"
@@ -98,6 +102,7 @@ class PmsReservationService(Component):
                 adults=reservation_record.adults,
                 children=reservation_record.children,
                 reservationReference=reservation_record.name,
+                checkinPartners=reservation_checkin_partners,
             )
         ]
 
@@ -117,6 +122,7 @@ class PmsReservationService(Component):
                 reservation_record.pms_property_id.id,
                 "hotel_image_pms_api_rest",
             ),
+            pmsPropertyIsOcr=reservation_record.pms_property_id.ocr_checkin_supplier,
             folioPartnerName=reservation_record.folio_id.partner_name,
             reservations=reservations,
         )

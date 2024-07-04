@@ -175,7 +175,7 @@ class PmsFolioService(Component):
             pmsPropertyName=record_folio.pms_property_id.name,
             pmsPropertyStreet=record_folio.pms_property_id.street,
             pmsPropertyCity=record_folio.pms_property_id.city,
-            pmsPropertyState=record_folio.pms_property_id.state_id.name,
+            pmsPropertyState=record_folio.pms_property_id.state_id.name if record_folio.pms_property_id.state_id else "",
             pmsPropertyPhoneNumber=record_folio.pms_property_id.phone,
             pmsPropertyLogo=url_image_pms_api_rest(
                 "pms.property",
@@ -187,6 +187,7 @@ class PmsFolioService(Component):
                 record_folio.pms_property_id.id,
                 "hotel_image_pms_api_rest",
             ),
+            pmsPropertyIsOcr=record_folio.pms_property_id.ocr_checkin_supplier,
             folioPartnerName=record_folio.partner_name,
             folioReference=record_folio.name,
             folioRoomTypesDescription=folio_room_types_description_result.rstrip(", "),

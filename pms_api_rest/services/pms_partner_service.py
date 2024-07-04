@@ -501,10 +501,10 @@ class PmsPartnerService(Component):
             )
         ],
         output_param=Datamodel("pms.partner.info", is_list=True),
-        auth="jwt_api_pms",
+        auth="public",
     )
     def get_partner_by_doc_number(self, document_type, document_number):
-        doc_type = self.env["res.partner.id_category"].search(
+        doc_type = self.env["res.partner.id_category"].sudo().search(
             [("id", "=", document_type)]
         )
         # Clean Document number
@@ -562,14 +562,14 @@ class PmsPartnerService(Component):
                 "GET",
             )
         ],
-        auth="jwt_api_pms",
+        auth="public",
     )
     # REVIEW: create a new datamodel and service for documents?
     def check_document_number(self, document_number, document_type_id, country_id):
         error_mens = False
-        country = self.env["res.country"].browse(country_id)
-        document_type = self.env["res.partner.id_category"].browse(document_type_id)
-        id_number = self.env["res.partner.id_number"].new(
+        country = self.env["res.country"].sudo().browse(country_id)
+        document_type = self.env["res.partner.id_category"].sudo().browse(document_type_id)
+        id_number = self.env["res.partner.id_number"].sudo().new(
             {
                 "name": document_number,
                 "category_id": document_type,
