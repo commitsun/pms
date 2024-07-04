@@ -19,7 +19,7 @@ class ResCountryService(Component):
             )
         ],
         output_param=Datamodel("res.country.info", is_list=True),
-        auth="jwt_api_pms",
+        auth="public",
     )
     def get_countries(self):
         result_countries = []
@@ -46,7 +46,7 @@ class ResCountryService(Component):
             )
         ],
         output_param=Datamodel("res.country_state.info", is_list=True),
-        auth="jwt_api_pms",
+        auth="public",
     )
     def get_states(self, country_id):
         result_country_states = []

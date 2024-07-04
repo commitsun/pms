@@ -55,7 +55,7 @@ class ResCityZipService(Component):
             )
         ],
         output_param=Datamodel("res.city.zip.info", is_list=False),
-        auth="jwt_api_pms",
+        auth="public",
     )
     def get_address_data_by_zip(self, res_city_zip):
         ResCityZipInfo = self.env.datamodels["res.city.zip.info"]
