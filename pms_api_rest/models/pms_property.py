@@ -117,8 +117,6 @@ class PmsProperty(models.Model):
         selection=[],
     )
 
-    latitude = fields.Float(string="Latitude", digits=(16, 5))
-    longitude = fields.Float(string="Longitude", digits=(16, 5))
 
     # PUSH API NOTIFICATIONS
     def get_payload_avail(self, avails, client):
