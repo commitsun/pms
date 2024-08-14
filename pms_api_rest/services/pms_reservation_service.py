@@ -630,6 +630,9 @@ class PmsReservationService(Component):
                         signature=checkin_partner.signature
                         if checkin_partner.signature
                         else None,
+                        partnerId=checkin_partner.partner_id.id
+                        if checkin_partner.partner_id
+                        else None,
                     )
                 )
         return checkin_partners
@@ -694,8 +697,8 @@ class PmsReservationService(Component):
         if pms_search_param.toAssign:
             domain.append(("to_assign", "=", True))
             domain.append(("checkin", ">=", fields.Date.today()))
-        if pms_search_param.ids:
-            domain.append(("id", "in", pms_search_param.ids))
+        # if pms_search_param.ids:
+        #     domain.append(("id", "in", pms_search_param.ids))
         if pms_search_param.createDateFrom and pms_search_param.createDateTo:
             domain.append(
                 (

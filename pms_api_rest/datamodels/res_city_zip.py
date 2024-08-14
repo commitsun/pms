@@ -11,8 +11,10 @@ class ResCityZipSearchParam(Datamodel):
 class ResCityZipInfo(Datamodel):
     _name = "res.city.zip.info"
     resZipId = fields.Integer(required=False, allow_none=True)
+    street = fields.String(required=False, allow_none=True)
     cityId = fields.String(required=False, allow_none=True)
     stateId = fields.Integer(required=False, allow_none=True)
     stateName = fields.String(required=False, allow_none=True)
     countryId = fields.Integer(required=False, allow_none=True)
     zipCode = fields.String(required=False, allow_none=True)
+    documentNumber = fields.String(required=False, allow_none=True)
