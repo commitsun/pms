@@ -76,8 +76,8 @@ class PmsFolioService(Component):
                 if folio.external_reference
                 else None,
                 closureReasonId=folio.closure_reason_id,
-                outOfServiceDescription=folio.out_service_description
-                if folio.out_service_description
+                outOfOrderDescription=folio.out_order_description
+                if folio.out_order_description
                 else None,
                 portalUrl=portal_url,
                 language=folio.lang if folio.lang else None,
@@ -626,9 +626,9 @@ class PmsFolioService(Component):
                     "pms_property_id": pms_folio_info.pmsPropertyId,
                     "reservation_type": pms_folio_info.reservationType,
                     "closure_reason_id": pms_folio_info.closureReasonId,
-                    "out_service_description": pms_folio_info.outOfServiceDescription
-                    if pms_folio_info.outOfServiceDescription
-                    else None,
+                    "out_order_description": pms_folio_info.outOfOrderDescription
+                if pms_folio_info.outOfOrderDescription
+                else None,
                 }
             else:
                 vals = {

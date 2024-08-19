@@ -2,6 +2,7 @@ from datetime import datetime
 
 from odoo import _
 from odoo.exceptions import MissingError
+from odoo.odoo import fields
 
 from odoo.addons.base_rest import restapi
 from odoo.addons.base_rest_datamodel.restapi import Datamodel
@@ -104,6 +105,12 @@ class PmsRoomService(Component):
                         lambda x: x.is_add_code_room_name
                     ).name
                     else "",
+                    roomState=room.room_state,
+                    outOfService=room.out_of_service,
+                    outOfServiceReason=room.out_of_service_reason
+                    if room.out_of_service_reason
+                    else "",
+                    outOfOrder=room.out_of_order,
                 )
             )
         return result_rooms
@@ -139,6 +146,54 @@ class PmsRoomService(Component):
         [
             (
                 [
+                    "/<int:room_id>/reservations-out",
+                ],
+                "GET",
+            )
+        ],
+        output_param=Datamodel("pms.reservation.short.info", is_list=False),
+        auth="jwt_api_pms",
+    )
+    def get_reservations_out_by_room(self, room_id):
+        reservation_out = self.env["pms.reservation"].search(
+            [
+                ("preferred_room_id", "=", room_id),
+                ("reservation_type", "=", "out"),
+                ("checkout", ">=", fields.Date.today()),
+                ("checkin", "<=", fields.Date.today()),
+            ]
+        )
+        if not reservation_out:
+            reservation_out = self.env["pms.reservation"].search(
+                [
+                    ("preferred_room_id", "=", room_id),
+                    ("reservation_type", "=", "out"),
+                    ("checkin", ">", fields.Date.today()),
+                ],
+                limit=1,
+                order="checkin asc",
+            )
+        PmsReservation = self.env.datamodels["pms.reservation.short.info"]
+        if reservation_out:
+            return PmsReservation(
+                id=reservation_out.id,
+                checkin=datetime.combine(
+                    reservation_out.checkin, datetime.min.time()
+                ).isoformat(),
+                checkout=datetime.combine(
+                    reservation_out.checkout, datetime.min.time()
+                ).isoformat(),
+                closureReasonId=reservation_out.closure_reason_id,
+                outOfOrderDescription=reservation_out.out_order_description
+                if reservation_out.out_order_description
+                else "",
+            )
+        return PmsReservation()
+
+    @restapi.method(
+        [
+            (
+                [
                     "/p/<int:room_id>",
                 ],
                 "PATCH",
@@ -147,14 +202,20 @@ class PmsRoomService(Component):
         input_param=Datamodel("pms.room.info"),
         auth="jwt_api_pms",
     )
-    def update_room(self, room_id, pms_room_info_data):
+    def update_room(self, room_id, pms_room_info):
         room = self.env["pms.room"].search([("id", "=", room_id)])
         room_vals = {}
         if not room:
             raise MissingError(_("Room not found"))
 
-        if pms_room_info_data.name:
-            room_vals["name"] = pms_room_info_data.name
+        if pms_room_info.roomState:
+            room_vals["room_state"] = pms_room_info.roomState
+        if pms_room_info.outOfService:
+            room_vals["out_of_service"] = pms_room_info.outOfService
+        if pms_room_info.outOfServiceReason:
+            room_vals["out_of_service_reason"] = pms_room_info.outOfServiceReason
+        if pms_room_info.outOfOrder:
+            room_vals["out_of_order"] = pms_room_info.outOfOrder
 
         if room_vals:
             room.write(room_vals)
