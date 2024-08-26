@@ -144,3 +144,32 @@ class PmsBoardServiceService(Component):
                 )
             )
         return result_board_service_lines
+
+    @restapi.method(
+        [
+            (
+                [
+                    "/restricted/<int:board_service_id>",
+                ],
+                "GET",
+            )
+        ],
+        output_param=Datamodel("pms.board.service.info", is_list=False),
+        auth="jwt_api_pms",
+    )
+    def get_board_service(self, board_service_id):
+        board_service_record = self.env["pms.board.service.room.type"].sudo().browse(board_service_id)
+        if not board_service_record:
+            raise MissingError("Room Type Class not found")
+        if board_service_record:
+            PmsBoardServiceInfo = self.env.datamodels["pms.board.service.info"]
+            return PmsBoardServiceInfo(
+                id=board_service_record.id,
+                # TODO: check if pms_board_Service_id can be archived or removed from the room type
+                name=board_service_record.pms_board_service_id.display_name,
+                roomTypeId=board_service_record.pms_room_type_id.id,
+                amount=round(board_service_record.amount),
+                productIds=board_service_record.board_service_line_ids.mapped("product_id.id"),
+            )
+        else:
+            raise MissingError(_("Board Service not found"))
