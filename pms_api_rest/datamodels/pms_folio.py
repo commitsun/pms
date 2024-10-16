@@ -58,6 +58,7 @@ class PmsFolioInfo(Datamodel):
     transactions = fields.List(
         NestedModel("pms.transaction.info"), required=False, allow_none=True
     )
+    access_token = fields.String(required=False, allow_none=True)
 
 
 class PmsFolioShortInfo(Datamodel):
