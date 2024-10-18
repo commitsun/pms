@@ -136,6 +136,50 @@ class PmsFolioService(Component):
         [
             (
                 [
+                    "/<int:folio_id>/bookia",
+                ],
+                "GET",
+            )
+        ],
+        output_param=Datamodel("pms.folio.info", is_list=False),
+        auth="jwt_api_pms",
+    )
+    def get_folio_bookia(self, folio_id):
+        folio = self.env["pms.folio"].search(
+            [
+                ("id", "=", folio_id),
+            ]
+        )
+        if folio:
+            portal_url = (
+                self.env["ir.config_parameter"].sudo().get_param("web.base.url")
+                + folio.get_portal_url()
+            )
+            PmsFolioInfo = self.env.datamodels["pms.folio.info"]
+            return PmsFolioInfo(
+                id=folio.id,
+                name=folio.name,
+                partnerId=folio.partner_id if folio.partner_id else None,
+                partnerName=folio.partner_name if folio.partner_name else None,
+                partnerPhone=folio.mobile if folio.mobile else None,
+                partnerEmail=folio.email if folio.email else None,
+                state=folio.state,
+                amountTotal=round(folio.amount_total, 2),
+                pendingAmount=folio.pending_amount,
+                firstCheckin=str(folio.first_checkin),
+                lastCheckout=str(folio.last_checkout),
+                language=folio.lang if folio.lang else None,
+                access_token=folio.access_token,
+            )
+        else:
+            raise MissingError(_("Folio not found"))
+
+
+
+    @restapi.method(
+        [
+            (
+                [
                     "/",
                 ],
                 "GET",
