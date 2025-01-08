@@ -16,6 +16,7 @@
         "l10n_es_aeat",
         "sql_export_excel",
         "feed_rss",
+        "sale_loyalty",
     ],
     "external_dependencies": {
         "python": ["jwt", "simplejson", "marshmallow", "jose"],
