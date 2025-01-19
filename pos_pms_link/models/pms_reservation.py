@@ -26,6 +26,13 @@ class PMSReservation(models.Model):
     @api.model
     def search_read(self, domain=None, fields=None, offset=0, limit=None, order=None):
         if self.env.context.get("pos_user_force", False):
+            # TEMP pàra pontevedra centro, que puedan cargar la cafeteria (a espera de SII en POS)
+            if domain:
+                for dom in domain:
+                    if dom[0] == "pms_property_id" and dom[2] == 371:
+                        domain.append(("preferred_room_id.name", "ilike", "cafeteria"))
+                        domain.append(("checkin", "=", fields.Date.today()))
+                        break
             return (
                 super()
                 .sudo()
