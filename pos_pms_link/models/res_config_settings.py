@@ -12,3 +12,4 @@ class ResConfigSettings(models.TransientModel):
     pos_reservation_allowed_propertie_ids = fields.Many2many(
         related='pos_config_id.reservation_allowed_propertie_ids', readonly=False
     )
+    pos_close_session_allowed = fields.Boolean(related='pos_config_id.close_session_allowed', readonly=False)

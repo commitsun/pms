@@ -10,9 +10,14 @@
             <xpath expr="//h2[@name='pos_interface']/../div[1]" position="inside">
                 <div class="col-12 col-lg-6 o_setting_box">
                     <div class="o_setting_left_pane">
+                        <field name="pos_close_session_allowed"/>
                         <field name="pos_pay_on_reservation"/>
                     </div>
                     <div class="o_setting_right_pane">
+                        <label for="pos_close_session_allowed"/>
+                         <div class="text-muted">
+                            Always allow to close session
+                        </div>
                         <label for="pos_pay_on_reservation"/>
                         <div class="text-muted">
                             Allow pay on reservations

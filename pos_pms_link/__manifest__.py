@@ -29,6 +29,7 @@
     "depends": [
         "point_of_sale",
         "pms",
+        "pos_hr",
     ],
     "data": [
         # "views/assets_common.xml",
