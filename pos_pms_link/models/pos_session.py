@@ -111,7 +111,6 @@ class PosSession(models.Model):
                     value["amount_converted"] = (
                         value["amount_converted"] - sales[element]["amount_converted"]
                     )
-            payment_type = self.config_id.pay_on_reservation_method_id.type
             if self.config_id.pay_on_reservation_method_id.split_transactions:
                 for element, value in dict(res["split_receivables_pay_later"]).items():
                     if (
