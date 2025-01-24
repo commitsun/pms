@@ -3,6 +3,7 @@
 
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
+import uuid
 
 
 class HrEmployee(models.Model):
@@ -21,7 +22,11 @@ class HrEmployee(models.Model):
         compute="_compute_allowed_pre_assigned_room_ids",
     )
 
-    job_name = fields.Char(string="Job Name", compute="_compute_job_name")
+    is_housekeeping_job = fields.Boolean(
+        string="Is Housekeeping Job",
+        related="job_id.is_housekeeping_job",
+        store=True,
+    )
 
     @api.constrains("pre_assigned_room_ids")
     def _check_pre_assigned_room_ids(self):
@@ -44,11 +49,6 @@ class HrEmployee(models.Model):
             ):
                 raise ValidationError(_("The job position should be Housekeeper."))
 
-    @api.depends("job_id")
-    def _compute_job_name(self):
-        for record in self:
-            record.job_name = record.job_id.name
-
     @api.depends("property_ids")
     def _compute_allowed_pre_assigned_room_ids(self):
         for record in self:
@@ -58,3 +58,10 @@ class HrEmployee(models.Model):
             record.allowed_pre_assigned_room_ids = (
                 self.env["pms.room"].search(domain).ids
             )
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if "uuid" not in vals:
+                vals["uuid"] = str(uuid.uuid4())
+        return super().create(vals_list)

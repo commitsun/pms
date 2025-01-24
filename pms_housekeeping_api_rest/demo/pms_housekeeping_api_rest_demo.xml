@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <record id="base.demo_user0" model="res.users">
+            <field name="user_role">housekeeper</field>
+            <field name="pms_property_ids" eval="[
+                (4, ref('pms.main_pms_property')),
+                (4, ref('pms.san_carlos_property'))
+               ]"
+            />
+            <field name="pms_property_id" ref="pms.main_pms_property"/>
+        </record>
+        <record id="pms.main_pms_property" model="pms.property">
+            <field
+                name="hotel_image_pms_api_rest"
+                type="base64"
+                file="pms_housekeeping_api_rest/demo/pms_property_hotel_image_pms_api_rest_my_property.jpg"
+            />
+        </record>
+        <record id="pms.san_carlos_property" model="pms.property">
+            <field
+                name="hotel_image_pms_api_rest"
+                type="base64"
+                file="pms_housekeeping_api_rest/demo/pms_property_hotel_image_pms_api_rest_san_carlos.jpg"
+            />
+        </record>
+    </data>
+</odoo>
+

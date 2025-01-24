@@ -24,5 +24,8 @@
         "views/pms_housekeeping_task_views.xml",
         "views/pms_room_views.xml",
     ],
+    "demo": [
+        "demo/pms_housekeeping_demo.xml",
+    ],
     "installable": True,
 }

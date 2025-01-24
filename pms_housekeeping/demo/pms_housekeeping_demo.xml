@@ -1,0 +1,275 @@
+<odoo>
+    <data noupdate="0">
+
+        <!--task types-->
+        <record id="housekeeping_task_type_change_sheets" model="pms.housekeeping.task.type">
+            <field name="name">Cambio de sábanas</field>
+            <field name="description">Solo es un cambio de las sábanas</field>
+            <field name="is_automated">True</field>
+            <field name="is_checkin">True</field>
+            <field name="priority">0</field>
+        </record>
+
+        <record id="housekeeping_task_type_clean_room" model="pms.housekeeping.task.type">
+            <field name="name">Limpieza habitación</field>
+            <field name="description">Limpieza completa de habitación y baños</field>
+            <field name="is_automated">True</field>
+            <field name="is_checkout">True</field>
+            <field name="priority">0</field>
+        </record>
+
+        <record id="housekeeping_task_type_clean_bathroom" model="pms.housekeeping.task.type">
+            <field name="name">Limpieza baño</field>
+            <field name="description">Solo limpieza de baño</field>
+            <field name="is_automated">True</field>
+            <field name="is_overnight">True</field>
+            <field name="days_after_clean_overnight">1</field>
+            <field name="priority">0</field>
+        </record>
+
+        <record id="housekeeping_task_type_clean_windows" model="pms.housekeeping.task.type">
+            <field name="name">Limpieza cristales</field>
+            <field name="description">Limpieza de cristales</field>
+            <field name="is_automated">True</field>
+            <field name="is_empty">True</field>
+            <field name="days_after_clean_empty">1</field>
+            <field name="priority">0</field>
+        </record>
+
+        <!--tasks-->
+        <record id="housekeeping_task_0" model="pms.housekeeping.task">
+            <field name="name">Limpieza cristales Open Talk Away Room 1</field>
+            <field name="task_type_id" ref="housekeeping_task_type_clean_windows"/>
+            <field name="room_id" ref="pms.pms_room_conference_01"/>
+            <field name="state">to_do</field>
+            <field name="task_date" eval="DateTime.today()"/>
+            <field name="cleaning_comments">Limpieza de cristales de la sala de conferencias 1 para el evento
+            </field>
+        </record>
+        <record id="housekeeping_task_1" model="pms.housekeeping.task">
+            <field name="name">Cambio de sábanas Double-201</field>
+            <field name="task_type_id" ref="housekeeping_task_type_change_sheets"/>
+            <field name="room_id" ref="pms.pms_room_double_01"/>
+            <field name="state">to_do</field>
+            <field name="task_date" eval="DateTime.today()"/>
+            <field name="reservation_id">90</field>
+        </record>
+        <record id="housekeeping_task_2" model="pms.housekeeping.task">
+            <field name="name">Limpieza habitación Double-202</field>
+            <field name="task_type_id" ref="housekeeping_task_type_clean_room"/>
+            <field name="room_id" ref="pms.pms_room_double_02"/>
+            <field name="state">to_do</field>
+            <field name="task_date" eval="DateTime.today()"/>
+        </record>
+        <record id="housekeeping_task_3" model="pms.housekeeping.task">
+            <field name="name">Limpieza baño Double-203</field>
+            <field name="task_type_id" ref="housekeeping_task_type_clean_bathroom"/>
+            <field name="room_id" ref="pms.pms_room_double_03"/>
+            <field name="state">pending</field>
+            <field name="task_date" eval="DateTime.today()"/>
+            <field name="reservation_id">59</field>
+            <field name="cleaning_comments">Habitación Double 203 está fuera de servicio</field>
+        </record>
+        <record id="housekeeping_task_4" model="pms.housekeeping.task">
+            <field name="name">Limpieza baño Double-204</field>
+            <field name="task_type_id" ref="housekeeping_task_type_clean_bathroom"/>
+            <field name="room_id" ref="pms.pms_room_double_04"/>
+            <field name="state">to_do</field>
+            <field name="task_date" eval="DateTime.today()"/>
+            <field name="reservation_id">89</field>
+        </record>
+        <record id="housekeeping_task_5" model="pms.housekeeping.task">
+            <field name="name">Limpieza baño Double-205</field>
+            <field name="task_type_id" ref="housekeeping_task_type_clean_bathroom"/>
+            <field name="room_id" ref="pms.pms_room_double_05"/>
+            <field name="state">done</field>
+            <field name="task_date" eval="DateTime.today()"/>
+            <field name="task_completed_datetime" eval="DateTime.now()"/>
+            <field name="reservation_id">58</field>
+        </record>
+        <record id="housekeeping_task_6" model="pms.housekeeping.task">
+            <field name="name">Cambio de sábanas Economic-101</field>
+            <field name="task_type_id" ref="housekeeping_task_type_change_sheets"/>
+            <field name="room_id" ref="pms.pms_room_eco_01"/>
+            <field name="state">pending</field>
+            <field name="task_date" eval="DateTime.today()"/>
+            <field name="reservation_id">67</field>
+        </record>
+        <record id="housekeeping_task_7" model="pms.housekeeping.task">
+            <field name="name">Cambio de sábanas Economic-102</field>
+            <field name="task_type_id" ref="housekeeping_task_type_change_sheets"/>
+            <field name="room_id" ref="pms.pms_room_eco_02"/>
+            <field name="state">done</field>
+            <field name="task_date" eval="DateTime.today()"/>
+            <field name="reservation_id">68</field>
+            <field name="task_completed_datetime" eval="DateTime.now()"/>
+        </record>
+        <record id="housekeeping_task_8" model="pms.housekeeping.task">
+            <field name="name">Cambio de sábanas Economic-103</field>
+            <field name="task_type_id" ref="housekeeping_task_type_change_sheets"/>
+            <field name="room_id" ref="pms.pms_room_eco_03"/>
+            <field name="state">to_do</field>
+            <field name="task_date" eval="DateTime.today()"/>
+            <field name="reservation_id">69</field>
+        </record>
+        <record id="housekeeping_task_9" model="pms.housekeeping.task">
+            <field name="name">Cambio de sábanas Economic-104</field>
+            <field name="task_type_id" ref="housekeeping_task_type_change_sheets"/>
+            <field name="room_id" ref="pms.pms_room_eco_04"/>
+            <field name="state">to_do</field>
+            <field name="task_date" eval="DateTime.today()"/>
+            <field name="reservation_id">70</field>
+        </record>
+        <record id="housekeeping_task_10" model="pms.housekeeping.task">
+            <field name="name">Cambio de sábanas Economic-105</field>
+            <field name="task_type_id" ref="housekeeping_task_type_change_sheets"/>
+            <field name="room_id" ref="pms.pms_room_eco_05"/>
+            <field name="state">pending</field>
+            <field name="task_date" eval="DateTime.today()"/>
+            <field name="reservation_id">72</field>
+        </record>
+        <record id="housekeeping_task_11" model="pms.housekeeping.task">
+            <field name="name">Cambio de sábanas Quadruple-301</field>
+            <field name="task_type_id" ref="housekeeping_task_type_change_sheets"/>
+            <field name="room_id" ref="pms.pms_room_quadruple_01"/>
+            <field name="state">pending</field>
+            <field name="task_date" eval="DateTime.today()"/>
+            <field name="reservation_id">112</field>
+        </record>
+        <record id="housekeeping_task_12" model="pms.housekeeping.task">
+            <field name="name">Limpieza cristales Quadruple-302</field>
+            <field name="task_type_id" ref="housekeeping_task_type_clean_windows"/>
+            <field name="room_id" ref="pms.pms_room_quadruple_02"/>
+            <field name="state">done</field>
+            <field name="task_date" eval="DateTime.today()"/>
+            <field name="task_completed_datetime" eval="DateTime.now()"/>
+        </record>
+        <record id="housekeeping_task_13" model="pms.housekeeping.task">
+            <field name="name">Limpieza baño Quadruple-303</field>
+            <field name="task_type_id" ref="housekeeping_task_type_clean_bathroom"/>
+            <field name="room_id" ref="pms.pms_room_quadruple_03"/>
+            <field name="state">done</field>
+            <field name="task_date" eval="DateTime.today()"/>
+            <field name="reservation_id">111</field>
+            <field name="task_completed_datetime" eval="DateTime.now()"/>
+        </record>
+        <record id="housekeeping_task_14" model="pms.housekeeping.task">
+            <field name="name">Limpieza cristales Quadruple-304</field>
+            <field name="task_type_id" ref="housekeeping_task_type_clean_windows"/>
+            <field name="room_id" ref="pms.pms_room_quadruple_04"/>
+            <field name="state">pending</field>
+            <field name="task_date" eval="DateTime.today()"/>
+        </record>
+        <record id="housekeeping_task_15" model="pms.housekeeping.task">
+            <field name="name">Limpieza baño Single-106</field>
+            <field name="task_type_id" ref="housekeeping_task_type_clean_bathroom"/>
+            <field name="room_id" ref="pms.pms_room_single_01"/>
+            <field name="state">done</field>
+            <field name="task_date" eval="DateTime.today()"/>
+            <field name="reservation_id">79</field>
+            <field name="task_completed_datetime" eval="DateTime.now()"/>
+        </record>
+        <record id="housekeeping_task_16" model="pms.housekeeping.task">
+            <field name="name">Limpieza baño Single-107</field>
+            <field name="task_type_id" ref="housekeeping_task_type_clean_bathroom"/>
+            <field name="room_id" ref="pms.pms_room_single_02"/>
+            <field name="state">done</field>
+            <field name="task_date" eval="DateTime.today()"/>
+            <field name="reservation_id">80</field>
+            <field name="task_completed_datetime" eval="DateTime.now()"/>
+        </record>
+        <record id="housekeeping_task_17" model="pms.housekeeping.task">
+            <field name="name">Cambio de sábanas Single-108</field>
+            <field name="task_type_id" ref="housekeeping_task_type_change_sheets"/>
+            <field name="room_id" ref="pms.pms_room_single_03"/>
+            <field name="state">pending</field>
+            <field name="task_date" eval="DateTime.today()"/>
+            <field name="reservation_id">81</field>
+        </record>
+        <record id="housekeeping_task_18" model="pms.housekeeping.task">
+            <field name="name">Limpieza baño Single-109</field>
+            <field name="task_type_id" ref="housekeeping_task_type_clean_bathroom"/>
+            <field name="room_id" ref="pms.pms_room_single_04"/>
+            <field name="state">to_do</field>
+            <field name="task_date" eval="DateTime.today()"/>
+            <field name="reservation_id">77</field>
+        </record>
+        <record id="housekeeping_task_19" model="pms.housekeeping.task">
+            <field name="name">Limpieza habitación Single-110</field>
+            <field name="task_type_id" ref="housekeeping_task_type_clean_room"/>
+            <field name="room_id" ref="pms.pms_room_single_05"/>
+            <field name="state">to_do</field>
+            <field name="task_date" eval="DateTime.today()"/>
+        </record>
+        <record id="housekeeping_task_20" model="pms.housekeeping.task">
+            <field name="name">Cambio de sábanas Triple-206</field>
+            <field name="task_type_id" ref="housekeeping_task_type_change_sheets"/>
+            <field name="room_id" ref="pms.pms_room_triple_01"/>
+            <field name="state">to_do</field>
+            <field name="task_date" eval="DateTime.today()"/>
+            <field name="reservation_id">100</field>
+        </record>
+        <record id="housekeeping_task_21" model="pms.housekeeping.task">
+            <field name="name">Limpieza cristales Triple-208</field>
+            <field name="task_type_id" ref="housekeeping_task_type_clean_windows"/>
+            <field name="room_id" ref="pms.pms_room_triple_03"/>
+            <field name="state">to_do</field>
+            <field name="task_date" eval="DateTime.today()"/>
+        </record>
+        <record id="housekeeping_task_22" model="pms.housekeeping.task">
+            <field name="name">Limpieza baño Grand Suite-401</field>
+            <field name="task_type_id" ref="housekeeping_task_type_clean_bathroom"/>
+            <field name="room_id" ref="pms.pms_room_grand_suite_01"/>
+            <field name="state">to_do</field>
+            <field name="task_date" eval="DateTime.today()"/>
+            <field name="reservation_id">121</field>
+        </record>
+        <record id="housekeeping_task_23" model="pms.housekeeping.task">
+            <field name="name">Limpieza baño Grand Suite-402</field>
+            <field name="task_type_id" ref="housekeeping_task_type_clean_bathroom"/>
+            <field name="room_id" ref="pms.pms_room_grand_suite_02"/>
+            <field name="state">to_do</field>
+            <field name="task_date" eval="DateTime.today()"/>
+            <field name="reservation_id">122</field>
+        </record>
+        <record id="housekeeping_task_24" model="pms.housekeeping.task">
+            <field name="name">Limpieza baño Grand Suite-403</field>
+            <field name="task_type_id" ref="housekeeping_task_type_clean_bathroom"/>
+            <field name="room_id" ref="pms.pms_room_grand_suite_03"/>
+            <field name="state">to_do</field>
+            <field name="task_date" eval="DateTime.today()"/>
+            <field name="reservation_id">123</field>
+        </record>
+        <record id="housekeeping_task_25" model="pms.housekeeping.task">
+            <field name="name">Cambio de sábanas Junior Suite-406</field>
+            <field name="task_type_id" ref="housekeeping_task_type_change_sheets"/>
+            <field name="room_id" ref="pms.pms_room_junior_suite_01"/>
+            <field name="state">to_do</field>
+            <field name="task_date" eval="DateTime.today()"/>
+            <field name="reservation_id">128</field>
+        </record>
+        <record id="housekeeping_task_26" model="pms.housekeeping.task">
+            <field name="name">Limpieza baño Junior Suite-407</field>
+            <field name="task_type_id" ref="housekeeping_task_type_clean_bathroom"/>
+            <field name="room_id" ref="pms.pms_room_junior_suite_02"/>
+            <field name="state">pending</field>
+            <field name="task_date" eval="DateTime.today()"/>
+            <field name="reservation_id">127</field>
+        </record>
+        <record id="housekeeping_task_27" model="pms.housekeeping.task">
+            <field name="name">Limpieza cristales Junior Suite-408</field>
+            <field name="task_type_id" ref="housekeeping_task_type_clean_windows"/>
+            <field name="room_id" ref="pms.pms_room_junior_suite_03"/>
+            <field name="state">to_do</field>
+            <field name="task_date" eval="DateTime.today()"/>
+        </record>
+        <record id="housekeeping_task_28" model="pms.housekeeping.task">
+            <field name="name">Limpieza cristales Junior Suite-409</field>
+            <field name="task_type_id" ref="housekeeping_task_type_clean_windows"/>
+            <field name="room_id" ref="pms.pms_room_junior_suite_04"/>
+            <field name="state">done</field>
+            <field name="task_date" eval="DateTime.today()"/>
+            <field name="task_completed_datetime" eval="DateTime.now()"/>
+        </record>
+    </data>
+</odoo>

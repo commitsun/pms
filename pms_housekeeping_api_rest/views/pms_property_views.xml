@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="inherit_pms_housekeeping_property_views" model="ir.ui.view">
+            <field name="name">ProjectName.ModelName.form</field>
+            <field name="model">pms.property</field>
+            <field name="inherit_id" ref="pms.pms_property_views_form" />
+            <field name="arch" type="xml">
+                <xpath
+                expr="//page[@name='property_general']//field[@name='street']"
+                position="before"
+            >
+                <group>
+                    <field
+                        name="hotel_image_pms_api_rest"
+                        widget="image"
+                        class="oe_avatar"
+                    />
+                </group>
+            </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

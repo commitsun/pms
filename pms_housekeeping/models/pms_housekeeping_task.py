@@ -6,6 +6,7 @@ from odoo.exceptions import ValidationError
 
 class PmsHouseKeepingTask(models.Model):
     _name = "pms.housekeeping.task"
+    _inherit = ["mail.thread", "mail.activity.mixin"]
 
     name = fields.Char(string="Name", required=True)
     room_id = fields.Many2one(
@@ -24,6 +25,9 @@ class PmsHouseKeepingTask(models.Model):
         string="Date",
         required=True,
     )
+    task_completed_datetime = fields.Datetime(
+        string="Completed DateTime",
+    )
     state = fields.Selection(
         selection=[
             ("pending", "Pending"),
@@ -35,6 +39,7 @@ class PmsHouseKeepingTask(models.Model):
         string="State",
         required=True,
         default="pending",
+        tracking=True,
     )
     priority = fields.Integer(
         string="Priority",
@@ -50,7 +55,7 @@ class PmsHouseKeepingTask(models.Model):
         column1="task_id",
         column2="employee_id",
         string="Housekeepers",
-        domain="[('job_id.name', '=', 'Housekeeper')]",
+        domain="[('job_id.is_housekeeping_job', '=', True)]",
         compute="_compute_housekeeper_ids",
         store=True,
         readonly=False,
@@ -102,6 +107,14 @@ class PmsHouseKeepingTask(models.Model):
         compute="_compute_allowed_housekeeper_ids",
     )
 
+    reservation_id = fields.Many2one(
+        comodel_name="pms.reservation",
+        string="Reservation",
+        store=True,
+        readonly=False,
+        compute="_compute_reservation_id",
+    )
+
     @api.constrains("task_date")
     def _check_task_date(self):
         for rec in self:
@@ -149,6 +162,11 @@ class PmsHouseKeepingTask(models.Model):
         for rec in self:
             rec.state = "pending"
             rec.cancellation_type_id = False
+
+    def all_records_action_to_do(self):
+        tasks = self.search([('state', '=', 'draft')])
+        for task in tasks:
+            task.action_to_do()
 
     @api.onchange("state")
     def _onchange_state(self):
@@ -248,16 +266,23 @@ class PmsHouseKeepingTask(models.Model):
     @api.depends("room_id")
     def _compute_allowed_housekeeper_ids(self):
         for rec in self:
-            domain = [("job_id.name", "=", "Housekeeper")]
+            domain = [("job_id.is_housekeeping_job", "=", True)]
             if rec.room_id:
                 domain = [
-                    ("job_id.name", "=", "Housekeeper"),
+                    ("job_id.is_housekeeping_job", "=", True),
                     "|",
                     ("property_ids", "in", rec.room_id.pms_property_id.ids),
                     ("property_ids", "=", False),
                 ]
             rec.allowed_housekeeper_ids = self.env["hr.employee"].search(domain).ids
-
+    @api.depends("room_id")
+    def _compute_reservation_id(self):
+        for rec in self:
+            rec.reservation_id = (
+                self.env["pms.reservation.line"]
+                .search([("room_id", "=", rec.room_id.id), ("date", "=", rec.task_date)])
+                .reservation_id
+            )
     @api.model
     def create(self, vals):
         task_type_id = vals.get("task_type_id")
