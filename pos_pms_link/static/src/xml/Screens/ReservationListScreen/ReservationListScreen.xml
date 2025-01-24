@@ -30,9 +30,17 @@
                             <i class="fa fa-undo" />
                         </t>
                     </div>
-                    <div class="search-bar-container sb-partner" t-if="!state.detailIsShown">
+                    <div
+                        class="search-bar-container sb-partner"
+                        t-if="!state.detailIsShown"
+                    >
                         <div class="pos-search-bar">
-                            <input t-ref="search-word-input-reservation" placeholder="Search Reservations..." size="1" t-on-keyup="updateReservationList" />
+                            <input
+                                t-ref="search-word-input-reservation"
+                                placeholder="Search Reservations..."
+                                size="1"
+                                t-on-keyup="updateReservationList"
+                            />
                         </div>
                     </div>
                 </div>

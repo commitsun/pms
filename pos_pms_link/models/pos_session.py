@@ -21,9 +21,7 @@
 import logging
 from collections import defaultdict
 
-from odoo import models, fields
-from itertools import groupby
-from odoo.osv.expression import AND
+from odoo import fields, models
 
 _logger = logging.getLogger(__name__)
 
@@ -121,7 +119,9 @@ class PosSession(models.Model):
                         value["amount_converted"] = 0.0
 
             else:
-                for element, value in dict(res["combine_receivables_pay_later"]).items():
+                for element, value in dict(
+                    res["combine_receivables_pay_later"]
+                ).items():
                     if element == self.config_id.pay_on_reservation_method_id:
                         value["amount"] = 0.0
                         value["amount_converted"] = 0.0
@@ -132,7 +132,7 @@ class PosSession(models.Model):
         if self.config_id.pay_on_reservation:
             result.append("pms.reservation")
         return result
-    
+
     def _loader_params_pms_reservation(self):
         domain = [
             "|",
@@ -143,7 +143,11 @@ class PosSession(models.Model):
         ]
         if self.config_id and self.config_id.reservation_allowed_propertie_ids:
             domain.append(
-                ("pms_property_id", "in", self.config_id.reservation_allowed_propertie_ids.ids)
+                (
+                    "pms_property_id",
+                    "in",
+                    self.config_id.reservation_allowed_propertie_ids.ids,
+                )
             )
         return {
             "search_params": {
@@ -169,13 +173,14 @@ class PosSession(models.Model):
             "search_params": {
                 "fields": [
                     "name",
-                    "id", 
-                    "service_line_ids", 
-                    "product_id", 
-                    "reservation_id"],
+                    "id",
+                    "service_line_ids",
+                    "product_id",
+                    "reservation_id",
+                ],
             },
         }
-    
+
     def _loader_params_pms_service_line(self):
         return {
             "search_params": {
@@ -185,7 +190,8 @@ class PosSession(models.Model):
                     "id",
                     "product_id",
                     "day_qty",
-                    "pos_order_line_ids"],
+                    "pos_order_line_ids",
+                ],
             },
         }
 
@@ -195,7 +201,8 @@ class PosSession(models.Model):
                 "fields": [
                     "qty",
                     "id",
-                    "pms_service_line_id",],
+                    "pms_service_line_id",
+                ],
             },
         }
 
@@ -204,8 +211,10 @@ class PosSession(models.Model):
         ctx.update({"pos_user_force": True})
 
         # 1. Obtener las reservas con `search_read` para todos los campos que necesitas
-        reservations = self.env["pms.reservation"].with_context(ctx).search_read(
-            **params["search_params"]
+        reservations = (
+            self.env["pms.reservation"]
+            .with_context(ctx)
+            .search_read(**params["search_params"])
         )
         reservation_ids = [r["id"] for r in reservations]
 
@@ -214,28 +223,46 @@ class PosSession(models.Model):
 
         # 2. Obtener los servicios relacionados con esas reservas
         service_params = self._loader_params_pms_service()
-        service_params["search_params"]["domain"] = [('reservation_id', 'in', reservation_ids)]
-        services = self.env["pms.service"].with_context(ctx).search_read(
-            service_params["search_params"]["domain"],
-            fields=service_params['search_params']['fields']
+        service_params["search_params"]["domain"] = [
+            ("reservation_id", "in", reservation_ids)
+        ]
+        services = (
+            self.env["pms.service"]
+            .with_context(ctx)
+            .search_read(
+                service_params["search_params"]["domain"],
+                fields=service_params["search_params"]["fields"],
+            )
         )
         service_ids = [s["id"] for s in services]
 
         # 3. Obtener las líneas de servicio relacionadas con esos servicios
         service_line_params = self._loader_params_pms_service_line()
-        service_line_params["search_params"]["domain"] = [('service_id', 'in', service_ids)]
-        service_lines = self.env["pms.service.line"].with_context(ctx).search_read(
-            service_line_params["search_params"]["domain"],
-            fields=service_line_params['search_params']['fields']
+        service_line_params["search_params"]["domain"] = [
+            ("service_id", "in", service_ids)
+        ]
+        service_lines = (
+            self.env["pms.service.line"]
+            .with_context(ctx)
+            .search_read(
+                service_line_params["search_params"]["domain"],
+                fields=service_line_params["search_params"]["fields"],
+            )
         )
         service_line_ids = [sl["id"] for sl in service_lines]
 
         # 4. Obtener las líneas de pedido POS relacionadas con esas líneas de servicio
         pos_order_line_params = self._loader_params_pos_order_line()
-        pos_order_line_params["search_params"]["domain"] = [('pms_service_line_id', 'in', service_line_ids)]
-        pos_order_lines = self.env["pos.order.line"].with_context(ctx).search_read(
-            pos_order_line_params["search_params"]["domain"],
-            fields=pos_order_line_params['search_params']['fields']
+        pos_order_line_params["search_params"]["domain"] = [
+            ("pms_service_line_id", "in", service_line_ids)
+        ]
+        pos_order_lines = (
+            self.env["pos.order.line"]
+            .with_context(ctx)
+            .search_read(
+                pos_order_line_params["search_params"]["domain"],
+                fields=pos_order_line_params["search_params"]["fields"],
+            )
         )
 
         # 5. Agrupar las líneas de pedido por línea de servicio
@@ -252,7 +279,9 @@ class PosSession(models.Model):
             service_id = service_line["service_id"][0]
             if service_id not in service_lines_by_service:
                 service_lines_by_service[service_id] = []
-            service_line["pos_order_lines"] = pos_order_lines_by_service_line.get(service_line["id"], [])
+            service_line["pos_order_lines"] = pos_order_lines_by_service_line.get(
+                service_line["id"], []
+            )
             service_lines_by_service[service_id].append(service_line)
 
         # 7. Agrupar los servicios por reserva
@@ -270,13 +299,11 @@ class PosSession(models.Model):
 
         return reservations
 
-
     # def get_pos_ui_pms_reservation_by_params(self, custom_search_params):
     #     """
     #     :param custom_search_params: a dictionary containing params of a search_read()
     #     """
 
-        
     #     ctx = self.env.context.copy()
     #     ctx.update({"pos_user_force": True})
     #     params = self._loader_params_pms_reservation()
@@ -293,5 +320,5 @@ class PosSession(models.Model):
 
     #     for reservation in reservations:
     #         reservation['services'] = services_by_reservation.get(reservation['id'], [])
-        
+
     #     return reservations

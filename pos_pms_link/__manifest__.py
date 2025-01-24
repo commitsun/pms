@@ -39,11 +39,11 @@
     ],
     "demo": [],
     "assets": {
-        'point_of_sale.assets': [
-            'pos_pms_link/static/src/js/*.js',
-            'pos_pms_link/static/src/js/*/*/*.js',
-            'pos_pms_link/static/src/xml/*.xml',
-            'pos_pms_link/static/src/xml/*/*/*.xml',
+        "point_of_sale.assets": [
+            "pos_pms_link/static/src/js/*.js",
+            "pos_pms_link/static/src/js/*/*/*.js",
+            "pos_pms_link/static/src/xml/*.xml",
+            "pos_pms_link/static/src/xml/*/*/*.xml",
         ],
     },
     "installable": True,

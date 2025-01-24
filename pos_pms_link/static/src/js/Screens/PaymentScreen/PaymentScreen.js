@@ -3,7 +3,6 @@
 import PaymentScreen from "point_of_sale.PaymentScreen";
 import Registries from "point_of_sale.Registries";
 
-
 const PosPMSLinkPaymentScreen = (PaymentScreen) =>
     class extends PaymentScreen {
         async selectReservation() {
@@ -44,4 +43,4 @@ const PosPMSLinkPaymentScreen = (PaymentScreen) =>
         }
     };
 
-    Registries.Component.extend(PaymentScreen, PosPMSLinkPaymentScreen);
+Registries.Component.extend(PaymentScreen, PosPMSLinkPaymentScreen);

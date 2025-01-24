@@ -4,8 +4,7 @@ import PosComponent from "point_of_sale.PosComponent";
 import Registries from "point_of_sale.Registries";
 
 class ReservationDetailsEdit extends PosComponent {
-    
-    setup(){
+    setup() {
         super.setup();
         const reservation = this.props.reservation;
         // onMounted(() => {

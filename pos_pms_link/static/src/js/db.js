@@ -22,10 +22,10 @@
 */
 
 import PosDB from "point_of_sale.DB";
-import  { patch, unaccent } from 'web.utils';
+import {patch, unaccent} from "web.utils";
 
-patch(PosDB.prototype, 'pos_pms_link.PosDB', {
-    init(options){
+patch(PosDB.prototype, "pos_pms_link.PosDB", {
+    init(options) {
         this._super(options);
         this.reservation_sorted = [];
         this.reservation_by_id = {};
@@ -33,43 +33,48 @@ patch(PosDB.prototype, 'pos_pms_link.PosDB', {
         this.reservation_search_strings = {};
         this.reservation_id = null;
     },
-    get_reservation_by_id(id){
+    get_reservation_by_id(id) {
         return this.reservation_by_id[id];
     },
-    get_reservations_sorted(max_count){
-        max_count = max_count ? Math.min(this.reservation_sorted.length, max_count) : this.reservation_sorted.length;
+    get_reservations_sorted(max_count) {
+        max_count = max_count
+            ? Math.min(this.reservation_sorted.length, max_count)
+            : this.reservation_sorted.length;
         var reservations = [];
         for (var i = 0; i < max_count; i++) {
             reservations.push(this.reservation_by_id[this.reservation_sorted[i]]);
         }
         return reservations;
     },
-    search_reservation(query){
-        try{
-            query = query.replace(/[\[\]\(\)\+\*\?\.\-\!\&\^\$\|\~\_\{\}\:\,\\\/]/g, ".");
+    search_reservation(query) {
+        try {
+            query = query.replace(
+                /[\[\]\(\)\+\*\?\.\-\!\&\^\$\|\~\_\{\}\:\,\\\/]/g,
+                "."
+            );
             query = query.replace(/ /g, ".+");
             var re = RegExp("([0-9]+):.*?" + unaccent(query), "gi");
-        }catch(e){
+        } catch (e) {
             return [];
         }
         var results = [];
         const searchStrings = Object.values(this.reservation_search_strings).reverse();
         let searchString = searchStrings.pop();
-        while(searchString && results.length < this.limit){
+        while (searchString && results.length < this.limit) {
             var r = re.exec(searchString);
-            if(r){
+            if (r) {
                 var id = Number(r[1]);
                 var res = this.get_reservation_by_id(id);
-                if(res){
+                if (res) {
                     results.push(res);
                 }
-            }else{
+            } else {
                 searchString = searchStrings.pop();
             }
         }
         return results;
     },
-    _reservation_search_string(reservation){
+    _reservation_search_string(reservation) {
         var str = reservation.name || "";
         var room_str = reservation.rooms || "";
         var partner_str = reservation.partner_name || "";
@@ -84,10 +89,10 @@ patch(PosDB.prototype, 'pos_pms_link.PosDB', {
             "\n";
         return str;
     },
-    add_reservations(reservations){
+    add_reservations(reservations) {
         var updated = {};
         var reservation;
-        for(var i = 0, len = reservations.length; i < len; i++){
+        for (var i = 0, len = reservations.length; i < len; i++) {
             reservation = reservations[i];
 
             if (!this.reservation_by_id[reservation.id]) {

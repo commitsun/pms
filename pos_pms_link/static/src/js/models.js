@@ -22,8 +22,8 @@
 ##############################################################################
 */
 
-import Registries from 'point_of_sale.Registries';
-import { PosGlobalState ,Order, Orderline } from 'point_of_sale.models';
+import Registries from "point_of_sale.Registries";
+import {PosGlobalState, Order, Orderline} from "point_of_sale.models";
 
 const PosPmsGlobalState = (PosGlobalState) =>
     class extends PosGlobalState {
@@ -34,20 +34,20 @@ const PosPmsGlobalState = (PosGlobalState) =>
         //@override
         async _processData(loadedData) {
             await super._processData(...arguments);
-            if (this.config.pay_on_reservation){
-                this.reservations = loadedData['pms.reservation'];
+            if (this.config.pay_on_reservation) {
+                this.reservations = loadedData["pms.reservation"];
                 this.loadPmsReservation();
                 this.addReservations(this.reservations);
             }
         }
 
         loadPmsReservation() {
-            if (this.config.pay_on_reservation){
+            if (this.config.pay_on_reservation) {
                 this.reservations_by_id = {};
                 this.services_by_id = {};
-                for (let reservation of this.reservations){
+                for (let reservation of this.reservations) {
                     this.reservations_by_id[reservation.id] = reservation;
-                    for (let service of reservation.services){
+                    for (let service of reservation.services) {
                         this.services_by_id[service.id] = service;
                         service.reservation = reservation;
                     }
@@ -56,16 +56,19 @@ const PosPmsGlobalState = (PosGlobalState) =>
         }
 
         async _loadReservations(reservartionIds) {
-            if (reservartionIds.lenght > 0){
-                var domain = [['id', 'in', reservartionIds]];
-                const fetchedReservations = await this.env.services.rpc({
-                    model: 'pos.session',
-                    method: 'get_pos_ui_pms_reservation_by_params',
-                    args: [[odoo.pos_session_id], {domain}],
-                },{
-                    timeout: 3000,
-                    shadow: true,
-                });
+            if (reservartionIds.lenght > 0) {
+                var domain = [["id", "in", reservartionIds]];
+                const fetchedReservations = await this.env.services.rpc(
+                    {
+                        model: "pos.session",
+                        method: "get_pos_ui_pms_reservation_by_params",
+                        args: [[odoo.pos_session_id], {domain}],
+                    },
+                    {
+                        timeout: 3000,
+                        shadow: true,
+                    }
+                );
                 this.addReservations(fetchedReservations);
             }
         }
@@ -73,16 +76,12 @@ const PosPmsGlobalState = (PosGlobalState) =>
         addReservations(reservations) {
             return this.db.add_reservations(reservations);
         }
-
-        
-    }
+    };
 
 Registries.Model.extend(PosGlobalState, PosPmsGlobalState);
 
-
-const PosPmsOrder= (Order) =>
+const PosPmsOrder = (Order) =>
     class extends Order {
-
         constructor(obj, options) {
             super(obj, options);
             this.paid_on_reservation = this.paid_on_reservation || null;
@@ -118,17 +117,17 @@ const PosPmsOrder= (Order) =>
             this.pms_reservation_id = json.pms_reservation_id;
         }
 
-        apply_ms_data(data){
-            if(typeof data.paid_on_reservation !== 'undefined'){
+        apply_ms_data(data) {
+            if (typeof data.paid_on_reservation !== "undefined") {
                 this.set_paid_on_reservation(data.paid_on_reservation);
             }
-            if(typeof data.pms_reservation_id !== 'undefined'){
+            if (typeof data.pms_reservation_id !== "undefined") {
                 this.set_pms_reservation_id(data.pms_reservation_id);
             }
             this.trigger("change", this);
         }
 
-        add_reservation_services(reservation){
+        add_reservation_services(reservation) {
             var self = this;
             var d = new Date();
             var month = d.getMonth() + 1;
@@ -156,11 +155,12 @@ const PosPmsOrder= (Order) =>
                 if (service_line_id) {
                     var qty = service_line_id.day_qty;
                     if (service_line_id.pos_order_lines.length > 0) {
-                        _.each(service_line_id.pos_order_lines, function (
-                            order_line_id
-                        ) {
-                            qty -= order_line_id.qty;
-                        });
+                        _.each(
+                            service_line_id.pos_order_lines,
+                            function (order_line_id) {
+                                qty -= order_line_id.qty;
+                            }
+                        );
                     }
                     if (qty > 0) {
                         var options = {
@@ -173,7 +173,7 @@ const PosPmsOrder= (Order) =>
                         );
                         self.pos.get_order().add_product(service_product, options);
                         var last_line = self.pos.get_order().get_last_orderline();
-                        if (last_line){
+                        if (last_line) {
                             last_line.set_note(
                                 "RESERVATION: " +
                                     reservation.name +
@@ -184,7 +184,10 @@ const PosPmsOrder= (Order) =>
                         var r_service_line_id = reservation.services
                             .map((x) => x.service_lines)[0]
                             .find((x) => x.id == service_line_id.id);
-                        if (r_service_line_id && r_service_line_id.pos_order_lines.length == 0) {
+                        if (
+                            r_service_line_id &&
+                            r_service_line_id.pos_order_lines.length == 0
+                        ) {
                             r_service_line_id.pos_order_lines.push({
                                 id: 0,
                                 qty: parseInt(qty),
@@ -204,16 +207,20 @@ const PosPmsOrder= (Order) =>
                                 id: 0,
                                 qty: parseInt(qty),
                             });
-                        } else if (r_service_line_id && r_service_line_id.pos_order_lines.length > 1) {
+                        } else if (
+                            r_service_line_id &&
+                            r_service_line_id.pos_order_lines.length > 1
+                        ) {
                             var id_in_lines = false;
-                            _.each(r_service_line_id.pos_order_lines, function (
-                                pos_line_id
-                            ) {
-                                if (pos_line_id.id == self.id) {
-                                    pos_line_id.qty = parseInt(qty);
-                                    id_in_lines = true;
+                            _.each(
+                                r_service_line_id.pos_order_lines,
+                                function (pos_line_id) {
+                                    if (pos_line_id.id == self.id) {
+                                        pos_line_id.qty = parseInt(qty);
+                                        id_in_lines = true;
+                                    }
                                 }
-                            });
+                            );
                             if (id_in_lines == false) {
                                 r_service_line_id.pos_order_lines.push({
                                     id: self.id,
@@ -224,7 +231,6 @@ const PosPmsOrder= (Order) =>
                     }
                 }
             });
-
         }
 
         add_product(product, options) {
@@ -236,20 +242,18 @@ const PosPmsOrder= (Order) =>
             }
         }
 
-        export_for_printing(){
+        export_for_printing() {
             var res = super.export_for_printing();
             res.paid_on_reservation = this.paid_on_reservation;
             res.pms_reservation_id = this.pms_reservation_id;
             return res;
         }
-
     };
 
 Registries.Model.extend(Order, PosPmsOrder);
 
 const PosPmsOrderline = (Orderline) =>
     class extends Orderline {
-
         constructor(obj, options) {
             super(obj, options);
             this.server_id = this.server_id || null;
@@ -276,8 +280,8 @@ const PosPmsOrderline = (Orderline) =>
             this.server_id = json.server_id;
         }
 
-        apply_ms_data(data){
-            if(typeof data.pms_service_line_id !== 'undefined'){
+        apply_ms_data(data) {
+            if (typeof data.pms_service_line_id !== "undefined") {
                 this.set_pms_service_line_id(data.pms_service_line_id);
             }
             this.trigger("change", this);
@@ -301,29 +305,37 @@ const PosPmsOrderline = (Orderline) =>
                                         id: self.server_id || 0,
                                         qty: parseInt(quantity),
                                     });
-                                } 
+                                }
                                 // Si ya existe una línea de pedido con el mismo ID
-                                else if (line.pos_order_lines.length == 1 && line.pos_order_lines[0].id == self.server_id) {
+                                else if (
+                                    line.pos_order_lines.length == 1 &&
+                                    line.pos_order_lines[0].id == self.server_id
+                                ) {
                                     if (is_real_qty) {
                                         // Actualizamos la cantidad
-                                        line.pos_order_lines[0].qty = parseInt(quantity);
+                                        line.pos_order_lines[0].qty =
+                                            parseInt(quantity);
                                     } else {
                                         // Eliminamos la línea con splice() en lugar de pop()
                                         line.pos_order_lines.splice(0, 1);
                                     }
-                                } 
+                                }
                                 // Si hay varias líneas, buscamos por ID y eliminamos correctamente
                                 else if (line.pos_order_lines.length > 1) {
                                     var index_to_remove = -1;
-                                    _.each(line.pos_order_lines, function (pos_line_id, index) {
-                                        if (pos_line_id.id == self.server_id) {
-                                            if (is_real_qty) {
-                                                pos_line_id.qty = parseInt(quantity);
-                                            } else {
-                                                index_to_remove = index;
+                                    _.each(
+                                        line.pos_order_lines,
+                                        function (pos_line_id, index) {
+                                            if (pos_line_id.id == self.server_id) {
+                                                if (is_real_qty) {
+                                                    pos_line_id.qty =
+                                                        parseInt(quantity);
+                                                } else {
+                                                    index_to_remove = index;
+                                                }
                                             }
                                         }
-                                    });
+                                    );
                                     if (index_to_remove !== -1) {
                                         line.pos_order_lines.splice(index_to_remove, 1);
                                     }
@@ -335,9 +347,6 @@ const PosPmsOrderline = (Orderline) =>
             }
             return res;
         }
-        
-
-
     };
 
 Registries.Model.extend(Orderline, PosPmsOrderline);
