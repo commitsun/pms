@@ -29,6 +29,11 @@ _logger = logging.getLogger(__name__)
 class PosSession(models.Model):
     _inherit = "pos.session"
 
+    def _load_model(self, model):
+        ctx = self.env.context.copy()
+        ctx.update({"pos_user_force": True})
+        return super(PosSession, self.with_context(ctx))._load_model(model)
+
     def _accumulate_amounts(self, data):  # noqa: C901  # too-complex
         res = super(PosSession, self)._accumulate_amounts(data)
         if (
