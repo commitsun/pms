@@ -17,3 +17,6 @@ class ResConfigSettings(models.TransientModel):
     pos_close_session_allowed = fields.Boolean(
         related="pos_config_id.close_session_allowed", readonly=False
     )
+    pos_cash_in_out_allowed = fields.Boolean(
+        related="pos_config_id.cash_in_out_allowed", readonly=False
+    )

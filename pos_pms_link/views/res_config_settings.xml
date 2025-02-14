@@ -40,9 +40,25 @@
                                 />
                             </div>
                         </div>
-
                     </div>
                 </div>
+            </xpath>
+            <xpath expr="//div[@id='pos_payment_section']" position="inside">
+            <div
+                    class="col-12 col-lg-6 o_setting_box"
+                    attrs="{'invisible': [('pos_cash_control', '=', False)]}"
+                >
+                    <div class="o_setting_left_pane">
+                        <field name="pos_cash_in_out_allowed" />
+                    </div>
+                    <div class="o_setting_right_pane">
+                        <label for="pos_cash_in_out_allowed" />
+                         <div class="text-muted">
+                            Allow cash in/out operations for all employees
+                        </div>
+                    </div>
+                </div>
+
             </xpath>
         </field>
     </record>

@@ -37,6 +37,8 @@ class PosConfig(models.Model):
     )
     close_session_allowed = fields.Boolean("Close session allowed", default=False)
 
+    cash_in_out_allowed = fields.Boolean("Cash in/out allowed", default=False)
+
     @api.model
     def search_read(self, domain=None, fields=None, offset=0, limit=None, order=None):
         if self.env.context.get("pos_user_force", False):
