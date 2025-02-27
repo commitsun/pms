@@ -21,7 +21,8 @@
 import logging
 from collections import defaultdict
 
-from odoo import fields, models
+from odoo import _, fields, models
+from odoo.exceptions import UserError
 
 _logger = logging.getLogger(__name__)
 
@@ -327,3 +328,51 @@ class PosSession(models.Model):
     #         reservation['services'] = services_by_reservation.get(reservation['id'], [])
 
     #     return reservations
+
+    def try_cash_in_out(self, _type, amount, reason, extras):
+        sign = 1 if _type == "in" else -1
+        sessions = self.filtered("cash_journal_id")
+        if not sessions:
+            raise UserError(_("There is no cash payment method for this PoS Session"))
+
+        partner_id = self.env.context.get("partner_id", False)
+        self.env["account.bank.statement.line"].sudo().create(
+            [
+                {
+                    "pos_session_id": session.id,
+                    "journal_id": session.cash_journal_id.id,
+                    "amount": sign * amount,
+                    "date": fields.Date.context_today(self),
+                    "payment_ref": "-".join(
+                        [session.name, extras["translatedType"], reason]
+                    ),
+                    "partner_id": partner_id,
+                }
+                for session in sessions
+            ]
+        )
+        cashier = self.env.context.get("cashier", False)
+        message_content = [f"-Cashier: {cashier}"] if cashier else []
+        message_content.append(f'-Cash {extras["translatedType"]}')
+        message_content.append(f'-Amount: {extras["formattedAmount"]}')
+        if reason:
+            message_content.append(f"-Reason: {reason}")
+        self.message_post(body="<br/>\n".join(message_content))
+
+    def set_cashbox_pos(self, cashbox_value, notes):
+        super().set_cashbox_pos(cashbox_value, notes)
+        cashier = self.env.context.get("cashier", False)
+        if cashier:
+            self.message_post(
+                body=f'Session opened by cashier: <strong style="text-transform:uppercase;">{cashier}<strong/>'
+            )
+
+    def close_session_from_ui(self, bank_payment_method_diff_pairs=None):
+        result = super().close_session_from_ui(bank_payment_method_diff_pairs)
+        if result.get("successful"):
+            cashier = self.env.context.get("cashier", False)
+            if cashier:
+                self.message_post(
+                    body=f'Session ended by cashier: <strong style="text-transform:uppercase;">{cashier}<strong/>'
+                )
+        return result

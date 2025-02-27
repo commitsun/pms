@@ -20,3 +20,6 @@ class ResConfigSettings(models.TransientModel):
     pos_cash_in_out_allowed = fields.Boolean(
         related="pos_config_id.cash_in_out_allowed", readonly=False
     )
+    pos_cash_move_partner = fields.Boolean(
+        related="pos_config_id.cash_move_partner", readonly=False
+    )

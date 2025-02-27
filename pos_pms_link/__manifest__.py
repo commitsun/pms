@@ -41,9 +41,12 @@
     "assets": {
         "point_of_sale.assets": [
             "pos_pms_link/static/src/js/*.js",
+            "pos_pms_link/static/src/js/*/*.js",
             "pos_pms_link/static/src/js/*/*/*.js",
             "pos_pms_link/static/src/xml/*.xml",
+            "pos_pms_link/static/src/xml/*/*.xml",
             "pos_pms_link/static/src/xml/*/*/*.xml",
+            "pos_pms_link/static/src/scss/*.scss",
         ],
     },
     "installable": True,
