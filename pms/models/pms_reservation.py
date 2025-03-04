@@ -1472,7 +1472,7 @@ class PmsReservation(models.Model):
                 record.checkin_partner_count = 0
                 record.checkin_partner_pending_count = 0
 
-    @api.depends("room_type_id", "partner_id")
+    @api.depends("room_type_id")
     def _compute_tax_ids(self):
         for record in self:
             record = record.with_company(record.company_id)

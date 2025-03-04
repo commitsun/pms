@@ -155,7 +155,9 @@ class PmsReservationService(Component):
                 isSplitted=reservation.splitted,
                 pendingCheckinData=reservation.pending_checkin_data,
                 createDate=reservation.create_date.isoformat(),
-                createdBy=reservation.create_uid.name,
+                createdBy=reservation.create_uid.name
+                if reservation.create_uid
+                else "Unknown",
                 segmentationId=reservation.segmentation_ids[0].id
                 if reservation.segmentation_ids
                 else None,
