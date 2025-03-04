@@ -232,7 +232,7 @@ class PmsService(models.Model):
             origin = record.reservation_id if record.reservation_id else record.folio_id
             record.pricelist_id = origin.pricelist_id
 
-    @api.depends("product_id", "folio_id.partner_id", "reservation_id.partner_id")
+    @api.depends("product_id")
     def _compute_tax_ids(self):
         for service in self:
             partner = (
