@@ -2553,7 +2553,10 @@ class PmsFolioService(Component):
         except AccessError:
             raise MissingError(_("Folio not found"))
 
-    def _generate_payment_link(self, folio_record):
+    def _generate_payment_link(self, folio_record, amount=False):
+        vals = dict()
+        if amount:
+            vals["amount"] = amount
         wizard_payment_link = (
             self.env["payment.link.wizard"]
             .with_context(
@@ -2561,7 +2564,7 @@ class PmsFolioService(Component):
                 active_model="pms.folio",
             )
             .sudo()
-            .create({})
+            .create(vals)
         )
         wizard_payment_link._generate_link()
         return wizard_payment_link.link
@@ -2695,4 +2698,28 @@ class PmsFolioService(Component):
                 folio_record
             ),
             reservations=reservations,
+        )
+
+    @restapi.method(
+        [
+            (
+                [
+                    "/<int:folio_id>/payment-link",
+                ],
+                "GET",
+            )
+        ],
+        input_param=Datamodel("pms.folio.payment.link.search.param", is_list=False),
+        output_param=Datamodel("pms.folio.payment.link.info", is_list=False),
+        auth="jwt_api_pms",
+    )
+    def get_folio_payment_link(self, folio_id, folio_payment_link_search_param):
+        folio = self.env["pms.folio"].sudo().browse(folio_id)
+        if not folio.exists():
+            raise MissingError(_("Folio not found"))
+        pms_api_check_access(user=self.env.user, records=folio)
+        payment_link = self._generate_payment_link(folio, folio_payment_link_search_param.amount)
+        PmsFolioPaymentLinkInfo = self.env.datamodels["pms.folio.payment.link.info"]
+        return PmsFolioPaymentLinkInfo(
+            paymentLink=payment_link,
         )
