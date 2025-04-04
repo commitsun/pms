@@ -16,6 +16,9 @@
                     />
                 </group>
             </xpath>
+            <xpath expr="//field[@name='default_pricelist_id']" position="after">
+                <field name="channel_currency_id" />
+            </xpath>
             <xpath expr="//field[@name='default_departure_hour']" position="after">
                 <group string="Planning Colors">
                     <field name="color_option_config" />

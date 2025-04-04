@@ -859,6 +859,12 @@ class PmsFolioService(Component):
                                 * reservation.children
                             )
                     for reservationLine in reservation.reservationLines:
+                        # HOTFIX TO CONVERT PRICE IN PROPERTY CHANNEL CURRENCY
+                        if pms_property.channel_currency_id and external_app:
+                            reservationLine.price = (
+                                reservationLine.price
+                                / pms_property.channel_currency_id.rate
+                            )
                         price = reservationLine.price - (
                             commision_percent_to_deduct * reservationLine.price / 100
                         )
@@ -932,6 +938,11 @@ class PmsFolioService(Component):
                                     }
                                 )
                             new_service = self.env["pms.service"].sudo().create(vals)
+                            if pms_property.channel_currency_id:
+                                new_service.price_unit = (
+                                    service.priceUnit
+                                    / pms_property.channel_currency_id.rate
+                                )
                             new_service.service_line_ids.price_unit = service.priceUnit
                 # Force compute board service default if not board service is set
                 # REVIEW: Precharge the board service in the app form?
@@ -2422,6 +2433,7 @@ class PmsFolioService(Component):
                         )
                 reservation_lines_cmds = self.wrapper_reservation_lines(
                     reservation=info_reservation,
+                    pms_property_id=folio.pms_property_id.id,
                     board_day_price=board_day_price,
                     proposed_reservation=proposed_reservation,
                     commission_percent_to_deduct=commision_percent_to_deduct,
@@ -2448,17 +2460,21 @@ class PmsFolioService(Component):
     def wrapper_reservation_lines(
         self,
         reservation,
+        pms_property_id,
         board_day_price=0,
         proposed_reservation=False,
         commission_percent_to_deduct=0,
     ):
         cmds = []
         for line in reservation.reservationLines:
+            pms_property = self.env["pms.property"].sudo().browse(pms_property_id)
             if proposed_reservation:
                 # Not is necesay check new dates, becouse a if the dates change, the reservation is new
                 proposed_line = proposed_reservation.reservation_line_ids.filtered(
                     lambda l: l.date == datetime.strptime(line.date, "%Y-%m-%d").date()
                 )
+                if pms_property.channel_currency_id:
+                    line.price = line.price / pms_property.channel_currency_id.rate
                 line.price -= commission_percent_to_deduct * proposed_line.price / 100
                 if proposed_line:
                     vals = {}
@@ -2483,6 +2499,8 @@ class PmsFolioService(Component):
                         )
                     )
             else:
+                if pms_property.channel_currency_id:
+                    line.price = line.price / pms_property.channel_currency_id.rate
                 cmds.append(
                     (
                         0,
