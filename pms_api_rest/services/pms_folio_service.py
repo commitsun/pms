@@ -2454,18 +2454,18 @@ class PmsFolioService(Component):
     ):
         cmds = []
         for line in reservation.reservationLines:
+            board_day_price -= commission_percent_to_deduct * line.price / 100
+            night_price = line.price - (commission_percent_to_deduct * line.price / 100)
+            target_price = night_price - board_day_price
             if proposed_reservation:
                 # Not is necesay check new dates, becouse a if the dates change, the reservation is new
                 proposed_line = proposed_reservation.reservation_line_ids.filtered(
                     lambda l: l.date == datetime.strptime(line.date, "%Y-%m-%d").date()
                 )
-                line.price -= commission_percent_to_deduct * proposed_line.price / 100
                 if proposed_line:
                     vals = {}
-                    if round(proposed_line.price, 2) != round(
-                        line.price - board_day_price, 2
-                    ):
-                        vals.update({"price": line.price - board_day_price})
+                    if round(proposed_line.price, 2) != round(target_price, 2):
+                        vals.update({"price": target_price})
                     if round(proposed_line.discount, 2) != round(line.discount, 2):
                         vals.update({"discount": line.discount})
                     if vals:
@@ -2477,7 +2477,7 @@ class PmsFolioService(Component):
                             False,
                             {
                                 "date": line.date,
-                                "price": line.price - board_day_price,
+                                "price": target_price,
                                 "discount": line.discount or 0,
                             },
                         )
@@ -2489,7 +2489,7 @@ class PmsFolioService(Component):
                         False,
                         {
                             "date": line.date,
-                            "price": line.price - board_day_price,
+                            "price": target_price,
                             "discount": line.discount or 0,
                         },
                     )
