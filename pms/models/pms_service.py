@@ -598,6 +598,7 @@ class PmsService(models.Model):
             folio = self.folio_id
             reservation = self.reservation_id
             origin = reservation if reservation else folio
+            agency = origin.agency_id
             if origin:
                 partner = origin.partner_id
                 pricelist = origin.pricelist_id
@@ -613,6 +614,14 @@ class PmsService(models.Model):
                     pms_property_id=origin.pms_property_id.id,
                     board_service_line_id=self.board_service_line_id.id,
                 )
+                # REVIEW: New field to compute commission in the line?
+                if (
+                    self.board_service_line_id
+                    and agency_id
+                    and agency_id.commission_type == "subtract"
+                ):
+                    commision_percent_to_deduct = agency.default_commission
+                    price -= (price * commision_percent_to_deduct) / 100
                 return self.env["account.tax"]._fix_tax_included_price_company(
                     price,
                     self.product_id.taxes_id,
