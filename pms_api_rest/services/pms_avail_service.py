@@ -136,3 +136,82 @@ class PmsAvailService(Component):
                 )
             )
         return result_rooms
+
+    @restapi.method(
+        [
+            (
+                [
+                    "/bookia",
+                ],
+                "GET",
+            )
+        ],
+        input_param=Datamodel("bookia.avail.search.param"),
+        output_param=Datamodel("bookia.avail.info", is_list=True),
+        auth="jwt_api_pms",
+    )
+    def get_bookia_avails(self, bookia_avail_search):
+        if not (
+            bookia_avail_search.checkin
+            and bookia_avail_search.checkout
+            and bookia_avail_search.pmsPropertyId
+            and bookia_avail_search.occupancy
+        ):
+            raise MissingError(
+                _(
+                    """Missing required parameters:
+                    availabilityFrom, availabilityTo, pmsPropertyId"""
+                )
+            )
+        pms_property = self.env["pms.property"].browse(
+            bookia_avail_search.pmsPropertyId
+        )
+        checkin = fields.Date.from_string(bookia_avail_search.checkin)
+        checkout = fields.Date.from_string(bookia_avail_search.checkout)
+        pricelist = pms_property.default_pricelist_id
+        PmsAvailInfo = self.env.datamodels["bookia.avail.info"]
+        rooms = self.env["pms.room"].search(
+            [
+                ("pms_property_id", "=", pms_property.id),
+                ("capacity", ">=", bookia_avail_search.occupancy),
+            ]
+        )
+        room_types = rooms.mapped("room_type_id").filtered(lambda x: x.overnight_room)
+        bookia_avails = []
+        for room_type in room_types:
+            pms_property = pms_property.with_context(
+                checkin=checkin,
+                checkout=checkout,
+                room_type_id=room_type.id,
+                pricelist_id=pricelist.id,
+            )
+            avail = pms_property.availability
+            if not avail:
+                continue
+            total_price = 0
+            dates = [
+                checkin + timedelta(days=x) for x in range(0, (checkout - checkin).days)
+            ]
+            product = room_type.product_id
+            for date in dates:
+                price = pricelist._get_product_price(
+                    product=product,
+                    quantity=1,
+                    consumption_date=date,
+                    pms_property_id=pms_property.id,
+                )
+                total_price += self.env["account.tax"]._fix_tax_included_price_company(
+                    price,
+                    product.taxes_id,
+                    product.taxes_id,
+                    pms_property.company_id,
+                )
+            bookia_avails.append(
+                PmsAvailInfo(
+                    roomTypeId=room_type.id,
+                    roomTypeName=room_type.name,
+                    avail=avail,
+                    price=round(total_price, 2),
+                )
+            )
+        return bookia_avails
