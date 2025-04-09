@@ -163,18 +163,22 @@ class PmsAvailService(Component):
                     availabilityFrom, availabilityTo, pmsPropertyId"""
                 )
             )
-        pms_property = self.env["pms.property"].browse(
-            bookia_avail_search.pmsPropertyId
+        pms_property = (
+            self.env["pms.property"].sudo().browse(bookia_avail_search.pmsPropertyId)
         )
         checkin = fields.Date.from_string(bookia_avail_search.checkin)
         checkout = fields.Date.from_string(bookia_avail_search.checkout)
         pricelist = pms_property.default_pricelist_id
         PmsAvailInfo = self.env.datamodels["bookia.avail.info"]
-        rooms = self.env["pms.room"].search(
-            [
-                ("pms_property_id", "=", pms_property.id),
-                ("capacity", ">=", bookia_avail_search.occupancy),
-            ]
+        rooms = (
+            self.env["pms.room"]
+            .sudo()
+            .search(
+                [
+                    ("pms_property_id", "=", pms_property.id),
+                    ("capacity", ">=", bookia_avail_search.occupancy),
+                ]
+            )
         )
         room_types = rooms.mapped("room_type_id").filtered(lambda x: x.overnight_room)
         bookia_avails = []
@@ -200,11 +204,15 @@ class PmsAvailService(Component):
                     consumption_date=date,
                     pms_property_id=pms_property.id,
                 )
-                total_price += self.env["account.tax"]._fix_tax_included_price_company(
-                    price,
-                    product.taxes_id,
-                    product.taxes_id,
-                    pms_property.company_id,
+                total_price += (
+                    self.env["account.tax"]
+                    .sudo()
+                    ._fix_tax_included_price_company(
+                        price,
+                        product.taxes_id,
+                        product.taxes_id,
+                        pms_property.company_id,
+                    )
                 )
             bookia_avails.append(
                 PmsAvailInfo(
