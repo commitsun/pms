@@ -12,7 +12,7 @@ _logger = logging.getLogger(__name__)
 
 
 @common.tagged("-at_install", "post_install")
-class TestMultiPMSProperties(common.SavepointCase):
+class TestMultiPMSProperties(common.TransactionCase):
     @classmethod
     def setUpClass(cls):
         super(TestMultiPMSProperties, cls).setUpClass()
