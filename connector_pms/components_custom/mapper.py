@@ -102,6 +102,10 @@ class ChannelChildMapperImport(AbstractComponent):
 
     def get_all_items(self, mapper, items, parent, to_attr, options):
         mapped = []
+        neobookings_user = self.env["res.users"].search(
+            [("login", "=", "neobookings@roomdoo.com")]
+        )
+        neobooking_item_ids = []
         for item in items:
             map_record = mapper.map_record(item, parent=parent)
             if self.skip_item(map_record):
@@ -110,6 +114,108 @@ class ChannelChildMapperImport(AbstractComponent):
             if item_values:
                 self._child_bind(map_record, item_values)
                 mapped.append(item_values)
+                if hasattr(items, "_name"):
+                    neobooking_item_ids.append(item.id)
+        neobookings_property_ids = neobookings_user.pms_property_ids.ids
+
+        if self.backend_record.pms_property_id.id not in neobookings_property_ids:
+            return mapped
+
+        neobookings_property_id = self.backend_record.pms_property_id.id
+        neobookings_property = self.env["pms.property"].browse(neobookings_property_id)
+        ota_neo_settings = neobookings_property.ota_property_settings_ids.filtered(
+            lambda r: "eobookings" in r.agency_id.name
+        )
+        neobookings_pricelist_id = ota_neo_settings.main_pricelist_id.id
+        neobookings_availability_plan_id = ota_neo_settings.main_avail_plan_id.id
+        payload = False
+        items_to_upload = False
+        call_type = False
+        min_date = False
+        max_date = False
+        room_type_ids = False
+        if (
+            hasattr(items, "_name")
+            and items._name == "channel.wubook.product.pricelist.item"
+        ):
+            call_type = "prices"
+            items_to_upload = (
+                self.env["channel.wubook.product.pricelist.item"]
+                .browse(neobooking_item_ids)
+                .filtered(
+                    lambda r: r.pricelist_id.id == neobookings_pricelist_id
+                    and neobookings_property_id in r.pms_property_ids.ids
+                )
+            )
+            if items_to_upload:
+                min_date = min(items_to_upload.mapped("date_end_consumption"))
+                max_date = max(items_to_upload.mapped("date_end_consumption"))
+                room_type_ids = (
+                    self.env["pms.room.type"]
+                    .search(
+                        [("product_id", "in", items_to_upload.mapped("product_id").ids)]
+                    )
+                    .ids
+                )
+                payload, endpoint = neobookings_property.get_payload_prices(
+                    prices=items_to_upload, client=neobookings_user
+                )
+        if hasattr(items, "_name") and items._name == "channel.wubook.pms.availability":
+            call_type = "availability"
+            items_to_upload = (
+                self.env["channel.wubook.pms.availability"]
+                .browse(neobooking_item_ids)
+                .filtered(lambda r: r.pms_property_id.id == neobookings_property_id)
+            )
+            if items_to_upload:
+                min_date = min(items_to_upload.mapped("date"))
+                max_date = max(items_to_upload.mapped("date"))
+                room_type_ids = items_to_upload.mapped("room_type_id.id")
+                payload, endpoint = neobookings_property.get_payload_avail(
+                    avails=items_to_upload, client=neobookings_user
+                )
+        if (
+            hasattr(items, "_name")
+            and items._name == "channel.wubook.pms.availability.plan.rule"
+        ):
+            call_type = "restrictions"
+            items_to_upload = (
+                self.env["channel.wubook.pms.availability.plan.rule"]
+                .browse(neobooking_item_ids)
+                .filtered(
+                    lambda r: r.availability_plan_id.id
+                    == neobookings_availability_plan_id
+                    and r.pms_property_id.id == neobookings_property_id
+                )
+            )
+            if items_to_upload:
+                min_date = min(items_to_upload.mapped("date"))
+                max_date = max(items_to_upload.mapped("date"))
+                room_type_ids = items_to_upload.mapped("room_type_id.id")
+                payload, endpoint = neobookings_property.get_payload_rules(
+                    rules=items_to_upload, client=neobookings_user
+                )
+        if payload:
+            _logger.info("Exporting Neobookings")
+            response = neobookings_property.pms_api_push_payload(
+                payload=payload, endpoint=endpoint, client=neobookings_user
+            )
+            self.env["pms.api.log"].sudo().create(
+                {
+                    "pms_property_id": neobookings_property_id,
+                    "client_id": neobookings_user.id,
+                    "request": payload,
+                    "response": str(response),
+                    "status": "success" if response.ok else "error",
+                    "request_date": fields.Datetime.now(),
+                    "method": "PUSH",
+                    "endpoint": endpoint,
+                    "target_date_from": min_date,
+                    "target_date_to": max_date,
+                    "request_type": call_type,
+                    "room_type_ids": room_type_ids,
+                }
+            )
         return mapped
 
     def get_items(self, items, parent, to_attr, options):
