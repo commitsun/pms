@@ -946,6 +946,13 @@ class PmsFolioService(Component):
                     )._compute_board_service_room_id()
                 if reservation.stateCode == "cancel":
                     reservation_record.action_cancel()
+            # Apply loyalty discount
+            for reservation in folio.reservation_ids:
+                service_discount_cmds = self.get_autoinclude_loyalty_by_code(
+                    reservation, pms_folio_info.internalComment or ""
+                )
+                if len(service_discount_cmds) > 0:
+                    reservation.write({"service_ids": service_discount_cmds})
             pms_folio_info.transactions = self.normalize_payments_structure(
                 pms_folio_info, folio
             )
@@ -2799,3 +2806,57 @@ class PmsFolioService(Component):
         return PmsFolioPaymentLinkInfo(
             paymentLink=payment_link,
         )
+
+    def get_autoinclude_loyalty_by_code(self, reservation, internal_comment=False):
+        """
+        This method is used to get the autoinclude loyalty by code
+        """
+        promos = (
+            self.env["loyalty.program"]
+            .sudo()
+            .search(
+                [
+                    ("company_id", "=", reservation.company_id.id),
+                ]
+            )
+        )
+        cmds = []
+        if not internal_comment:
+            return cmds
+        for promo in promos.filtered(
+            lambda p: p.rule_ids.filtered(
+                lambda r: r.code and r.code in internal_comment
+            )
+        ):
+            reward = promo.reward_ids[0] if promo.reward_ids else False
+            if not reward:
+                continue
+            product = reward.discount_line_product_id
+            if promo.reward_type == "percentage":
+                price = -reward.discount * reservation.price_room_services_set / 100
+            else:
+                price = -reward.discount
+            if not product or price == 0:
+                continue
+            cmds.append(
+                (
+                    0,
+                    False,
+                    {
+                        "product_id": product.id,
+                        "reservation_id": reservation.id,
+                        "service_line_ids": [
+                            (
+                                0,
+                                False,
+                                {
+                                    "date": reservation.checkin,
+                                    "price_unit": price,
+                                    "day_qty": 1,
+                                },
+                            )
+                        ],
+                    },
+                )
+            )
+        return cmds
