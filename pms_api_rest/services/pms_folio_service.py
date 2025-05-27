@@ -2907,7 +2907,7 @@ class PmsFolioService(Component):
             if not reward:
                 continue
             product = reward.discount_line_product_id
-            if promo.reward_type == "percentage":
+            if reward.discount_mode == "percent":
                 price = -reward.discount * reservation.price_room_services_set / 100
             else:
                 price = -reward.discount
