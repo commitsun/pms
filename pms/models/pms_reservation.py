@@ -2370,6 +2370,27 @@ class PmsReservation(models.Model):
                             * penalty_percent
                             / 100
                         )
+                        # Check if there are board services to add to the penalty
+                        # Only services with 'consumed_on' set to 'before' or 'after' are considered.
+                        # Services consumed only on the first or last day are excluded.
+                        if record.service_ids:
+                            amount_board_service = 0
+                            board_services = record.service_ids.filtered("is_board_service")
+                            for board_service in board_services:
+                                consumed_on = board_service.product_id.consumed_on
+                                for service_line in board_service.service_line_ids:
+                                    service_date = fields.Date.from_string(service_line.date)
+                                    if (
+                                        consumed_on == "before" and service_date in dates
+                                    ) or (
+                                        consumed_on == "after" and service_date in [
+                                        d + datetime.timedelta(days=1) for d in dates
+                                    ]
+                                    ):
+                                        amount_board_service += service_line.price_unit * service_line.day_qty
+
+                            amount_penalty += amount_board_service * penalty_percent / 100
+
                         if not amount_penalty:
                             return
                         if not record.company_id.cancel_penalty_product_id:
