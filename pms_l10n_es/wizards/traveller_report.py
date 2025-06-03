@@ -88,7 +88,9 @@ def _ses_xml_contract_elements(comunicacion, reservation, people=False):
     if people:
         ET.SubElement(contrato, "numPersonas").text = str(people)
     else:
-        ET.SubElement(contrato, "numPersonas").text = str(reservation.adults)
+        ET.SubElement(contrato, "numPersonas").text = str(
+            reservation.adults + reservation.children if reservation.children else 0
+        )
     _ses_xml_payment_elements(contrato, reservation)
 
 
@@ -134,7 +136,10 @@ def _ses_xml_person_names_elements(persona, reservation, checkin_partner):
             ]
         elif (
             reservation.partner_name
-            and len(replace_multiple_spaces(reservation.partner_name.rstrip()).split(" ")) > 1
+            and len(
+                replace_multiple_spaces(reservation.partner_name.rstrip()).split(" ")
+            )
+            > 1
         ):
             ses_lastname = clean_string_only_letters(
                 replace_multiple_spaces(reservation.partner_name)
@@ -1170,7 +1175,10 @@ class TravellerReport(models.TransientModel):
                         communication.reservation_id.pms_property_id.institution_lessor_id
                     )
                     ses_url = communication.reservation_id.pms_property_id.ses_url
-                if communication.operation == DELETE_OPERATION_CODE and communication.communication_id_to_cancel:
+                if (
+                    communication.operation == DELETE_OPERATION_CODE
+                    and communication.communication_id_to_cancel
+                ):
                     """communication_to_cancel = self.env["pms.ses.communication"].search(
                         [
                             ("reservation_id", "=", communication.reservation_id.id),
