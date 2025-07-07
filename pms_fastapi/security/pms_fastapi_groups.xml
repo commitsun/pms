@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="pms_fastapi_group" model="res.groups">
+        <field name="name">PMS endpoint group</field>
+        <field
+            name="implied_ids"
+            eval="[(4, ref('fastapi.group_fastapi_endpoint_runner'))]"
+        />
+    </record>
+</odoo>
