@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="pms_board_service_line_rule_wizard_view_form" model="ir.ui.view">
+        <field name="name">pms.board.service.line.rule.wizard.form</field>
+        <field name="model">pms.board.service.line.rule.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Create Board Service Rules">
+                <sheet>
+                    <group>
+                        <group string="Scope">
+                            <field name="available_property_ids" invisible="1" />
+                            <field name="available_room_type_ids" invisible="1" />
+                            <field name="board_service_id" />
+                            <field
+                                name="pms_property_ids"
+                                widget="many2many_tags"
+                                options="{'no_create': True,'no_open': True}"
+                                domain="[('id','in',available_property_ids)]"
+                            />
+                            <field
+                                name="room_type_ids"
+                                widget="many2many_tags"
+                                options="{'no_create': True,'no_open': True}"
+                                domain="[('id','in',available_room_type_ids)]"
+                            />
+                        </group>
+                        <group string="Price and Dates">
+                            <field name="amount" />
+                            <field name="date_start" />
+                            <field name="date_end" />
+                        </group>
+                    </group>
+                    <group string="Weekdays" col="4">
+                        <field name="weekday_monday" />
+                        <field name="weekday_tuesday" />
+                        <field name="weekday_wednesday" />
+                        <field name="weekday_thursday" />
+                        <field name="weekday_friday" />
+                        <field name="weekday_saturday" />
+                        <field name="weekday_sunday" />
+                    </group>
+                </sheet>
+                <footer>
+                    <button
+                        name="action_create_rules"
+                        type="object"
+                        class="btn-primary"
+                        string="Create Rules"
+                    />
+                    <button string="Cancel" class="btn-secondary" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record
+        id="action_pms_board_service_line_rule_wizard"
+        model="ir.actions.act_window"
+    >
+        <field name="name">Create Board Service Rules</field>
+        <field name="res_model">pms.board.service.line.rule.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="context">{'default_board_service_id': active_id}</field>
+    </record>
+</odoo>

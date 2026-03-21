@@ -35,6 +35,7 @@ from . import pms_room_closure_reason
 from . import pms_service_line
 from . import pms_board_service
 from . import pms_board_service_room_type_line
+from . import pms_board_service_room_type_line_rule
 from . import pms_board_service_line
 from . import account_move_line
 from . import pms_cancelation_rule

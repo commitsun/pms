@@ -3,7 +3,7 @@
 <template id="report_folio_document">
     <t t-call="web.external_layout">
         <t t-if="doc">
-            <t t-set="doc" t-value="doc.with_context(lang=doc.partner_id.lang)" />
+            <t t-set="doc" t-value="doc.with_context(lang=doc.lang)" />
         </t>
         <t t-if="folio">
             <t t-set="doc" t-value="folio" />
@@ -355,7 +355,7 @@
 <template id="report_folio">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="doc">
-                <t t-call="pms.report_folio_document" t-lang="doc.partner_id.lang" />
+                <t t-call="pms.report_folio_document" t-lang="doc.lang" />
             </t>
         </t>
     </template>

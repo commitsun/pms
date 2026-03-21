@@ -27,11 +27,18 @@ class ProductProduct(models.Model):
     def _compute_board_price(self):
         for record in self:
             if self._context.get("board_service_line_id"):
-                record.board_price = (
-                    self.env["pms.board.service.room.type.line"]
-                    .browse(self._context.get("board_service_line_id"))
-                    .amount
-                )
+                board_service_line = self.env[
+                    "pms.board.service.room.type.line"
+                ].browse(self._context.get("board_service_line_id"))
+                amount = board_service_line.amount
+                consumption_date = self._context.get("consumption_date")
+                if consumption_date:
+                    rule = self.env[
+                        "pms.board.service.room.type.line.rule"
+                    ].get_applicable_rule(board_service_line, consumption_date)
+                    if rule:
+                        amount = rule.amount
+                record.board_price = amount
             else:
                 record.board_price = False
 

@@ -28,6 +28,7 @@ from . import test_pms_availability_plan_rules
 from . import test_pms_room_type
 from . import test_pms_room_type_class
 from . import test_pms_board_service
+from . import test_pms_board_service_line_rule
 from . import test_pms_wizard_massive_changes
 from . import test_pms_booking_engine
 from . import test_pms_res_users

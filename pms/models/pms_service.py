@@ -593,6 +593,7 @@ class PmsService(models.Model):
                 product = self.product_id.with_context(
                     board_service_line_id=self.board_service_line_id.id,
                     property=origin.pms_property_id.id,
+                    consumption_date=date,
                 )
                 price = pricelist._get_product_price(
                     product=product,

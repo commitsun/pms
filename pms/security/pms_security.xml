@@ -106,6 +106,18 @@
                 user.pms_property_ids.ids)]
             </field>
         </record>
+        <record
+            id="pms_board_service_room_type_line_rule_property_rule"
+            model="ir.rule"
+        >
+            <field name="name">PMS Board Service Line Rule Property Rule</field>
+            <field name="model_id" ref="model_pms_board_service_room_type_line_rule" />
+            <field name="global" eval="True" />
+            <field name="domain_force">
+                ['|',('pms_property_id','=',False),('pms_property_id', 'in',
+                user.pms_property_ids.ids)]
+            </field>
+        </record>
         <record id="pms_cancelation_rule_property_rule" model="ir.rule">
             <field name="name">PMS Cancelation Rule Property Rule</field>
             <field name="model_id" ref="model_pms_cancelation_rule" />

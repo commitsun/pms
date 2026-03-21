@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="pms_board_service_room_type_line_rule_view_tree" model="ir.ui.view">
+        <field name="name">pms.board.service.room.type.line.rule.tree</field>
+        <field name="model">pms.board.service.room.type.line.rule</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="pms_board_service_id" />
+                <field name="pms_property_id" />
+                <field name="pms_room_type_id" />
+                <field name="product_id" />
+                <field name="date_start" />
+                <field name="date_end" />
+                <field name="amount" />
+                <field name="priority" />
+                <field name="active" />
+            </tree>
+        </field>
+    </record>
+
+    <record id="pms_board_service_room_type_line_rule_view_form" model="ir.ui.view">
+        <field name="name">pms.board.service.room.type.line.rule.form</field>
+        <field name="model">pms.board.service.room.type.line.rule</field>
+        <field name="arch" type="xml">
+            <form string="Board Service Rule">
+                <sheet>
+                    <group>
+                        <group string="Rule">
+                            <field name="active" />
+                            <field name="amount" />
+                            <field name="priority" />
+                        </group>
+                        <group string="Context">
+                            <field name="pms_board_service_id" readonly="1" />
+                            <field name="pms_property_id" readonly="1" />
+                            <field name="pms_room_type_id" readonly="1" />
+                            <field name="product_id" readonly="1" />
+                            <field
+                                name="pricelist_ids"
+                                widget="many2many_tags"
+                                readonly="1"
+                            />
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Date Range">
+                            <field name="date_start" />
+                            <field name="date_end" />
+                        </group>
+                        <group string="Weekdays" col="4">
+                            <field name="weekday_monday" />
+                            <field name="weekday_tuesday" />
+                            <field name="weekday_wednesday" />
+                            <field name="weekday_thursday" />
+                            <field name="weekday_friday" />
+                            <field name="weekday_saturday" />
+                            <field name="weekday_sunday" />
+                        </group>
+                    </group>
+                    <field
+                        name="board_service_room_type_line_id"
+                        readonly="1"
+                        invisible="1"
+                    />
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="pms_board_service_room_type_line_rule_view_search" model="ir.ui.view">
+        <field name="name">pms.board.service.room.type.line.rule.search</field>
+        <field name="model">pms.board.service.room.type.line.rule</field>
+        <field name="type">search</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="pms_board_service_id" />
+                <field name="pms_property_id" />
+                <field name="pms_room_type_id" />
+                <field name="pricelist_ids" />
+                <field name="product_id" />
+                <field name="priority" />
+                <filter
+                    string="Date Range"
+                    name="date_range"
+                    domain="[('date_start','!=',False),('date_end','!=',False)]"
+                />
+                <filter
+                    string="Weekdays"
+                    name="weekdays"
+                    domain="['|','|','|','|','|','|',
+                        ('weekday_monday','=',True),
+                        ('weekday_tuesday','=',True),
+                        ('weekday_wednesday','=',True),
+                        ('weekday_thursday','=',True),
+                        ('weekday_friday','=',True),
+                        ('weekday_saturday','=',True),
+                        ('weekday_sunday','=',True)
+                    ]"
+                />
+                <filter string="Active" name="active" domain="[('active','=',True)]" />
+                <group expand="0" string="Group By">
+                    <filter
+                        string="Board Service"
+                        name="group_board_service"
+                        context="{'group_by':'pms_board_service_id'}"
+                    />
+                    <filter
+                        string="Property"
+                        name="group_property"
+                        context="{'group_by':'pms_property_id'}"
+                    />
+                    <filter
+                        string="Room Type"
+                        name="group_room_type"
+                        context="{'group_by':'pms_room_type_id'}"
+                    />
+                    <filter
+                        string="Pricelist"
+                        name="group_pricelist"
+                        context="{'group_by':'pricelist_ids'}"
+                    />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record
+        id="action_pms_board_service_room_type_line_rule"
+        model="ir.actions.act_window"
+    >
+        <field name="name">Board Service Rules</field>
+        <field name="res_model">pms.board.service.room.type.line.rule</field>
+        <field name="view_mode">tree,form</field>
+        <field
+            name="search_view_id"
+            ref="pms_board_service_room_type_line_rule_view_search"
+        />
+    </record>
+</odoo>

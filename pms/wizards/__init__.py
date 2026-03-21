@@ -8,3 +8,4 @@ from . import wizard_folio_changes
 from . import wizard_several_partners
 from . import pms_booking_duplicate
 from . import folio_payment_link
+from . import wizard_board_service_line_rule

@@ -5,7 +5,31 @@
         <field name="model">pms.board.service</field>
         <field name="arch" type="xml">
             <form string="Board Service Line">
+                <header>
+                    <button
+                        name="%(action_pms_board_service_line_rule_wizard)d"
+                        type="action"
+                        string="Create Rules"
+                        class="btn-primary"
+                        context="{'default_board_service_id': active_id}"
+                    />
+                </header>
                 <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button
+                            name="%(action_pms_board_service_room_type_line_rule)d"
+                            type="action"
+                            class="oe_stat_button"
+                            icon="fa-tags"
+                            context="{'search_default_pms_board_service_id': active_id}"
+                        >
+                            <field
+                                name="rule_count"
+                                widget="statinfo"
+                                string="Rules"
+                            />
+                        </button>
+                    </div>
                     <widget
                         name="web_ribbon"
                         title="Archived"

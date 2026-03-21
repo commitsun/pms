@@ -63,6 +63,9 @@ class PmsBoardService(models.Model):
         help="If unchecked, this board service will be archived and hidden from "
         "selections without affecting historical records that reference it.",
     )
+    rule_count = fields.Integer(
+        compute="_compute_rule_count",
+    )
 
     def write(self, vals):
         res = super().write(vals)
@@ -83,6 +86,13 @@ class PmsBoardService(models.Model):
             for service in record.board_service_line_ids:
                 total += service.amount
             record.update({"amount": total})
+
+    def _compute_rule_count(self):
+        rule_model = self.env["pms.board.service.room.type.line.rule"]
+        for record in self:
+            record.rule_count = rule_model.search_count(
+                [("pms_board_service_id", "=", record.id)]
+            )
 
     @api.model
     def get_unique_by_property_code(self, pms_property_id, default_code=None):
