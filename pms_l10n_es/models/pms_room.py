@@ -9,6 +9,7 @@ class PmsRoom(models.Model):
         default=True,
     )
     ine_apartment_type = fields.Selection(
+        string="INE Apartment Typology",
         selection=[
             ("studio", "Studio"),
             ("apt_2_4", "Apartment 2-4 pax"),
