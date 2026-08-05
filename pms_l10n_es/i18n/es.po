@@ -1560,3 +1560,9 @@ msgstr "Encuesta de Ocupación Hotelera (EOH)"
 #: model:ir.model.fields.selection,name:pms_l10n_es.selection__pms_ine_tourism_type_category__survey_type__apartments
 msgid "Tourist Apartments Occupancy Survey (EOAP)"
 msgstr "Encuesta de Ocupación en Apartamentos Turísticos (EOAP)"
+
+#. module: pms_l10n_es
+#: model:ir.model.fields,field_description:pms_l10n_es.field_pms_property__ine_order_number
+#: model:ir.model.fields,field_description:pms_l10n_es.field_pms_ine_wizard__ine_order_number
+msgid "INE Order Number"
+msgstr "Nº de orden del INE"
