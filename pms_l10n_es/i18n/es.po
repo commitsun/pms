@@ -1460,3 +1460,103 @@ msgstr ""
 
 #~ msgid "Users"
 #~ msgstr "Usuarios"
+
+#. module: pms_l10n_es
+#: model:ir.model.fields,field_description:pms_l10n_es.field__pms.ine.tourism.type.category_survey_type
+msgid "Survey Type"
+msgstr "Tipo de encuesta"
+
+#. module: pms_l10n_es
+#: model:ir.model.fields,field_description:pms_l10n_es.field__pms.property_ine_informant_name
+msgid "INE Informant Name"
+msgstr "Nombre del informante del INE"
+
+#. module: pms_l10n_es
+#: model:ir.model.fields,field_description:pms_l10n_es.field__pms.property_ine_informant_job
+msgid "INE Informant Job Position"
+msgstr "Cargo del informante del INE"
+
+#. module: pms_l10n_es
+#: model:ir.model.fields,field_description:pms_l10n_es.field__pms.property_ine_informant_phone
+msgid "INE Informant Phone"
+msgstr "Teléfono del informante del INE"
+
+#. module: pms_l10n_es
+#: model:ir.model.fields,field_description:pms_l10n_es.field__pms.property_ine_informant_email
+msgid "INE Informant Email"
+msgstr "Correo del informante del INE"
+
+#. module: pms_l10n_es
+#: model:ir.model.fields,field_description:pms_l10n_es.field__pms.room_ine_apartment_type
+msgid "INE Apartment Typology"
+msgstr "Tipología de apartamento del INE"
+
+#. module: pms_l10n_es
+#: model:ir.model.fields,field_description:pms_l10n_es.field__res.country.state_ine_tourism_province_name
+msgid "INE Tourism Province Name"
+msgstr "Literal de provincia del INE"
+
+#. module: pms_l10n_es
+#. odoo-python
+#: code:addons/pms_l10n_es/wizards/wizard_ine.py:0
+#, python-format
+msgid "The INE informant name is not established."
+msgstr "El nombre del informante del INE no está establecido."
+
+#. module: pms_l10n_es
+#. odoo-python
+#: code:addons/pms_l10n_es/wizards/wizard_ine.py:0
+#, python-format
+msgid "The INE informant job position is not established."
+msgstr "El cargo del informante del INE no está establecido."
+
+#. module: pms_l10n_es
+#. odoo-python
+#: code:addons/pms_l10n_es/wizards/wizard_ine.py:0
+#, python-format
+msgid "The INE informant email is not established."
+msgstr "El correo del informante del INE no está establecido."
+
+#. module: pms_l10n_es
+#. odoo-python
+#: code:addons/pms_l10n_es/wizards/wizard_ine.py:0
+#, python-format
+msgid "The province literal '%s' exceeds the 25 characters allowed by the INE survey. Set the 'INE Tourism Province Name' field on the property state."
+msgstr "El literal de provincia '%s' supera los 25 caracteres que admite la encuesta del INE. Establece el campo 'Literal de provincia del INE' en la provincia de la propiedad."
+
+#. module: pms_l10n_es
+#. odoo-python
+#: code:addons/pms_l10n_es/wizards/wizard_ine.py:0
+#, python-format
+msgid "The average daily rate of the occupied apartment typology '%s' is zero. The INE requires a price greater than zero for occupied typologies."
+msgstr "La tarifa media de la tipología de apartamento ocupada '%s' es cero. El INE exige un precio mayor que cero en las tipologías con ocupación."
+
+#. module: pms_l10n_es
+#: model:ir.model.fields.selection,name:pms_l10n_es.selection__pms_room__ine_apartment_type__studio
+msgid "Studio"
+msgstr "Estudio"
+
+#. module: pms_l10n_es
+#: model:ir.model.fields.selection,name:pms_l10n_es.selection__pms_room__ine_apartment_type__apt_2_4
+msgid "Apartment 2-4 pax"
+msgstr "Apartamento 2-4 plazas"
+
+#. module: pms_l10n_es
+#: model:ir.model.fields.selection,name:pms_l10n_es.selection__pms_room__ine_apartment_type__apt_4_6
+msgid "Apartment 4-6 pax"
+msgstr "Apartamento 4-6 plazas"
+
+#. module: pms_l10n_es
+#: model:ir.model.fields.selection,name:pms_l10n_es.selection__pms_room__ine_apartment_type__other
+msgid "Other apartments"
+msgstr "Otros apartamentos"
+
+#. module: pms_l10n_es
+#: model:ir.model.fields.selection,name:pms_l10n_es.selection__pms_ine_tourism_type_category__survey_type__hotel
+msgid "Hotel Occupancy Survey (EOH)"
+msgstr "Encuesta de Ocupación Hotelera (EOH)"
+
+#. module: pms_l10n_es
+#: model:ir.model.fields.selection,name:pms_l10n_es.selection__pms_ine_tourism_type_category__survey_type__apartments
+msgid "Tourist Apartments Occupancy Survey (EOAP)"
+msgstr "Encuesta de Ocupación en Apartamentos Turísticos (EOAP)"
