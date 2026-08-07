@@ -1566,3 +1566,154 @@ msgstr "Encuesta de Ocupación en Apartamentos Turísticos (EOAP)"
 #: model:ir.model.fields,field_description:pms_l10n_es.field_pms_ine_wizard__ine_order_number
 msgid "INE Order Number"
 msgstr "Nº de orden del INE"
+
+#. module: pms_l10n_es
+#. odoo-python
+#: code:addons/pms_l10n_es/wizards/wizard_ine.py:0
+#, python-format
+msgid ""
+"Day %(day)s: %(rooms)s occupied rooms and %(stays)s overnight stays. The INE"
+" expects both to be zero or both greater than zero."
+msgstr "Día %(day)s: %(rooms)s habitaciones ocupadas y %(stays)s pernoctaciones. El INE espera que ambas cifras sean cero o ambas mayores que cero."
+
+#. module: pms_l10n_es
+#. odoo-python
+#: code:addons/pms_l10n_es/wizards/wizard_ine.py:0
+#, python-format
+msgid ""
+"Day %(day)s: %(rooms)s occupied rooms exceed the %(total)s rooms of the "
+"establishment."
+msgstr "Día %(day)s: %(rooms)s habitaciones ocupadas superan las %(total)s habitaciones del establecimiento."
+
+#. module: pms_l10n_es
+#. odoo-python
+#: code:addons/pms_l10n_es/wizards/wizard_ine.py:0
+#, python-format
+msgid ""
+"Day %(day)s: %(rooms)s occupied rooms for only %(stays)s overnight stays."
+msgstr "Día %(day)s: %(rooms)s habitaciones ocupadas para solo %(stays)s pernoctaciones."
+
+#. module: pms_l10n_es
+#. odoo-python
+#: code:addons/pms_l10n_es/wizards/wizard_ine.py:0
+#, python-format
+msgid ""
+"Day %(day)s: %(stays)s overnight stays exceed the %(seats)s available seats "
+"plus %(extra)s extra beds. Check the seats declared in the property."
+msgstr "Día %(day)s: %(stays)s pernoctaciones superan las %(seats)s plazas disponibles más %(extra)s camas supletorias. Revisa las plazas declaradas en la propiedad."
+
+#. module: pms_l10n_es
+#. odoo-python
+#: code:addons/pms_l10n_es/wizards/wizard_ine.py:0
+#, python-format
+msgid ""
+"Day %(day)s: as many occupied rooms as overnight stays, so no double room "
+"can be reported as used by two people."
+msgstr "Día %(day)s: hay tantas habitaciones ocupadas como pernoctaciones, así que ninguna habitación doble puede declararse como usada por dos personas."
+
+#. module: pms_l10n_es
+#: model:ir.model.fields,field_description:pms_l10n_es.field_pms_property__ine_blocking_reasons
+msgid "INE Configuration Warnings"
+msgstr "Avisos de configuración del INE"
+
+#. module: pms_l10n_es
+#. odoo-python
+#: code:addons/pms_l10n_es/wizards/wizard_ine.py:0
+#, python-format
+msgid ""
+"Place of residence %(residence)s, day %(day)s: %(stays)s overnight stays for"
+" %(arrivals)s arrivals. Every guest checking in stays at least that night."
+msgstr "Residencia %(residence)s, día %(day)s: %(stays)s pernoctaciones para %(arrivals)s entradas. Todo huésped que hace la entrada pernocta al menos esa noche."
+
+#. module: pms_l10n_es
+#. odoo-python
+#: code:addons/pms_l10n_es/wizards/wizard_ine.py:0
+#, python-format
+msgid ""
+"Place of residence %(residence)s, day %(day)s: %(stays)s overnight stays, "
+"but the previous day had %(previous)s with %(arrivals)s arrivals and "
+"%(departures)s departures, so the INE expects %(expected)s."
+msgstr "Residencia %(residence)s, día %(day)s: %(stays)s pernoctaciones, pero el día anterior había %(previous)s con %(arrivals)s entradas y %(departures)s salidas, así que el INE espera %(expected)s."
+
+#. module: pms_l10n_es
+#. odoo-python
+#: code:addons/pms_l10n_es/wizards/wizard_ine.py:0
+#, python-format
+msgid ""
+"Place of residence %(residence)s, day %(day)s: negative values are not "
+"allowed."
+msgstr "Residencia %(residence)s, día %(day)s: no se admiten valores negativos."
+
+#. module: pms_l10n_es
+#. odoo-python
+#: code:addons/pms_l10n_es/wizards/wizard_ine.py:0
+#, python-format
+msgid ""
+"Place of residence %(residence)s: day %(day)s is reported twice. The survey "
+"schema uses the day as a key, so it can only appear once."
+msgstr "Residencia %(residence)s: el día %(day)s aparece dos veces. El esquema de la encuesta usa el día como clave, así que solo puede aparecer una vez."
+
+#. module: pms_l10n_es
+#: model:ir.model.fields,field_description:pms_l10n_es.field_pms_property__ine_ready
+msgid "Ready for the INE survey"
+msgstr "Lista para la encuesta del INE"
+
+#. module: pms_l10n_es
+#. odoo-python
+#: code:addons/pms_l10n_es/wizards/wizard_ine.py:0
+#, python-format
+msgid ""
+"The INE would reject this file. Fix the following and generate it again:\n"
+"\n"
+"- %s"
+msgstr ""
+"El INE rechazaría este fichero. Corrige lo siguiente y vuelve a generarlo:\n"
+"\n"
+"- %s"
+
+#. module: pms_l10n_es
+#. odoo-python
+#: code:addons/pms_l10n_es/wizards/wizard_ine.py:0
+#, python-format
+msgid "The file reports %(open)s days open in a month of %(days)s days."
+msgstr "El fichero declara %(open)s días abiertos en un mes de %(days)s días."
+
+#. module: pms_l10n_es
+#. odoo-python
+#: code:addons/pms_l10n_es/wizards/wizard_ine.py:0
+#, python-format
+msgid ""
+"The file reports guest movements on %(moved)s days but only %(open)s days "
+"open."
+msgstr "El fichero declara movimientos de viajeros en %(moved)s días pero solo %(open)s días abiertos."
+
+#. module: pms_l10n_es
+#. odoo-python
+#: code:addons/pms_l10n_es/models/pms_property.py:0
+#, python-format
+msgid ""
+"The rooms reported to the INE add up to %(seats)s seats, more than the "
+"%(declared)s declared in the property. Set the seats available excluding "
+"extra beds."
+msgstr "Las habitaciones declaradas al INE suman %(seats)s plazas, más que las %(declared)s declaradas en la propiedad. Configura las plazas disponibles excluyendo camas supletorias."
+
+#. module: pms_l10n_es
+#. odoo-python
+#: code:addons/pms_l10n_es/models/pms_property.py:0
+#, python-format
+msgid ""
+"The property phone '%s' is too short: the INE survey requires at least 9 "
+"digits."
+msgstr "El teléfono de la propiedad '%s' es demasiado corto: la encuesta del INE exige al menos 9 dígitos."
+
+#. module: pms_l10n_es
+#. odoo-python
+#: code:addons/pms_l10n_es/wizards/wizard_ine.py:0
+#, python-format
+msgid ""
+"There are no guest movements in %(month)s/%(year)s, so the INE file cannot "
+"be generated: the survey schema requires at least one place of residence. "
+"The survey is built from the check-in data, not from the bookings, so check "
+"that the check-ins of the month are completed before reporting the month as "
+"empty."
+msgstr "No hay movimientos de viajeros en %(month)s/%(year)s, así que no se puede generar el fichero del INE: el esquema de la encuesta exige al menos una residencia. La encuesta se construye con los datos de check-in, no con las reservas, así que comprueba que los check-in del mes están completados antes de declarar el mes vacío."
