@@ -1622,6 +1622,33 @@ msgid "INE Notes"
 msgstr "Notas del INE"
 
 #. module: pms_l10n_es
+#: model:ir.model.fields,field_description:pms_l10n_es.field_res_country__ine_country_code
+msgid "INE Country Code"
+msgstr "Código de país del INE"
+
+#. module: pms_l10n_es
+#: model:ir.model.fields,help:pms_l10n_es.field_res_country__ine_country_code
+msgid ""
+"Code expected in the ID_PAIS element of the INE occupancy survey XML files, "
+"for the countries the INE does not code as ISO 3166-1 alpha-3 does. Leave it "
+"empty to use the alpha-3 code."
+msgstr ""
+"Código que espera el elemento ID_PAIS de los ficheros XML de las encuestas de "
+"ocupación del INE, para los países que el INE no codifica como la norma ISO "
+"3166-1 alpha-3. Déjalo vacío para usar el código alpha-3."
+
+#. module: pms_l10n_es
+#: code:addons/pms_l10n_es/wizards/wizard_ine.py:0
+#, python-format
+msgid ""
+"The country of residence '%(country)s' has no code for the INE survey. Set "
+"the INE country code on the country, using the list published by the INE."
+msgstr ""
+"El país de residencia '%(country)s' no tiene código para la encuesta del INE. "
+"Indica el código de país del INE en la ficha del país, tomándolo de la lista "
+"que publica el INE."
+
+#. module: pms_l10n_es
 #: model:ir.model.fields,help:pms_l10n_es.field_pms_ine_wizard__ine_notes
 msgid ""
 "What the generated file is worth a second look for, such as the nights "
