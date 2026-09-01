@@ -1617,6 +1617,32 @@ msgid "INE Configuration Warnings"
 msgstr "Avisos de configuración del INE"
 
 #. module: pms_l10n_es
+#: model:ir.model.fields,field_description:pms_l10n_es.field_pms_ine_wizard__ine_notes
+msgid "INE Notes"
+msgstr "Notas del INE"
+
+#. module: pms_l10n_es
+#: model:ir.model.fields,help:pms_l10n_es.field_pms_ine_wizard__ine_notes
+msgid ""
+"What the generated file is worth a second look for, such as the nights "
+"reported with an extra bed."
+msgstr ""
+"Lo que conviene mirar dos veces en el fichero generado, como las noches "
+"declaradas con cama supletoria."
+
+#. module: pms_l10n_es
+#: code:addons/pms_l10n_es/wizards/wizard_ine.py:0
+#, python-format
+msgid ""
+"Extra beds reported on %(count)s nights (days %(days)s), for guests "
+"registered beyond the places their room offers. Review the capacity of those "
+"rooms if you did not expect it."
+msgstr ""
+"Se han declarado camas supletorias en %(count)s noches (días %(days)s), por "
+"huéspedes registrados por encima de las plazas que ofrece su habitación. "
+"Revisa la capacidad de esas habitaciones si no lo esperabas."
+
+#. module: pms_l10n_es
 #. odoo-python
 #: code:addons/pms_l10n_es/wizards/wizard_ine.py:0
 #, python-format
