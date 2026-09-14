@@ -572,7 +572,12 @@ class FolioSaleLine(models.Model):
             else:
                 line.invoice_status = "no"
 
-    @api.depends("reservation_line_ids", "service_line_ids", "service_id")
+    @api.depends(
+        "reservation_line_ids",
+        "reservation_line_ids.room_id",
+        "service_line_ids",
+        "service_id",
+    )
     def _compute_name(self):
         for record in self:
             record.name = self.generate_folio_sale_name(
@@ -795,6 +800,45 @@ class FolioSaleLine(models.Model):
         return result
 
     @api.model
+    def _guest_label_use_room(self):
+        """Whether guest-facing labels must name the room instead of its type.
+
+        Per-database switch: this filesystem is shared by every tenant, so the
+        behaviour cannot be keyed on the database name. Absent row == off.
+        The context key is an escape hatch for maintenance scripts that need
+        to render both variants without touching the parameter.
+        """
+        if "guest_label_use_room" in self.env.context:
+            return bool(self.env.context["guest_label_use_room"])
+        param = (
+            self.env["ir.config_parameter"]
+            .sudo()
+            .get_param("roomdoo.guest_label_use_room")
+        )
+        return param in ("1", "True", "true", "yes", "on")
+
+    @api.model
+    def _guest_room_label(self, reservation_line_ids, product_id):
+        """Label of a room charge as the guest should read it.
+
+        Properties modelled as one room type per physical room (apartments)
+        need the room actually assigned, not the room type sold: moving the
+        guest to another apartment must change what the guest reads on the
+        invoice, the quotation and the folio.
+
+        The rooms are read off the nights of THIS line, not from
+        reservation.rooms: preferred_room_id is only refreshed when every
+        night of the stay is present (pms.reservation._compute_splitted), so
+        it still holds the previous room while a modification is half
+        applied. mapped() dedupes, so one room over five nights yields one
+        name.
+        """
+        if not self._guest_label_use_room():
+            return product_id.name
+        rooms = ", ".join(reservation_line_ids.mapped("room_id.name"))
+        return rooms or product_id.name
+
+    @api.model
     def generate_folio_sale_name(
         self,
         reservation_id,
@@ -824,7 +868,8 @@ class FolioSaleLine(models.Model):
                 else:
                     name += ", " + date.strftime("%d")
 
-            return f"{product_id.name} ({name})."
+            label = self._guest_room_label(reservation_line_ids, product_id)
+            return f"{label} ({name})."
         elif service_line_ids:
             month = False
             name = False
