@@ -575,6 +575,8 @@ class FolioSaleLine(models.Model):
     @api.depends(
         "reservation_line_ids",
         "reservation_line_ids.room_id",
+        "reservation_id.board_service_room_id",
+        "reservation_id.service_ids.price_total",
         "service_line_ids",
         "service_id",
     )
@@ -839,6 +841,30 @@ class FolioSaleLine(models.Model):
         return rooms or product_id.name
 
     @api.model
+    def _included_board_label(self, reservation_id):
+        """Name of the board service when its price is inside the room rate.
+
+        A board sold at zero is not a charge of its own: its price is already
+        inside the room rate, and it only reaches the documents as a second
+        line at 0.00 under the accommodation charge. What the guest bought is
+        the room on that board, so the accommodation charge is where the board
+        belongs. A board that carries a price of its own is a charge in its own
+        right and is left alone, as are half board and full board, whose meals
+        are billed apart.
+
+        Returns an empty string when there is nothing to add, so every caller
+        keeps its own label untouched.
+        """
+        reservation = reservation_id[:1]
+        board = reservation.board_service_room_id.pms_board_service_id
+        if not board:
+            return ""
+        board_services = reservation.service_ids.filtered("is_board_service")
+        if not board_services or any(service.price_total for service in board_services):
+            return ""
+        return board.name
+
+    @api.model
     def generate_folio_sale_name(
         self,
         reservation_id,
@@ -869,6 +895,9 @@ class FolioSaleLine(models.Model):
                     name += ", " + date.strftime("%d")
 
             label = self._guest_room_label(reservation_line_ids, product_id)
+            board_label = self._included_board_label(reservation_id)
+            if board_label:
+                label = f"{label} - {board_label}"
             return f"{label} ({name})."
         elif service_line_ids:
             month = False

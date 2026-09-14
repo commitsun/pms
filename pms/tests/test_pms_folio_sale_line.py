@@ -1290,3 +1290,157 @@ class TestPmsFolioSaleLine(TestPms):
             "Folio sale lines should not be generated for a out "
             "of service type reservation",
         )
+
+    # BOARD SERVICE INCLUDED IN THE ROOM RATE
+    def _create_included_board(self):
+        """A board whose services are sold at zero, included in the room rate."""
+        board = self.env["pms.board.service"].create(
+            {
+                "name": "Included Board Test",
+                "default_code": "TIB",
+            }
+        )
+        self.env["pms.board.service.line"].create(
+            {
+                "pms_board_service_id": board.id,
+                "product_id": self.product_test1.id,
+                "amount": 0,
+                "adults": True,
+            }
+        )
+        return self.env["pms.board.service.room.type"].create(
+            {
+                "pms_room_type_id": self.room_type_double.id,
+                "pms_board_service_id": board.id,
+                "pms_property_id": self.pms_property1.id,
+            }
+        )
+
+    def _accommodation_line(self, reservation):
+        return reservation.folio_id.sale_line_ids.filtered(
+            lambda x: x.reservation_id == reservation
+            and not x.service_id
+            and not x.display_type
+        )
+
+    def test_comp_fsl_name_board_included_in_rate(self):
+        """
+        Check that the accommodation charge names the board included in the rate.
+        ----------------
+        Create a reservation of 3 nights on a board whose services are sold at
+        zero, so its price is already inside the room rate, and verify that the
+        description of the accommodation sale line names both the room type and
+        the board.
+        """
+        # ARRANGE
+        board_room_type = self._create_included_board()
+
+        # ACT
+        reservation = self.env["pms.reservation"].create(
+            {
+                "pms_property_id": self.pms_property1.id,
+                "checkin": fields.date.today(),
+                "checkout": fields.date.today() + datetime.timedelta(days=3),
+                "adults": 2,
+                "room_type_id": self.room_type_double.id,
+                "partner_id": self.env.ref("base.res_partner_12").id,
+                "board_service_room_id": board_room_type.id,
+                "sale_channel_origin_id": self.sale_channel_direct1.id,
+            }
+        )
+
+        # ASSERT
+        self.assertTrue(
+            self._accommodation_line(reservation).name.startswith(
+                "Double Test - Included Board Test ("
+            ),
+            "The accommodation charge should name the board included in the rate",
+        )
+
+    def test_comp_fsl_name_board_with_its_own_price(self):
+        """
+        Check that a board with a price of its own does not rename the room.
+        ----------------
+        Create a reservation of 3 nights on a board whose services carry a price,
+        billed apart, and verify that the description of the accommodation sale
+        line still names the room type alone.
+        """
+        # ACT
+        reservation = self.env["pms.reservation"].create(
+            {
+                "pms_property_id": self.pms_property1.id,
+                "checkin": fields.date.today(),
+                "checkout": fields.date.today() + datetime.timedelta(days=3),
+                "adults": 2,
+                "room_type_id": self.room_type_double.id,
+                "partner_id": self.env.ref("base.res_partner_12").id,
+                "board_service_room_id": self.board_service_room_type.id,
+                "sale_channel_origin_id": self.sale_channel_direct1.id,
+            }
+        )
+
+        # ASSERT
+        self.assertTrue(
+            self._accommodation_line(reservation).name.startswith("Double Test ("),
+            "A board billed apart should not be named on the accommodation charge",
+        )
+
+    def test_comp_fsl_name_without_board(self):
+        """
+        Check that a reservation without board keeps the room type description.
+        ----------------
+        Create a reservation of 3 nights with no board service and verify that
+        the description of the accommodation sale line names the room type.
+        """
+        # ACT
+        reservation = self.env["pms.reservation"].create(
+            {
+                "pms_property_id": self.pms_property1.id,
+                "checkin": fields.date.today(),
+                "checkout": fields.date.today() + datetime.timedelta(days=3),
+                "adults": 2,
+                "room_type_id": self.room_type_double.id,
+                "partner_id": self.env.ref("base.res_partner_12").id,
+                "sale_channel_origin_id": self.sale_channel_direct1.id,
+            }
+        )
+
+        # ASSERT
+        self.assertTrue(
+            self._accommodation_line(reservation).name.startswith("Double Test ("),
+            "A reservation without board should keep the room type description",
+        )
+
+    def test_comp_fsl_name_follows_board_change(self):
+        """
+        Check that changing the board rewrites the accommodation description.
+        ----------------
+        Create a reservation of 3 nights without board, set a board included in
+        the room rate on it, and verify that the description of the
+        accommodation sale line names the board without waiting for any other
+        change.
+        """
+        # ARRANGE
+        board_room_type = self._create_included_board()
+        reservation = self.env["pms.reservation"].create(
+            {
+                "pms_property_id": self.pms_property1.id,
+                "checkin": fields.date.today(),
+                "checkout": fields.date.today() + datetime.timedelta(days=3),
+                "adults": 2,
+                "room_type_id": self.room_type_double.id,
+                "partner_id": self.env.ref("base.res_partner_12").id,
+                "sale_channel_origin_id": self.sale_channel_direct1.id,
+            }
+        )
+
+        # ACT
+        reservation.board_service_room_id = board_room_type
+
+        # ASSERT
+        self.assertTrue(
+            self._accommodation_line(reservation).name.startswith(
+                "Double Test - Included Board Test ("
+            ),
+            "Changing the board should rewrite the accommodation description",
+        )

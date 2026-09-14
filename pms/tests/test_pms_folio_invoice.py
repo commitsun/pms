@@ -667,3 +667,71 @@ class TestPmsFolioInvoice(TestPms, AccountTestInvoicingCommon):
     def _test_reinvoice(self):
         """Test the compute reinvoice folio take into account
         nights and services qty invoiced"""
+
+    def test_invoice_report_drops_board_included_in_rate(self):
+        """
+        Check that a board included in the room rate is left out of the printed
+        invoice, and that nothing else is.
+        ----------------
+        Create a reservation on a board whose services are sold at zero and
+        invoice its folio. The board reaches the invoice as a line at 0.00 and
+        keeps its link to the folio line, but the accommodation line already
+        names the board, so the document leaves that line out and prints every
+        other one.
+        """
+        # ARRANGE
+        product = self.env["product.product"].create({"name": "Included breakfast"})
+        board = self.env["pms.board.service"].create(
+            {
+                "name": "Included Board",
+                "default_code": "CBI",
+            }
+        )
+        self.env["pms.board.service.line"].create(
+            {
+                "product_id": product.id,
+                "pms_board_service_id": board.id,
+                "amount": 0,
+                "adults": True,
+            }
+        )
+        board_room_type = self.env["pms.board.service.room.type"].create(
+            {
+                "pms_room_type_id": self.room_type_double.id,
+                "pms_board_service_id": board.id,
+                "pms_property_id": self.property.id,
+            }
+        )
+        reservation = self.env["pms.reservation"].create(
+            {
+                "pms_property_id": self.property.id,
+                "checkin": datetime.datetime.now(),
+                "checkout": datetime.datetime.now() + datetime.timedelta(days=3),
+                "adults": 2,
+                "room_type_id": self.room_type_double.id,
+                "partner_id": self.partner_id.id,
+                "board_service_room_id": board_room_type.id,
+                "sale_channel_origin_id": self.sale_channel_direct1.id,
+            }
+        )
+
+        # ACT
+        reservation.folio_id._create_invoices()
+        invoice = reservation.folio_id.move_ids
+        board_lines = invoice.invoice_line_ids.filtered(
+            lambda line: line.folio_line_ids
+            and all(line.folio_line_ids.mapped("is_board_service"))
+        )
+        printed_lines = invoice._drop_included_board_lines(invoice.invoice_line_ids)
+
+        # ASSERT
+        self.assertTrue(
+            board_lines,
+            "The board included in the rate should reach the invoice as a line",
+        )
+        self.assertEqual(
+            printed_lines,
+            invoice.invoice_line_ids - board_lines,
+            "The printed invoice should drop the board lines included in the "
+            "rate, and only those",
+        )
