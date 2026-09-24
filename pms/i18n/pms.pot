@@ -85,6 +85,11 @@ msgid ""
 msgstr ""
 
 #. module: pms
+#: model:ir.model.fields,field_description:pms.field_pms_property__budget_count
+msgid "# Budgets"
+msgstr ""
+
+#. module: pms
 #: model:ir.model.fields,field_description:pms.field_pms_room_type__product_variant_count
 msgid "# Product Variants"
 msgstr ""
@@ -1710,6 +1715,11 @@ msgstr ""
 #. module: pms
 #: model:ir.model.fields,field_description:pms.field_pms_property__employee_ids
 msgid "Assigned Employees"
+msgstr ""
+
+#. module: pms
+#: model:ir.model.fields,field_description:pms.field_pms_room__assignment_sequence
+msgid "Assignment Sequence"
 msgstr ""
 
 #. module: pms
@@ -4513,6 +4523,13 @@ msgid "Format Departure Hour (HH:MM) Error: %s"
 msgstr ""
 
 #. module: pms
+#. odoo-python
+#: code:addons/pms/models/pms_property.py:0
+#, python-format
+msgid "Format Hour (HH:MM) Error: %s"
+msgstr ""
+
+#. module: pms
 #: model:ir.model.fields,help:pms.field_pms_property__email_formatted
 #: model:ir.model.fields,help:pms.field_pms_room__email_formatted
 msgid "Format email address \"Name <email@domain>\""
@@ -7087,6 +7104,15 @@ msgstr ""
 #. module: pms
 #: model:ir.model.fields,help:pms.field_pms_reservation__date_order
 msgid "Order date of reservation"
+msgstr ""
+
+#. module: pms
+#: model:ir.model.fields,help:pms.field_pms_room__assignment_sequence
+msgid ""
+"Order used to automatically assign rooms on reservations without a specific "
+"room preassigned (OTAs, web, etc.); rooms with lower values are assigned "
+"first. It is independent of the display order (sequence). By default it "
+"takes the same value as the sequence."
 msgstr ""
 
 #. module: pms
@@ -10715,6 +10741,15 @@ msgstr ""
 #. module: pms
 #: model:ir.model.fields,help:pms.field_pms_folio__revenue_user_id
 msgid "The revenue manager in the folio"
+msgstr ""
+
+#. module: pms
+#. odoo-python
+#: code:addons/pms/models/pms_reservation_line.py:0
+#, python-format
+msgid ""
+"The room %(room)s can't hold %(occupancy)s guests (maximum capacity: "
+"%(capacity)s) (%(reservation)s)"
 msgstr ""
 
 #. module: pms

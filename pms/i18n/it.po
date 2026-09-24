@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 14.0\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-02-04 10:09+0000\n"
+"PO-Revision-Date: 2026-07-29 09:46+0000\n"
 "Last-Translator: mymage <stefano.consolaro@mymage.it>\n"
 "Language-Team: none\n"
 "Language: it\n"
@@ -126,6 +126,11 @@ msgstr ""
 "        la commissione viene calcolata come prezzo - (prezzo * commissione / "
 "100)\n"
 "        "
+
+#. module: pms
+#: model:ir.model.fields,field_description:pms.field_pms_property__budget_count
+msgid "# Budgets"
+msgstr ""
 
 #. module: pms
 #: model:ir.model.fields,field_description:pms.field_pms_room_type__product_variant_count
@@ -2729,6 +2734,11 @@ msgid "Assigned Employees"
 msgstr "Dipendenti assegnati"
 
 #. module: pms
+#: model:ir.model.fields,field_description:pms.field_pms_room__assignment_sequence
+msgid "Assignment Sequence"
+msgstr ""
+
+#. module: pms
 #: model:ir.model.fields,help:pms.field_pms_property__pms_folio_ids
 #: model:ir.model.fields,help:pms.field_res_partner__pms_folio_ids
 #: model:ir.model.fields,help:pms.field_res_users__pms_folio_ids
@@ -3272,7 +3282,7 @@ msgstr "Annulla"
 #. module: pms
 #: model:ir.model.fields,field_description:pms.field_pms_reservation__cancel_datetime
 msgid "Cancel Date"
-msgstr "Annulla data"
+msgstr "Data di annullamento"
 
 #. module: pms
 #: model_terms:ir.ui.view,arch_db:pms.pms_folio_view_form
@@ -5618,6 +5628,13 @@ msgstr "Errore formato orario di arrivo (HH:MM): %s"
 #, python-format
 msgid "Format Departure Hour (HH:MM) Error: %s"
 msgstr "Errore formato orario di partenza (HH:MM): %s"
+
+#. module: pms
+#. odoo-python
+#: code:addons/pms/models/pms_property.py:0
+#, python-format
+msgid "Format Hour (HH:MM) Error: %s"
+msgstr ""
 
 #. module: pms
 #: model:ir.model.fields,help:pms.field_pms_property__email_formatted
@@ -8297,6 +8314,15 @@ msgstr "Data ordine"
 #: model:ir.model.fields,help:pms.field_pms_reservation__date_order
 msgid "Order date of reservation"
 msgstr "Data ordine della prenotazione"
+
+#. module: pms
+#: model:ir.model.fields,help:pms.field_pms_room__assignment_sequence
+msgid ""
+"Order used to automatically assign rooms on reservations without a specific "
+"room preassigned (OTAs, web, etc.); rooms with lower values are assigned "
+"first. It is independent of the display order (sequence). By default it "
+"takes the same value as the sequence."
+msgstr ""
 
 #. module: pms
 #. odoo-python
@@ -11936,6 +11962,15 @@ msgstr ""
 #. module: pms
 #: model:ir.model.fields,help:pms.field_pms_folio__revenue_user_id
 msgid "The revenue manager in the folio"
+msgstr ""
+
+#. module: pms
+#. odoo-python
+#: code:addons/pms/models/pms_reservation_line.py:0
+#, python-format
+msgid ""
+"The room %(room)s can't hold %(occupancy)s guests (maximum capacity: "
+"%(capacity)s) (%(reservation)s)"
 msgstr ""
 
 #. module: pms

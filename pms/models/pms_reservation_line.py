@@ -348,9 +348,12 @@ class PmsReservationLine(models.Model):
                                 )
 
                     # otherwise we assign the first of those
-                    # available for the entire stay
+                    # available for the entire stay following the
+                    # room assignment order (assignment_sequence)
                     else:
-                        line.room_id = rooms_available[0]
+                        line.room_id = rooms_available.sorted(
+                            key=lambda r: (r.assignment_sequence, r.sequence, r.id)
+                        )[0]
                 # check that the reservation cannot be allocated even by dividing it
                 elif not self.env["pms.property"].splitted_availability(
                     checkin=reservation.checkin,
@@ -363,8 +366,8 @@ class PmsReservationLine(models.Model):
                 ):
                     if self.env.context.get("force_overbooking"):
                         line.room_id = reservation.room_type_id.room_ids.filtered(
-                            lambda r, line=line: r.pms_property_id
-                            == line.pms_property_id
+                            lambda r, line=line: r.active
+                            and r.pms_property_id == line.pms_property_id
                         )[0]
                     else:
                         raise ValidationError(
@@ -377,11 +380,22 @@ class PmsReservationLine(models.Model):
                     rooms_ranking = dict()
 
                     # we go through the rooms of the type
-                    for room in self.env["pms.room"].search(
-                        [
-                            ("room_type_id", "=", reservation.room_type_id.id),
-                            ("pms_property_id", "=", reservation.pms_property_id.id),
-                        ]
+                    # (force active_test to avoid picking archived rooms when
+                    # the context carries active_test=False, e.g. connector
+                    # imports)
+                    for room in (
+                        self.env["pms.room"]
+                        .with_context(active_test=True)
+                        .search(
+                            [
+                                ("room_type_id", "=", reservation.room_type_id.id),
+                                (
+                                    "pms_property_id",
+                                    "=",
+                                    reservation.pms_property_id.id,
+                                ),
+                            ]
+                        )
                     ):
                         # we iterate the dates from the date of the line to the checkout
                         for date_iterator in [
@@ -658,7 +672,39 @@ class PmsReservationLine(models.Model):
         ):
             raise ValidationError(_("Blocked reservations can't be modified"))
         res = super().write(vals)
+        if vals.get("room_id"):
+            self._check_room_capacity()
         return res
+
+    def _check_room_capacity(self):
+        """Check that the room can hold the occupancy of the reservation.
+
+        pms.reservation only checks the capacity on create and when 'adults'
+        change, so changing the room (planning drag&drop, room swap or a new
+        preferred room) was not validated at all. We use the maximum capacity
+        of the room (capacity + allowed extra beds) instead of the extra beds
+        actually sold, to avoid false positives in intermediate states where
+        the extra bed service is not created yet.
+        """
+        if self.env.context.get("avoid_capacity_check"):
+            return
+        for record in self:
+            reservation = record.reservation_id
+            if not record.room_id or reservation.reservation_type == "out":
+                continue
+            occupancy = reservation.adults + reservation.children_occupying
+            max_capacity = record.room_id.capacity + record.room_id.extra_beds_allowed
+            if occupancy > max_capacity:
+                raise ValidationError(
+                    _(
+                        "The room %(room)s can't hold %(occupancy)s guests "
+                        "(maximum capacity: %(capacity)s) (%(reservation)s)",
+                        room=record.room_id.display_name,
+                        occupancy=occupancy,
+                        capacity=max_capacity,
+                        reservation=reservation.name,
+                    )
+                )
 
     # Constraints and onchanges
     @api.constrains("date")
