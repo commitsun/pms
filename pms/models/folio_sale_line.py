@@ -576,7 +576,14 @@ class FolioSaleLine(models.Model):
             else:
                 line.invoice_status = "no"
 
-    @api.depends("reservation_line_ids", "service_line_ids", "service_id")
+    @api.depends(
+        "reservation_line_ids",
+        "reservation_line_ids.room_id",
+        "reservation_id.board_service_room_id",
+        "reservation_id.service_ids.price_total",
+        "service_line_ids",
+        "service_id",
+    )
     def _compute_name(self):
         for record in self:
             # Sections and notes get their name on creation and must keep it:
@@ -805,6 +812,69 @@ class FolioSaleLine(models.Model):
         return result
 
     @api.model
+    def _guest_label_use_room(self):
+        """Whether guest-facing labels must name the room instead of its type.
+
+        Per-database switch: this filesystem is shared by every tenant, so the
+        behaviour cannot be keyed on the database name. Absent row == off.
+        The context key is an escape hatch for maintenance scripts that need
+        to render both variants without touching the parameter.
+        """
+        if "guest_label_use_room" in self.env.context:
+            return bool(self.env.context["guest_label_use_room"])
+        param = (
+            self.env["ir.config_parameter"]
+            .sudo()
+            .get_param("roomdoo.guest_label_use_room")
+        )
+        return param in ("1", "True", "true", "yes", "on")
+
+    @api.model
+    def _guest_room_label(self, reservation_line_ids, product_id):
+        """Label of a room charge as the guest should read it.
+
+        Properties modelled as one room type per physical room (apartments)
+        need the room actually assigned, not the room type sold: moving the
+        guest to another apartment must change what the guest reads on the
+        invoice, the quotation and the folio.
+
+        The rooms are read off the nights of THIS line, not from
+        reservation.rooms: preferred_room_id is only refreshed when every
+        night of the stay is present (pms.reservation._compute_splitted), so
+        it still holds the previous room while a modification is half
+        applied. mapped() dedupes, so one room over five nights yields one
+        name.
+        """
+        if not self._guest_label_use_room():
+            return product_id.name
+        rooms = ", ".join(reservation_line_ids.mapped("room_id.name"))
+        return rooms or product_id.name
+
+    @api.model
+    def _included_board_label(self, reservation_id):
+        """Name of the board service when its price is inside the room rate.
+
+        A board sold at zero is not a charge of its own: its price is already
+        inside the room rate, and it only reaches the documents as a second
+        line at 0.00 under the accommodation charge. What the guest bought is
+        the room on that board, so the accommodation charge is where the board
+        belongs. A board that carries a price of its own is a charge in its own
+        right and is left alone, as are half board and full board, whose meals
+        are billed apart.
+
+        Returns an empty string when there is nothing to add, so every caller
+        keeps its own label untouched.
+        """
+        reservation = reservation_id[:1]
+        board = reservation.board_service_room_id.pms_board_service_id
+        if not board:
+            return ""
+        board_services = reservation.service_ids.filtered("is_board_service")
+        if not board_services or any(service.price_total for service in board_services):
+            return ""
+        return board.name
+
+    @api.model
     def generate_folio_sale_name(
         self,
         reservation_id,
@@ -834,7 +904,11 @@ class FolioSaleLine(models.Model):
                 else:
                     name += ", " + date.strftime("%d")
 
-            return f"{product_id.name} ({name})."
+            label = self._guest_room_label(reservation_line_ids, product_id)
+            board_label = self._included_board_label(reservation_id)
+            if board_label:
+                label = f"{label} - {board_label}"
+            return f"{label} ({name})."
         elif service_line_ids:
             month = False
             name = False

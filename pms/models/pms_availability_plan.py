@@ -84,21 +84,24 @@ class PmsAvailabilityPlan(models.Model):
         date,
         pms_property_id,
     ):
-        if pricelist_id and room_type_id and date:
-            rule = self.env["pms.availability.plan.rule"].search(
+        # Decrement quota on EVERY availability plan rule matching
+        # room_type/date/property, regardless of the reservation pricelist,
+        # so all availability plans share a single quota pool and the
+        # channel-published availability shrinks on every reservation.
+        if room_type_id and date:
+            rules = self.env["pms.availability.plan.rule"].search(
                 [
-                    ("availability_plan_id.pms_pricelist_ids", "in", pricelist_id),
                     ("room_type_id", "=", room_type_id),
                     ("date", "=", date),
                     ("pms_property_id", "=", pms_property_id),
                 ]
             )
-            # applies a rule
-            if rule:
-                rule.ensure_one()
-                if rule and rule.quota != -1 and rule.quota > 0:
+            updated = False
+            for rule in rules:
+                if rule.quota != -1 and rule.quota > 0:
                     rule.quota -= 1
-                    return True
+                    updated = True
+            return updated
         return False
 
     # Action methods

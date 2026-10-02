@@ -356,3 +356,37 @@ class AccountMove(models.Model):
             )
         else:
             return super()._is_downpayment()
+
+    def _drop_included_board_lines(self, lines):
+        """Invoice lines to print, without the boards included in the room rate.
+
+        A board included in the rate reaches the invoice as a second line at
+        0.00 right under the accommodation charge, which already names the
+        board. Printing it adds nothing, and it is what makes a hotel rewrite
+        the description by hand before sending the invoice. The line stays on
+        the invoice: only the document leaves it out, so the folio line keeps
+        its link to the invoice line and the invoiced quantities stay right.
+
+        Dropped only where every folio line behind the charge is a board
+        service at zero, so a free night, a discount to zero or an ordinary
+        service at zero still print. And only where the same document carries
+        the accommodation charge of that reservation, which is the line now
+        naming the board: on an invoice that does not, the board would
+        otherwise appear nowhere.
+        """
+        self.ensure_one()
+        room_reservations = lines.filtered(
+            lambda line: line.folio_line_ids and not line.folio_line_ids.service_id
+        ).folio_line_ids.reservation_id
+        return lines.filtered(
+            lambda line: not (
+                line.folio_line_ids
+                and all(line.folio_line_ids.mapped("is_board_service"))
+                and line.currency_id.is_zero(line.price_total)
+                and line.folio_line_ids.reservation_id
+                and all(
+                    reservation in room_reservations
+                    for reservation in line.folio_line_ids.reservation_id
+                )
+            )
+        )

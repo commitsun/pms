@@ -34,6 +34,9 @@
                 </div>
             </t>
         </xpath>
+        <xpath expr="//t[@t-set='lines']" position="after">
+            <t t-set="lines" t-value="o._drop_included_board_lines(lines)" />
+        </xpath>
         <xpath expr="//div[@name='no_shipping']" position="inside">
             <t t-if="o.pms_property_id">
                 <t t-set="information_block">
