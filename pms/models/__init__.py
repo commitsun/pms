@@ -15,6 +15,7 @@ from . import pms_room
 from . import pms_amenity
 from . import pms_amenity_type
 from . import pms_room_type
+from . import pms_room_type_image
 from . import pms_service
 from . import account_move
 from . import product_template

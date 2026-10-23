@@ -54,6 +54,13 @@ class PmsRoomType(models.Model):
         inverse_name="pms_room_type_id",
         check_pms_properties=True,
     )
+    room_type_image_ids = fields.One2many(
+        string="Images",
+        help="Images of the room type, common or of a property",
+        comodel_name="pms.room.type.image",
+        inverse_name="room_type_id",
+        check_pms_properties=True,
+    )
     room_amenity_ids = fields.Many2many(
         string="Room Type Amenities",
         help="List of amenities included in room type",
@@ -215,6 +222,32 @@ class PmsRoomType(models.Model):
             lambda r: not r.pms_property_id or r.pms_property_id.id == pms_property_id
         ).mapped("capacity")
         return min(capacities) if any(capacities) else 0
+
+    def get_room_type_images(self, pms_property_id):
+        """
+        :param pms_property_id: int
+        :return: the images of current type shown in the property, its own ones
+                 and the common ones, in order
+        """
+        self.ensure_one()
+        # Sorted explicitly: images created in the same transaction stay in the
+        # cache in creation order.
+        return self.room_type_image_ids.filtered(
+            lambda image: not image.pms_property_id
+            or image.pms_property_id.id == pms_property_id
+        ).sorted(lambda image: (image.sequence, image.id))
+
+    def get_room_type_size(self, pms_property_id):
+        """
+        :param pms_property_id: int
+        :return: the minimum size in square meters of the rooms of current type
+                 in the property, 0 when none has it
+        """
+        self.ensure_one()
+        sizes = self.room_ids.filtered(
+            lambda r: r.pms_property_id.id == pms_property_id and r.size_m2
+        ).mapped("size_m2")
+        return min(sizes) if sizes else 0.0
 
     @api.model
     def get_default_board_service(self, pms_property_id, room_type_id, pricelist_id):

@@ -84,6 +84,11 @@ class PmsRoom(models.Model):
         required=True,
         default="0",
     )
+    size_m2 = fields.Float(
+        string="Size (m²)",
+        help="Floor area of the room in square meters",
+        digits=(16, 2),
+    )
     room_amenity_ids = fields.Many2many(
         string="Room Amenities",
         help="List of amenities included in room",

@@ -75,6 +75,25 @@
                             <separator string="Room Amenities" />
                             <field name="room_amenity_ids" colspan="4" nolabel="1" />
                         </page>
+                        <page string="Images" name="images">
+                            <field
+                                name="room_type_image_ids"
+                                nolabel="1"
+                                context="{'default_room_type_id': id}"
+                            >
+                                <tree editable="bottom">
+                                    <field name="sequence" widget="handle" />
+                                    <field
+                                        name="image_1920"
+                                        widget="image"
+                                        options="{'size': [0, 90], 'preview_image': 'image_128'}"
+                                    />
+                                    <field name="name" />
+                                    <field name="pms_property_id" />
+                                    <field name="room_type_id" invisible="1" />
+                                </tree>
+                            </field>
+                        </page>
                     </notebook>
                 </sheet>
             </form>
