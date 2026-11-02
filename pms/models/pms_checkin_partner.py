@@ -718,9 +718,7 @@ class PmsCheckinPartner(models.Model):
                 "arrival": fields.Datetime.now(),
             }
             record.update(vals)
-            # A guest on board settles the room: the reservation cannot stay
-            # flagged as pending assignment once someone is sleeping in it
-            record.reservation_id.write({"state": "onboard", "to_assign": False})
+            record.reservation_id.state = "onboard"
             record.identifier = (
                 record.reservation_id.pms_property_id.checkin_sequence_id._next_do()
             )
