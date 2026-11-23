@@ -197,8 +197,8 @@
             </field>
         </record>
         <record id="pms_product_pricelist_item_property_rule" model="ir.rule">
-            <field name="name">PMS Room Type Class Property Rule</field>
-            <field name="model_id" ref="model_pms_availability_plan" />
+            <field name="name">PMS Product Pricelist Item Property Rule</field>
+            <field name="model_id" ref="model_product_pricelist_item" />
             <field name="global" eval="True" />
             <field name="domain_force">
                 ['|',('pms_property_ids','=',False),('pms_property_ids', 'in',
@@ -209,9 +209,26 @@
             <field name="name">PMS Users Property Rule</field>
             <field name="model_id" ref="model_res_users" />
             <field name="global" eval="True" />
+            <!-- Internal users without properties are not scoped by property:
+                 they see every user. Users with properties (archived ones
+                 included), and portal or public users, see the users without
+                 properties and the users sharing an active property with them.
+                 The user is listed explicitly so that a user whose properties
+                 are all archived can still read their own record.
+                 Keep the parentheses: the expression spans several lines. -->
             <field name="domain_force">
-                ['|',('pms_property_ids','=',False),('pms_property_ids', 'in',
-                user.pms_property_ids.ids)]
+                (
+                    [
+                        "|",
+                        "|",
+                        ("id", "=", user.id),
+                        ("pms_property_ids", "=", False),
+                        ("pms_property_ids", "in", user.pms_property_ids.ids),
+                    ]
+                    if user.with_context(active_test=False).pms_property_ids
+                    or user.share
+                    else [(1, "=", 1)]
+                )
             </field>
         </record>
         <record id="pms_account_move_property_rule" model="ir.rule">

@@ -31,6 +31,7 @@ from . import test_pms_board_service
 from . import test_pms_wizard_massive_changes
 from . import test_pms_booking_engine
 from . import test_pms_res_users
+from . import test_pms_record_rules
 from . import test_pms_room
 from . import test_pms_folio_invoice
 from . import test_pms_folio_sale_line
